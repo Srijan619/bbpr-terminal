@@ -10,6 +10,11 @@ import (
 	"github.com/rivo/tview"
 )
 
+const (
+	HIGH_CONTRAST_COLOR = tcell.ColorCadetBlue
+	LOW_CONTRAST_COLOR  = tcell.ColorYellow
+)
+
 func CreateApp(prs []PR) *tview.Application {
 	app := tview.NewApplication()
 
@@ -34,7 +39,7 @@ func CreateApp(prs []PR) *tview.Application {
 	// Grid layout
 	mainGrid := tview.NewGrid().
 		SetRows(1, 0).
-		SetColumns(40, 0).
+		SetColumns(60, 0).
 		SetBorders(true)
 
 	mainGrid.AddItem(header, 0, 0, 1, 2, 0, 0, false)
@@ -87,24 +92,30 @@ func updatePRDetails(prs []PR, prDetails *tview.TextView, row int) {
 // Function to populate the PR list
 func populatePRList(prs []PR, prList *tview.Table) {
 	for i, pr := range prs {
-		prRow := fmt.Sprintf("%s", pr.Title)
+		titleCell := cellFormat(ellipsizeText(pr.Title, 18), tcell.ColorWhite)
+		stateCell := styleState(pr.State)
 
-		titleCell := tview.NewTableCell(prRow).
-			SetTextColor(tcell.ColorWhite).
-			SetSelectable(true).
-			SetAlign(tview.AlignLeft) // Title cell in the center
+		initialsCell := cellFormat(formatInitials(pr.Author.DisplayName), HIGH_CONTRAST_COLOR)
 
-		stateCell := styleState(pr.State) // Function to style PR state
-
-		initialsCell := tview.NewTableCell(formatInitials(pr.Author.DisplayName)).
-			SetTextColor(tcell.ColorYellow).
-			SetSelectable(true).
-			SetAlign(tview.AlignLeft) // Initials cell in the rightmost position
+		sourceBranch := cellFormat(ellipsizeText(pr.Source.Branch.Name, 10), LOW_CONTRAST_COLOR)
+		arrow := cellFormat("-->", LOW_CONTRAST_COLOR)
+		destinationBranch := cellFormat(ellipsizeText(pr.Destination.Branch.Name, 10), LOW_CONTRAST_COLOR)
 
 		prList.SetCell(i, 0, initialsCell)
 		prList.SetCell(i, 1, stateCell)
 		prList.SetCell(i, 2, titleCell)
+
+		prList.SetCell(i, 3, sourceBranch)
+		prList.SetCell(i, 4, arrow)
+		prList.SetCell(i, 5, destinationBranch)
 	}
+}
+
+func cellFormat(text string, color tcell.Color) *tview.TableCell {
+	return tview.NewTableCell(text).
+		SetTextColor(color).
+		SetAlign(tview.AlignLeft).
+		SetSelectable(true)
 }
 
 // Helper function to format initials with a distinct color
@@ -175,4 +186,11 @@ func styleState(state string) *tview.TableCell {
 		SetTextColor(stateColor).
 		SetAlign(tview.AlignLeft).
 		SetSelectable(true)
+}
+
+func ellipsizeText(text string, max int) string {
+	if len(text) > max {
+		text = text[:max] + "..."
+	}
+	return text
 }
