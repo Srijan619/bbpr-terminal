@@ -43,13 +43,18 @@ func CreateApp(prs []PR) *tview.Application {
 
 	// Populate PR list
 	for i, pr := range prs {
-		prRow := fmt.Sprintf("%s [%s] by %s", pr.Title, pr.State, pr.Author.DisplayName)
-		cell := tview.NewTableCell(prRow).
-			SetTextColor(tcell.ColorWhite).
-			SetSelectable(true)
+    prRow := fmt.Sprintf("%s by %s", pr.Title, pr.Author.DisplayName)
+    cell := tview.NewTableCell(prRow).
+      SetTextColor(tcell.ColorWhite).
+      SetSelectable(true)
 
-		prList.SetCell(i, 0, cell)
-	}
+    // Apply styling for the state
+    stateCell := styleState(pr.State)
+
+    // Set the cells for the PR row
+    prList.SetCell(i, 0, cell)
+    prList.SetCell(i, 1, stateCell) // Add the styled state as a separate column
+  }
 
 	// Define the function to update PR details
 	updatePRDetails := func(row int) {
@@ -113,3 +118,25 @@ func getGitRepoName() string {
 	repoPath := strings.TrimSpace(string(output))
 	return strings.TrimSuffix(repoPath[strings.LastIndex(repoPath, "/")+1:], "\n")
 }
+
+// Helper function to style PR state
+func styleState(state string) *tview.TableCell {
+	var stateColor tcell.Color
+
+	switch state {
+	case "OPEN":
+		stateColor = tcell.ColorGreen
+	case "MERGED":
+		stateColor = tcell.ColorBlue
+	case "DECLINED":
+		stateColor = tcell.ColorRed
+	default:
+		stateColor = tcell.ColorYellow
+	}
+
+	return tview.NewTableCell(state).
+		SetTextColor(stateColor).
+		SetAlign(tview.AlignCenter).
+		SetSelectable(true)
+}
+
