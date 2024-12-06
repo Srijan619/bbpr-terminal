@@ -2,13 +2,13 @@ package main
 
 import (
 	"fmt"
-	"log"
 	"os"
 	"os/exec"
 	"strings"
 
 	"simple-git-terminal/pr"
 	"simple-git-terminal/types"
+	"simple-git-terminal/util"
 
 	"github.com/gdamore/tcell/v2"
 	"github.com/rivo/tview"
@@ -52,48 +52,37 @@ func CreateApp(prs []types.PR) *tview.Application {
 	mainGrid.AddItem(header, 0, 0, 1, 2, 0, 0, false)
 	mainGrid.AddItem(prList, 1, 0, 1, 1, 0, 0, true)
 
-	// Right-side layout: PR Details + Activities
-	rightPanel := tview.NewFlex().
-		SetDirection(tview.FlexRow).
-		AddItem(prDetails, 0, 1, false).
-		AddItem(activityDetails, 0, 1, false)
+	rightPanelGrid := tview.NewGrid().
+		SetRows(3, 0).
+		SetColumns(60, 0).
+		SetBorders(true)
 
-	mainGrid.AddItem(rightPanel, 1, 1, 1, 1, 0, 0, false)
+	rightPanelHeader := tview.NewTextView().SetText("Here we will display PR title").SetTextAlign(tview.AlignCenter)
 
+	rightPanelGrid.AddItem(rightPanelHeader, 0, 0, 1, 1, 0, 0, false)
+	rightPanelGrid.AddItem(prDetails, 1, 0, 1, 1, 0, 0, false)
+	rightPanelGrid.AddItem(activityDetails, 2, 0, 1, 1, 0, 0, false)
+
+	mainGrid.AddItem(rightPanelGrid, 1, 1, 1, 1, 0, 0, false)
 	// Populate PR list
 	populatePRList(prs, prList)
 
 	prList.SetSelectedFunc(func(row, column int) {
-		updatePRDetails(prs, prDetails, row)
+		pr.UpdatePrDetails(prs, prDetails, row)
 
 		if row >= 0 && row < len(prs) {
 			selectedPR := prs[row]
-
-			// Log selected PR ID for debugging
-			log.Printf("Selected PR ID: %d", selectedPR.ID)
-
-			// Fetch activities dynamically by PR ID
 			go func() {
-				// Show loading message
+				rightPanelHeader.SetText(selectedPR.Title)
+
 				activityDetails.Clear()
 				activityDetails.AddItem(tview.NewTextView().SetText("Fetching activities..."), 0, 1, true)
 
-				// Log before fetching activities
-				log.Printf("Fetching activities for PR ID: %d", selectedPR.ID)
-
-				// Fetch activities for the selected PR
 				prActivities := fetchBitbucketActivities(selectedPR.ID)
 
-				// Log the fetched activities
-				log.Printf("Fetched activities: %+v", prActivities)
-
-				// Update the UI with the fetched activities
 				app.QueueUpdateDraw(func() {
 					activityDetails.Clear()
 					activityDetails.AddItem(pr.CreateActivitiesView(prActivities), 0, 1, true)
-
-					// Log after updating the UI
-					log.Printf("Updated UI with activities for PR ID: %d", selectedPR.ID)
 				})
 			}()
 		}
@@ -102,12 +91,13 @@ func CreateApp(prs []types.PR) *tview.Application {
 	// Set initial PR details
 	if len(prs) > 0 {
 		prList.Select(0, 0)
-		updatePRDetails(prs, prDetails, 0)
+		pr.UpdatePrDetails(prs, prDetails, 0)
 
 		// Fetch initial activities dynamically
 		initialPR := prs[0]
 		go func() {
 
+			rightPanelHeader.SetText(initialPR.Title)
 			prActivities := fetchBitbucketActivities(initialPR.ID)
 			app.QueueUpdateDraw(func() {
 				activityDetails.AddItem(pr.CreateActivitiesView(prActivities), 0, 1, true)
@@ -119,42 +109,17 @@ func CreateApp(prs []types.PR) *tview.Application {
 	return app
 }
 
-func updatePRDetails(prs []types.PR, prDetails *tview.TextView, row int) {
-	if row >= 0 && row < len(prs) {
-		selectedPR := prs[row]
-		description := formatDescription(selectedPR.Description)
-
-		// Build the PR details
-		prDetails.SetText(fmt.Sprintf(
-			"[::b]Title:[-] %s\n"+
-				"[::b]State:[-] %s\n"+
-				"[::b]Author:[-] %s\n"+
-				"[::b]Created On:[-] %s\n"+
-				"[::b]Updated On:[-] %s\n"+
-				"[::b]Link:[-] %s\n"+
-				"[::b]Description:[-] %s\n",
-			selectedPR.Title,
-			selectedPR.State,
-			selectedPR.Author.DisplayName,
-			selectedPR.CreatedOn,
-			selectedPR.UpdatedOn,
-			selectedPR.Links.HTML.Href,
-			description,
-		))
-	}
-}
-
 // Function to populate the PR list
 func populatePRList(prs []types.PR, prList *tview.Table) {
 	for i, pr := range prs {
-		titleCell := cellFormat(ellipsizeText(pr.Title, 18), tcell.ColorWhite)
-		stateCell := styleState(pr.State)
+		titleCell := cellFormat(util.EllipsizeText(pr.Title, 18), tcell.ColorWhite)
+		stateCell := util.CreateStateCell(pr.State)
 
 		initialsCell := cellFormat(formatInitials(pr.Author.DisplayName), HIGH_CONTRAST_COLOR)
 
-		sourceBranch := cellFormat(ellipsizeText(pr.Source.Branch.Name, 10), LOW_CONTRAST_COLOR)
+		sourceBranch := cellFormat(util.EllipsizeText(pr.Source.Branch.Name, 10), LOW_CONTRAST_COLOR)
 		arrow := cellFormat("-->", LOW_CONTRAST_COLOR)
-		destinationBranch := cellFormat(ellipsizeText(pr.Destination.Branch.Name, 10), LOW_CONTRAST_COLOR)
+		destinationBranch := cellFormat(util.EllipsizeText(pr.Destination.Branch.Name, 10), LOW_CONTRAST_COLOR)
 
 		prList.SetCell(i, 0, initialsCell)
 		prList.SetCell(i, 1, stateCell)
@@ -195,17 +160,6 @@ func getInitials(displayName string) string {
 	return strings.ToUpper(displayName)
 }
 
-// Formats the PR description for display
-func formatDescription(description interface{}) string {
-	if description == nil {
-		return "No description provided."
-	}
-	if desc, ok := description.(string); ok {
-		return strings.TrimSpace(desc)
-	}
-	return "Unsupported description format."
-}
-
 // Get the name of the current Git repository
 func getGitRepoName() string {
 	// Run the 'git rev-parse --show-toplevel' command to get the root directory of the Git repo
@@ -222,30 +176,4 @@ func getGitRepoName() string {
 	return strings.TrimSuffix(repoPath[strings.LastIndex(repoPath, "/")+1:], "\n")
 }
 
-// Helper function to style PR state
-func styleState(state string) *tview.TableCell {
-	var stateColor tcell.Color
-
-	switch state {
-	case "OPEN":
-		stateColor = tcell.ColorGreen
-	case "MERGED":
-		stateColor = tcell.ColorBlue
-	case "DECLINED":
-		stateColor = tcell.ColorRed
-	default:
-		stateColor = tcell.ColorYellow
-	}
-
-	return tview.NewTableCell(state).
-		SetTextColor(stateColor).
-		SetAlign(tview.AlignLeft).
-		SetSelectable(true)
-}
-
-func ellipsizeText(text string, max int) string {
-	if len(text) > max {
-		text = text[:max] + "..."
-	}
-	return text
-}
+// GetStateColor determines the color based on the PR state

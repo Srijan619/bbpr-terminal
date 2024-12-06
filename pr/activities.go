@@ -4,9 +4,12 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/rivo/tview"
-	"simple-git-terminal/types"
 	"time"
+
+	"github.com/rivo/tview"
+
+	"simple-git-terminal/types"
+	"simple-git-terminal/util"
 )
 
 // CreateActivitiesView generates the UI for displaying PR activities in a TextView.
@@ -33,18 +36,21 @@ func GenerateActivityLogs(activities []types.Activity) string {
 	var logs []string
 
 	// Separate logs into sections
-	updateLogs := []string{"[::b]Updates:[-]"}
-	approvalLogs := []string{"[::b]Approvals:[-]"}
-	prLogs := []string{"[::b]Pull Requests:[-]"}
+	updateLogs := []string{"[::b][cyan]Updates:[-]\n"}
+	approvalLogs := []string{"[::b][cyan]Approvals:[-]\n"}
+	prLogs := []string{"[::b][cyan]Pull Requests:[-]\n"}
 
-	for _, activity := range activities {
+	for i, activity := range activities {
+		i = i + 1
 		switch {
 		case !isEmptyUpdateDetail(activity.Update):
 			// Handle updates
 			for field, change := range activity.Update.Changes {
 				log := fmt.Sprintf(
-					"%s edited the %s: %s → %s (%s ago)",
+					"[red]{%d}[-] %s edited the [%s]%s[-]: %s → %s [cyan](%s ago)[-]",
+					i,
 					activity.Update.Author.DisplayName,
+					util.GetFieldBasedColor(field),
 					field,
 					change.Old,
 					change.New[:min(len(change.New), 30)], // Truncate if too long
@@ -55,7 +61,8 @@ func GenerateActivityLogs(activities []types.Activity) string {
 		case activity.Approval.User.DisplayName != "":
 			// Handle approvals
 			log := fmt.Sprintf(
-				"%s APPROVED the pull request (%s ago)",
+				"[red]{%d}[-] %s [palegreen]APPROVED[-] the pull request [cyan](%s ago)[-]",
+				i,
 				activity.Approval.User.DisplayName,
 				formatTimeAgo(activity.Approval.Date),
 			)
@@ -63,7 +70,8 @@ func GenerateActivityLogs(activities []types.Activity) string {
 		case activity.PullRequest.Title != "":
 			// Handle pull requests
 			log := fmt.Sprintf(
-				"%s OPENED the pull request: %s (%s ago)",
+				"[red]{%d}[-] %s OPENED the pull request: %s [cyan](%s ago)[-]",
+				i,
 				activity.PullRequest.Author.DisplayName,
 				activity.PullRequest.Title,
 				formatTimeAgo(activity.PullRequest.CreatedOn),
@@ -75,15 +83,15 @@ func GenerateActivityLogs(activities []types.Activity) string {
 	// Add the logs and dividers only if there are actual entries in the section
 	if len(updateLogs) > 1 { // Check if there are any updates
 		logs = append(logs, strings.Join(updateLogs, "\n"))
-		logs = append(logs, "[gray]----------------------------------------[-]")
+		logs = append(logs, "[cyan]-------------------------------------------------[-]")
 	}
 	if len(approvalLogs) > 1 { // Check if there are any approvals
 		logs = append(logs, strings.Join(approvalLogs, "\n"))
-		logs = append(logs, "[gray]----------------------------------------[-]")
+		logs = append(logs, "[cyan]-------------------------------------------------[-]")
 	}
 	if len(prLogs) > 1 { // Check if there are any pull requests
 		logs = append(logs, strings.Join(prLogs, "\n"))
-		logs = append(logs, "[gray]----------------------------------------[-]")
+		logs = append(logs, "[cyan]-------------------------------------------------[-]")
 	}
 
 	// Join all the logs together
