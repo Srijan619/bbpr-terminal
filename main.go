@@ -46,7 +46,7 @@ func fetchBitbucketPRs() []PR {
 
 	resp, err := client.R().
 		SetResult(&BitbucketPRResponse{}).
-		Get(fmt.Sprintf("%s/repositories/%s/%s/pullrequests", BitbucketBaseURL, BitbucketWorkspace, BitbucketRepoSlug))
+		Get(fmt.Sprintf("%s/repositories/%s/%s/pullrequests?state=ALL", BitbucketBaseURL, BitbucketWorkspace, BitbucketRepoSlug))
 	if err != nil {
 		log.Fatalf("Error fetching PRs: %v", err)
 	}

@@ -26,6 +26,7 @@ func CreateApp(prs []PR) *tview.Application {
 	prList := tview.NewTable().
 		SetSelectable(true, false).
 		SetFixed(1, 0)
+
 	prDetails := tview.NewTextView().
 		SetDynamicColors(true).
 		SetText("Select a PR to view details").
@@ -41,20 +42,8 @@ func CreateApp(prs []PR) *tview.Application {
 	mainGrid.AddItem(prList, 1, 0, 1, 1, 0, 0, true)
 	mainGrid.AddItem(prDetails, 1, 1, 1, 1, 0, 0, false)
 
-	// Populate PR list
-	for i, pr := range prs {
-    prRow := fmt.Sprintf("%s by %s", pr.Title, pr.Author.DisplayName)
-    cell := tview.NewTableCell(prRow).
-      SetTextColor(tcell.ColorWhite).
-      SetSelectable(true)
-
-    // Apply styling for the state
-    stateCell := styleState(pr.State)
-
-    // Set the cells for the PR row
-    prList.SetCell(i, 0, cell)
-    prList.SetCell(i, 1, stateCell) // Add the styled state as a separate column
-  }
+  // Populate PR list
+	populatePRList(prs, prList)
 
 	// Define the function to update PR details
 	updatePRDetails := func(row int) {
@@ -90,7 +79,51 @@ func CreateApp(prs []PR) *tview.Application {
 	return app
 }
 
+// Function to populate the PR list
+func populatePRList(prs []PR, prList *tview.Table) {
+	for i, pr := range prs {
+		prRow := fmt.Sprintf("%s", pr.Title)
 
+		titleCell := tview.NewTableCell(prRow).
+			SetTextColor(tcell.ColorWhite).
+			SetSelectable(true).
+			SetAlign(tview.AlignLeft) // Title cell in the center
+
+		stateCell := styleState(pr.State) // Function to style PR state
+
+		initialsCell := tview.NewTableCell(formatInitials(pr.Author.DisplayName)).
+			SetTextColor(tcell.ColorYellow).
+			SetSelectable(true).
+			SetAlign(tview.AlignLeft) // Initials cell in the rightmost position
+
+	
+  	prList.SetCell(i, 0, initialsCell)   
+    prList.SetCell(i, 1, stateCell)      
+    prList.SetCell(i, 2, titleCell)     
+  }
+}
+
+// Helper function to format initials with a distinct color
+func formatInitials(initials string) string {
+	return fmt.Sprintf("[::b]%s[-]", getInitials(initials)) 
+}
+
+// Get the initials of the author's display name
+func getInitials(displayName string) string {
+	words := strings.Fields(displayName)
+	if len(words) > 0 {
+		initials := ""
+		for _, word := range words {
+			initials += string(word[0])
+    }
+		return strings.ToUpper(initials) 
+  }
+
+  if len(displayName) > 1 {
+		return strings.ToUpper(displayName[:2])
+	}
+	return strings.ToUpper(displayName) 
+}
 
 // Formats the PR description for display
 func formatDescription(description interface{}) string {
@@ -136,7 +169,7 @@ func styleState(state string) *tview.TableCell {
 
 	return tview.NewTableCell(state).
 		SetTextColor(stateColor).
-		SetAlign(tview.AlignCenter).
+		SetAlign(tview.AlignLeft).
 		SetSelectable(true)
 }
 
