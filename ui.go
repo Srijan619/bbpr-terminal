@@ -2,9 +2,13 @@ package main
 
 import (
 	"fmt"
+	"log"
 	"os"
 	"os/exec"
 	"strings"
+
+	"simple-git-terminal/pr"
+	"simple-git-terminal/types"
 
 	"github.com/gdamore/tcell/v2"
 	"github.com/rivo/tview"
@@ -15,7 +19,7 @@ const (
 	LOW_CONTRAST_COLOR  = tcell.ColorYellow
 )
 
-func CreateApp(prs []PR) *tview.Application {
+func CreateApp(prs []types.PR) *tview.Application {
 	app := tview.NewApplication()
 
 	// Get the current Git directory
@@ -36,6 +40,9 @@ func CreateApp(prs []PR) *tview.Application {
 		SetText("Select a PR to view details").
 		SetWrap(true)
 
+	activityDetails := tview.NewFlex().
+		SetDirection(tview.FlexRow)
+
 	// Grid layout
 	mainGrid := tview.NewGrid().
 		SetRows(1, 0).
@@ -44,27 +51,75 @@ func CreateApp(prs []PR) *tview.Application {
 
 	mainGrid.AddItem(header, 0, 0, 1, 2, 0, 0, false)
 	mainGrid.AddItem(prList, 1, 0, 1, 1, 0, 0, true)
-	mainGrid.AddItem(prDetails, 1, 1, 1, 1, 0, 0, false)
+
+	// Right-side layout: PR Details + Activities
+	rightPanel := tview.NewFlex().
+		SetDirection(tview.FlexRow).
+		AddItem(prDetails, 0, 1, false).
+		AddItem(activityDetails, 0, 1, false)
+
+	mainGrid.AddItem(rightPanel, 1, 1, 1, 1, 0, 0, false)
 
 	// Populate PR list
 	populatePRList(prs, prList)
 
-	// Handle PR selection
 	prList.SetSelectedFunc(func(row, column int) {
 		updatePRDetails(prs, prDetails, row)
+
+		if row >= 0 && row < len(prs) {
+			selectedPR := prs[row]
+
+			// Log selected PR ID for debugging
+			log.Printf("Selected PR ID: %d", selectedPR.ID)
+
+			// Fetch activities dynamically by PR ID
+			go func() {
+				// Show loading message
+				activityDetails.Clear()
+				activityDetails.AddItem(tview.NewTextView().SetText("Fetching activities..."), 0, 1, true)
+
+				// Log before fetching activities
+				log.Printf("Fetching activities for PR ID: %d", selectedPR.ID)
+
+				// Fetch activities for the selected PR
+				prActivities := fetchBitbucketActivities(selectedPR.ID)
+
+				// Log the fetched activities
+				log.Printf("Fetched activities: %+v", prActivities)
+
+				// Update the UI with the fetched activities
+				app.QueueUpdateDraw(func() {
+					activityDetails.Clear()
+					activityDetails.AddItem(pr.CreateActivitiesView(prActivities), 0, 1, true)
+
+					// Log after updating the UI
+					log.Printf("Updated UI with activities for PR ID: %d", selectedPR.ID)
+				})
+			}()
+		}
 	})
 
 	// Set initial PR details
 	if len(prs) > 0 {
 		prList.Select(0, 0)
 		updatePRDetails(prs, prDetails, 0)
+
+		// Fetch initial activities dynamically
+		initialPR := prs[0]
+		go func() {
+
+			prActivities := fetchBitbucketActivities(initialPR.ID)
+			app.QueueUpdateDraw(func() {
+				activityDetails.AddItem(pr.CreateActivitiesView(prActivities), 0, 1, true)
+			})
+		}()
 	}
 
 	app.SetRoot(mainGrid, true)
 	return app
 }
 
-func updatePRDetails(prs []PR, prDetails *tview.TextView, row int) {
+func updatePRDetails(prs []types.PR, prDetails *tview.TextView, row int) {
 	if row >= 0 && row < len(prs) {
 		selectedPR := prs[row]
 		description := formatDescription(selectedPR.Description)
@@ -90,7 +145,7 @@ func updatePRDetails(prs []PR, prDetails *tview.TextView, row int) {
 }
 
 // Function to populate the PR list
-func populatePRList(prs []PR, prList *tview.Table) {
+func populatePRList(prs []types.PR, prList *tview.Table) {
 	for i, pr := range prs {
 		titleCell := cellFormat(ellipsizeText(pr.Title, 18), tcell.ColorWhite)
 		stateCell := styleState(pr.State)
