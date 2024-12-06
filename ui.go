@@ -10,11 +10,10 @@ import (
 	"github.com/rivo/tview"
 )
 
-
 func CreateApp(prs []PR) *tview.Application {
 	app := tview.NewApplication()
 
-  // Get the current Git directory
+	// Get the current Git directory
 	gitDir := getGitRepoName()
 
 	// UI components
@@ -42,41 +41,47 @@ func CreateApp(prs []PR) *tview.Application {
 	mainGrid.AddItem(prList, 1, 0, 1, 1, 0, 0, true)
 	mainGrid.AddItem(prDetails, 1, 1, 1, 1, 0, 0, false)
 
-  // Populate PR list
+	// Populate PR list
 	populatePRList(prs, prList)
-
-	// Define the function to update PR details
-	updatePRDetails := func(row int) {
-		if row >= 0 && row < len(prs) {
-			selectedPR := prs[row]
-			description := formatDescription(selectedPR.Description)
-
-			prDetails.SetText(fmt.Sprintf(
-				"[::b]Title:[-] %s\n[::b]State:[-] %s\n[::b]Author:[-] %s\n[::b]Created On:[-] %s\n[::b]Updated On:[-] %s\n[::b]Description:[-] %s\n[::b]Link:[-] %s",
-				selectedPR.Title,
-				selectedPR.State,
-				selectedPR.Author.DisplayName,
-				selectedPR.CreatedOn,
-				selectedPR.UpdatedOn,
-				description,
-				selectedPR.Links.HTML.Href,
-			))
-		}
-	}
 
 	// Handle PR selection
 	prList.SetSelectedFunc(func(row, column int) {
-		updatePRDetails(row)
+		updatePRDetails(prs, prDetails, row)
 	})
 
 	// Set initial PR details
 	if len(prs) > 0 {
 		prList.Select(0, 0)
-		updatePRDetails(0) // Manually invoke the logic for the first PR
+		updatePRDetails(prs, prDetails, 0)
 	}
 
 	app.SetRoot(mainGrid, true)
 	return app
+}
+
+func updatePRDetails(prs []PR, prDetails *tview.TextView, row int) {
+	if row >= 0 && row < len(prs) {
+		selectedPR := prs[row]
+		description := formatDescription(selectedPR.Description)
+
+		// Build the PR details
+		prDetails.SetText(fmt.Sprintf(
+			"[::b]Title:[-] %s\n"+
+				"[::b]State:[-] %s\n"+
+				"[::b]Author:[-] %s\n"+
+				"[::b]Created On:[-] %s\n"+
+				"[::b]Updated On:[-] %s\n"+
+				"[::b]Link:[-] %s\n"+
+				"[::b]Description:[-] %s\n",
+			selectedPR.Title,
+			selectedPR.State,
+			selectedPR.Author.DisplayName,
+			selectedPR.CreatedOn,
+			selectedPR.UpdatedOn,
+			selectedPR.Links.HTML.Href,
+			description,
+		))
+	}
 }
 
 // Function to populate the PR list
@@ -96,16 +101,15 @@ func populatePRList(prs []PR, prList *tview.Table) {
 			SetSelectable(true).
 			SetAlign(tview.AlignLeft) // Initials cell in the rightmost position
 
-	
-  	prList.SetCell(i, 0, initialsCell)   
-    prList.SetCell(i, 1, stateCell)      
-    prList.SetCell(i, 2, titleCell)     
-  }
+		prList.SetCell(i, 0, initialsCell)
+		prList.SetCell(i, 1, stateCell)
+		prList.SetCell(i, 2, titleCell)
+	}
 }
 
 // Helper function to format initials with a distinct color
 func formatInitials(initials string) string {
-	return fmt.Sprintf("[::b]%s[-]", getInitials(initials)) 
+	return fmt.Sprintf("[::b]%s[-]", getInitials(initials))
 }
 
 // Get the initials of the author's display name
@@ -115,14 +119,14 @@ func getInitials(displayName string) string {
 		initials := ""
 		for _, word := range words {
 			initials += string(word[0])
-    }
-		return strings.ToUpper(initials) 
-  }
+		}
+		return strings.ToUpper(initials)
+	}
 
-  if len(displayName) > 1 {
+	if len(displayName) > 1 {
 		return strings.ToUpper(displayName[:2])
 	}
-	return strings.ToUpper(displayName) 
+	return strings.ToUpper(displayName)
 }
 
 // Formats the PR description for display
@@ -172,4 +176,3 @@ func styleState(state string) *tview.TableCell {
 		SetAlign(tview.AlignLeft).
 		SetSelectable(true)
 }
-
