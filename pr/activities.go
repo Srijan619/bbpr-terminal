@@ -2,8 +2,8 @@ package pr
 
 import (
 	"fmt"
+	"log"
 	"strings"
-
 	"time"
 
 	"github.com/rivo/tview"
@@ -36,19 +36,20 @@ func GenerateActivityLogs(activities []types.Activity) string {
 	var logs []string
 
 	// Separate logs into sections
-	updateLogs := []string{"[::b][cyan]Updates:[-]\n"}
-	approvalLogs := []string{"[::b][cyan]Approvals:[-]\n"}
-	prLogs := []string{"[::b][cyan]Pull Requests:[-]\n"}
+	updateLogs := []string{"🔄 [::b][darkslateblue]Updates:[-]\n"}
+	approvalLogs := []string{"✅ [::b][darkslateblue]Approvals:[-]\n"}
+	prLogs := []string{"🛠️ [::b][darkslateblue]Pull Requests:[-]\n"}
 
-	for i, activity := range activities {
-		i = i + 1
+	itemsCount := 0
+	for _, activity := range activities {
 		switch {
 		case !isEmptyUpdateDetail(activity.Update):
 			// Handle updates
 			for field, change := range activity.Update.Changes {
+				itemsCount++
 				log := fmt.Sprintf(
-					"[red]{%d}[-] %s edited the [%s]%s[-]: %s → %s [cyan](%s ago)[-]",
-					i,
+					"[red]{%d}[-] %s edited the [%s]%s[-]: %s → %s [cyan](%s ago)[-]\n",
+					itemsCount,
 					activity.Update.Author.DisplayName,
 					util.GetFieldBasedColor(field),
 					field,
@@ -60,24 +61,33 @@ func GenerateActivityLogs(activities []types.Activity) string {
 			}
 		case activity.Approval.User.DisplayName != "":
 			// Handle approvals
+			itemsCount++
 			log := fmt.Sprintf(
-				"[red]{%d}[-] %s [palegreen]APPROVED[-] the pull request [cyan](%s ago)[-]",
-				i,
+				"[red]{%d}[-] %s [palegreen]APPROVED[-] the pull request [cyan](%s ago)[-]\n",
+				itemsCount,
 				activity.Approval.User.DisplayName,
 				formatTimeAgo(activity.Approval.Date),
 			)
 			approvalLogs = append(approvalLogs, log)
 		case activity.PullRequest.Title != "":
 			// Handle pull requests
+			itemsCount++
 			log := fmt.Sprintf(
-				"[red]{%d}[-] %s OPENED the pull request: %s [cyan](%s ago)[-]",
-				i,
+				"[red]{%d}[-] %s OPENED the pull request: %s [cyan](%s ago)[-]\n",
+				itemsCount,
 				activity.PullRequest.Author.DisplayName,
 				activity.PullRequest.Title,
 				formatTimeAgo(activity.PullRequest.CreatedOn),
 			)
 			prLogs = append(prLogs, log)
 		}
+	}
+
+	log.Printf("Items count...%d %v", itemsCount, activities)
+
+	// Check if there are no activities
+	if itemsCount == 0 {
+		return "[::b][red] 📭 No activities----![-]"
 	}
 
 	// Add the logs and dividers only if there are actual entries in the section

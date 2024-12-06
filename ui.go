@@ -76,7 +76,7 @@ func CreateApp(prs []types.PR) *tview.Application {
 				rightPanelHeader.SetText(selectedPR.Title)
 
 				activityDetails.Clear()
-				activityDetails.AddItem(tview.NewTextView().SetText("Fetching activities..."), 0, 1, true)
+				activityDetails.AddItem(tview.NewTextView().SetText("⏳ Fetching activities..."), 0, 1, true)
 
 				prActivities := fetchBitbucketActivities(selectedPR.ID)
 
