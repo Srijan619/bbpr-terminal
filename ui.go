@@ -38,7 +38,7 @@ func CreateApp(prs []types.PR) *tview.Application {
 	prDetails := tview.NewTextView().
 		SetDynamicColors(true).
 		SetText("Select a PR to view details").
-		SetWrap(true)
+		SetDynamicColors(true)
 
 	activityDetails := tview.NewFlex().
 		SetDirection(tview.FlexRow)

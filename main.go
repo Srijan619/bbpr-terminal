@@ -6,6 +6,7 @@ import (
 	"log"
 	"os"
 	"simple-git-terminal/types"
+	"simple-git-terminal/util"
 )
 
 // Bitbucket API details
@@ -36,7 +37,13 @@ func fetchBitbucketPRs() []types.PR {
 		log.Fatalf("Error fetching PRs: %v", err)
 	}
 
-	return resp.Result().(*types.BitbucketPRResponse).Values
+	prs := resp.Result().(*types.BitbucketPRResponse).Values
+
+	for i := range prs {
+		prs[i] = util.SanitizePR(prs[i])
+	}
+
+	return prs
 }
 
 // Fetches recent activities from Bitbucket
@@ -50,15 +57,7 @@ func fetchBitbucketActivities(id int) []types.Activity {
 	if err != nil {
 		log.Fatalf("Error fetching activities: %v", err)
 	}
-
-	// Log the raw response body for debugging
-	log.Printf("Raw response: %s", resp.String())
-
-	// Log the response result before extracting the activities
 	activityResponse := resp.Result().(*types.BitbucketActivityResponse)
-	log.Printf("Parsed response: %+v", activityResponse)
-
-	// Return the activities
 	return activityResponse.Values
 }
 
@@ -79,11 +78,8 @@ func main() {
 	// Log a test message to verify
 	log.Printf("Application started")
 
-	// Fetch PRs
 	prs := fetchBitbucketPRs()
-	log.Printf("Fetched %d PRs", len(prs)) // Example logging PR count
 
-	// Create and run the UI
 	app := CreateApp(prs)
 	if err := app.Run(); err != nil {
 		log.Fatalf("Error running application: %v", err)
@@ -91,4 +87,3 @@ func main() {
 
 	log.Printf("Application ended")
 }
-

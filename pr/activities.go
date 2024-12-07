@@ -2,7 +2,6 @@ package pr
 
 import (
 	"fmt"
-	"log"
 	"strings"
 	"time"
 
@@ -82,8 +81,6 @@ func GenerateActivityLogs(activities []types.Activity) string {
 			prLogs = append(prLogs, log)
 		}
 	}
-
-	log.Printf("Items count...%d %v", itemsCount, activities)
 
 	// Check if there are no activities
 	if itemsCount == 0 {
