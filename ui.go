@@ -16,7 +16,7 @@ import (
 const (
 	HIGH_CONTRAST_COLOR      = tcell.ColorCadetBlue
 	LOW_CONTRAST_COLOR       = tcell.ColorYellow
-	VIEW_ACTIVE_BORDER_COLOR = tcell.ColorLightGreen
+	VIEW_ACTIVE_BORDER_COLOR = tcell.ColorOrange
 )
 
 func CreateApp(prs []types.PR) *tview.Application {
@@ -37,8 +37,7 @@ func CreateApp(prs []types.PR) *tview.Application {
 
 	prDetails := tview.NewTextView().
 		SetDynamicColors(true).
-		SetText("Select a PR to view details").
-		SetDynamicColors(true)
+		SetText("Select a PR to view details")
 
 	activityDetails := tview.NewFlex().
 		SetDirection(tview.FlexRow)
@@ -59,7 +58,10 @@ func CreateApp(prs []types.PR) *tview.Application {
 		SetColumns(60, 0).
 		SetBorders(true)
 
-	rightPanelHeader := tview.NewTextView().SetText("Here we will display PR title").SetTextAlign(tview.AlignCenter)
+	rightPanelHeader := tview.NewTextView().
+		SetText("Here we will display PR title").
+		SetTextAlign(tview.AlignLeft).
+		SetDynamicColors(true)
 
 	rightPanelGrid.AddItem(rightPanelHeader, 0, 0, 1, 1, 0, 0, false)
 	rightPanelGrid.AddItem(prDetails, 1, 0, 1, 1, 0, 0, false)
@@ -76,7 +78,7 @@ func CreateApp(prs []types.PR) *tview.Application {
 		if row >= 0 && row < len(prs) {
 			selectedPR := prs[row]
 			go func() {
-				rightPanelHeader.SetText(selectedPR.Title)
+				rightPanelHeader.SetText(FormatPRHeader(selectedPR))
 
 				activityDetails.Clear()
 				activityDetails.AddItem(tview.NewTextView().SetText("⏳ Fetching activities..."), 0, 1, true)
@@ -107,7 +109,7 @@ func CreateApp(prs []types.PR) *tview.Application {
 		initialPR := prs[0]
 		go func() {
 
-			rightPanelHeader.SetText(initialPR.Title)
+			rightPanelHeader.SetText(FormatPRHeader(initialPR))
 			diffData := fetchBitbucketDiffStat(initialPR.ID)
 			prActivities := fetchBitbucketActivities(initialPR.ID)
 
@@ -207,4 +209,17 @@ func getGitRepoName() string {
 	return strings.TrimSuffix(repoPath[strings.LastIndex(repoPath, "/")+1:], "\n")
 }
 
-// GetStateColor determines the color based on the PR state
+// FormatPRHeader takes the PR details and returns a formatted string
+func FormatPRHeader(pr types.PR) string {
+	// Use fmt.Sprintf to format the header and apply tview's dynamic color syntax
+	headerText := fmt.Sprintf(
+		"%s\n\n"+
+			"[yellow]%s[white] --> "+
+			"[green]%s[white]",
+		pr.Title,
+		pr.Source.Branch.Name,
+		pr.Destination.Branch.Name,
+	)
+
+	return headerText
+}

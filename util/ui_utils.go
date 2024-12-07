@@ -55,7 +55,9 @@ func UpdateFocusBorders(focusOrder []tview.Primitive, currentFocusIndex int, act
 			SetBorderColor(tcell.Color) *tview.Box
 		}); ok {
 			if i == currentFocusIndex {
-				bordered.SetBorder(true).SetBorderColor(activeBorderColor)
+				bordered.SetBorder(true).
+					SetBorderColor(activeBorderColor).
+					SetBorderPadding(1, 1, 1, 1)
 			} else {
 				bordered.SetBorder(false)
 			}
