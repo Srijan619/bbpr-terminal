@@ -2,10 +2,13 @@ package pr
 
 import (
 	"fmt"
+	"strings"
+
+	"github.com/charmbracelet/glamour"
+	"github.com/gdamore/tcell/v2"
 	"github.com/rivo/tview"
 	"simple-git-terminal/types"
 	"simple-git-terminal/util"
-	"strings"
 )
 
 func UpdatePrDetails(prs []types.PR, prDetails *tview.TextView, row int) {
@@ -16,20 +19,21 @@ func UpdatePrDetails(prs []types.PR, prDetails *tview.TextView, row int) {
 		// Get the color based on the state
 		stateColor := util.GetStateColor(selectedPR.State)
 
+		otherColor := tcell.ColorMediumAquamarine
 		// Create a formatted string with improved structure and apply the state color
 		prDetails.SetText(fmt.Sprintf(
 			"[::b]State:[-] [%s]%s[-]\n"+
-				"[::b]Author:[-] [green]%s[-]\n"+
-				"[::b]Created On:[-] [green]%s[-]\n"+
-				"[::b]Updated On:[-] [green]%s[-]\n"+
-				"[::b]Link:[-] [green]%s[-]\n"+
-				"[::b]Description:[-] [green]%s[-]\n",
+				"[::b]Author:[-] [%s]%s[-]\n"+
+				"[::b]Created On:[-] [%s]%s[-]\n"+
+				"[::b]Updated On:[-] [%s]%s[-]\n"+
+				"[::b]Link:[-] [%s]%s[-]\n"+
+				"[::b]Description:[-] \n[%s]%s[-]\n",
 			stateColor, selectedPR.State,
-			selectedPR.Author.DisplayName,
-			selectedPR.CreatedOn,
-			selectedPR.UpdatedOn,
-			selectedPR.Links.HTML.Href,
-			description,
+			otherColor, selectedPR.Author.DisplayName,
+			otherColor, selectedPR.CreatedOn,
+			otherColor, selectedPR.UpdatedOn,
+			otherColor, selectedPR.Links.HTML.Href,
+			otherColor, description,
 		))
 	}
 }
@@ -44,4 +48,3 @@ func formatDescription(description interface{}) string {
 	}
 	return "Unsupported description format."
 }
-

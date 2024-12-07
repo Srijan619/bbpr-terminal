@@ -9,7 +9,7 @@ import (
 func GetStateColor(state string) tcell.Color {
 	switch state {
 	case "OPEN":
-		return tcell.ColorPaleGreen
+		return tcell.ColorGreen
 	case "MERGED":
 		return tcell.ColorBlue
 	case "DECLINED":

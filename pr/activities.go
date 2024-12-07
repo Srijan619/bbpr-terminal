@@ -63,7 +63,7 @@ func GenerateActivityLogs(activities []types.Activity) string {
 			// Handle approvals
 			itemsCount++
 			log := fmt.Sprintf(
-				"[red]{%d}[-] %s [palegreen]APPROVED[-] the pull request [cyan](%s ago)[-]\n",
+				"[red]{%d}[-] %s [green]APPROVED[-] the pull request [cyan](%s ago)[-]\n",
 				itemsCount,
 				activity.Approval.User.DisplayName,
 				formatTimeAgo(activity.Approval.Date),
