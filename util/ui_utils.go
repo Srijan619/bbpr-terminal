@@ -45,3 +45,20 @@ func EllipsizeText(text string, max int) string {
 	}
 	return text
 }
+
+// Helper method to update borders of views
+func UpdateFocusBorders(focusOrder []tview.Primitive, currentFocusIndex int, activeBorderColor tcell.Color) {
+	for i, view := range focusOrder {
+		// Check if the view has border-related methods
+		if bordered, ok := view.(interface {
+			SetBorder(bool) *tview.Box
+			SetBorderColor(tcell.Color) *tview.Box
+		}); ok {
+			if i == currentFocusIndex {
+				bordered.SetBorder(true).SetBorderColor(activeBorderColor)
+			} else {
+				bordered.SetBorder(false)
+			}
+		}
+	}
+}

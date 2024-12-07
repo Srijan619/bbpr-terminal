@@ -2,22 +2,21 @@ package main
 
 import (
 	"fmt"
-	"log"
 	"os"
 	"os/exec"
 	"strings"
 
+	"github.com/gdamore/tcell/v2"
+	"github.com/rivo/tview"
 	"simple-git-terminal/pr"
 	"simple-git-terminal/types"
 	"simple-git-terminal/util"
-
-	"github.com/gdamore/tcell/v2"
-	"github.com/rivo/tview"
 )
 
 const (
-	HIGH_CONTRAST_COLOR = tcell.ColorCadetBlue
-	LOW_CONTRAST_COLOR  = tcell.ColorYellow
+	HIGH_CONTRAST_COLOR      = tcell.ColorCadetBlue
+	LOW_CONTRAST_COLOR       = tcell.ColorYellow
+	VIEW_ACTIVE_BORDER_COLOR = tcell.ColorLightGreen
 )
 
 func CreateApp(prs []types.PR) *tview.Application {
@@ -44,8 +43,9 @@ func CreateApp(prs []types.PR) *tview.Application {
 	activityDetails := tview.NewFlex().
 		SetDirection(tview.FlexRow)
 
-	diffData := "⏳ Fetching diff stats"
-	diffView := pr.GenerateDiffView(diffData)
+	diffDetails := tview.NewFlex().
+		SetDirection(tview.FlexRow)
+
 	// Grid layout
 	mainGrid := tview.NewGrid().
 		SetRows(1, 0).
@@ -64,7 +64,7 @@ func CreateApp(prs []types.PR) *tview.Application {
 	rightPanelGrid.AddItem(rightPanelHeader, 0, 0, 1, 1, 0, 0, false)
 	rightPanelGrid.AddItem(prDetails, 1, 0, 1, 1, 0, 0, false)
 	rightPanelGrid.AddItem(activityDetails, 2, 0, 1, 1, 0, 0, false)
-	rightPanelGrid.AddItem(diffView, 0, 1, 2, 1, 1, 0, false)
+	rightPanelGrid.AddItem(diffDetails, 0, 1, 2, 1, 1, 0, false)
 
 	mainGrid.AddItem(rightPanelGrid, 1, 1, 1, 1, 0, 0, false)
 	// Populate PR list
@@ -81,23 +81,18 @@ func CreateApp(prs []types.PR) *tview.Application {
 				activityDetails.Clear()
 				activityDetails.AddItem(tview.NewTextView().SetText("⏳ Fetching activities..."), 0, 1, true)
 
-				diffView.Clear()
-				diffView.SetText("⏳ Fetching diff stats")
+				diffDetails.Clear()
+				diffDetails.AddItem(tview.NewTextView().SetText("⏳ Fetching diff stats..."), 0, 1, true)
+
 				diffData := fetchBitbucketDiffStat(selectedPR.ID)
-				log.Printf("Diff stat....%s", diffData)
 				prActivities := fetchBitbucketActivities(selectedPR.ID)
-
-				// Create and update the diff view
-				newDiffView := pr.GenerateDiffView(diffData)
-				diffView = newDiffView
-
-				// Refresh the diff view display
-				rightPanelGrid.AddItem(diffView, 0, 1, 2, 1, 1, 0, false)
 
 				app.QueueUpdateDraw(func() {
 					activityDetails.Clear()
 					activityDetails.AddItem(pr.CreateActivitiesView(prActivities), 0, 1, true)
 
+					diffDetails.Clear()
+					diffDetails.AddItem(pr.GenerateDiffView(diffData), 0, 1, true)
 				})
 			}()
 		}
@@ -116,21 +111,32 @@ func CreateApp(prs []types.PR) *tview.Application {
 			diffData := fetchBitbucketDiffStat(initialPR.ID)
 			prActivities := fetchBitbucketActivities(initialPR.ID)
 
-			newDiffView := pr.GenerateDiffView(diffData)
-			diffView.Clear()
-			diffView.SetText("⏳ Fetching diff stats")
-			diffView = newDiffView
-
-			// Refresh the diff view display
-			rightPanelGrid.AddItem(diffView, 0, 1, 2, 1, 1, 0, false)
 			app.QueueUpdateDraw(func() {
 				activityDetails.AddItem(pr.CreateActivitiesView(prActivities), 0, 1, true)
-
+				diffDetails.AddItem(pr.GenerateDiffView(diffData), 0, 1, true)
 			})
 		}()
 	}
 
 	app.SetRoot(mainGrid, true)
+	// Capture the Tab key to switch focus between the views
+	// Maintain a list of views in the desired focus order
+	focusOrder := []tview.Primitive{prList, prDetails, activityDetails, diffDetails}
+	currentFocusIndex := 0
+	// Set initial borders
+	util.UpdateFocusBorders(focusOrder, currentFocusIndex, VIEW_ACTIVE_BORDER_COLOR)
+
+	app.SetInputCapture(func(event *tcell.EventKey) *tcell.EventKey {
+		switch event.Key() {
+		case tcell.KeyTAB:
+			currentFocusIndex = (currentFocusIndex + 1) % len(focusOrder)
+			app.SetFocus(focusOrder[currentFocusIndex])
+			util.UpdateFocusBorders(focusOrder, currentFocusIndex, VIEW_ACTIVE_BORDER_COLOR)
+		case tcell.KeyCtrlC:
+			app.Stop()
+		}
+		return event
+	})
 	return app
 }
 

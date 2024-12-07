@@ -58,7 +58,6 @@ func formatDescription(description interface{}) string {
 
 // Renders the given Markdown string using the glamour library.
 func renderMarkdown(md string) string {
-	log.Printf("Input md %s", md)
 	rendered, err := glamour.Render(md, "dark")
 	if err != nil {
 		log.Fatalf("Error rendering markdown: %v", err)
@@ -75,6 +74,5 @@ func translateANSI(input string) string {
 	if err != nil {
 		log.Fatalf("Error translating ANSI: %v", err)
 	}
-	log.Printf("Ansii trasnlate.. %s", buf.String())
 	return buf.String()
 }
