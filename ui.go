@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	"log"
 	"os"
 	"os/exec"
 	"strings"
@@ -43,6 +44,8 @@ func CreateApp(prs []types.PR) *tview.Application {
 	activityDetails := tview.NewFlex().
 		SetDirection(tview.FlexRow)
 
+	diffData := "⏳ Fetching diff stats"
+	diffView := pr.GenerateDiffView(diffData)
 	// Grid layout
 	mainGrid := tview.NewGrid().
 		SetRows(1, 0).
@@ -51,7 +54,6 @@ func CreateApp(prs []types.PR) *tview.Application {
 
 	mainGrid.AddItem(header, 0, 0, 1, 2, 0, 0, false)
 	mainGrid.AddItem(prList, 1, 0, 1, 1, 0, 0, true)
-
 	rightPanelGrid := tview.NewGrid().
 		SetRows(3, 0).
 		SetColumns(60, 0).
@@ -62,6 +64,7 @@ func CreateApp(prs []types.PR) *tview.Application {
 	rightPanelGrid.AddItem(rightPanelHeader, 0, 0, 1, 1, 0, 0, false)
 	rightPanelGrid.AddItem(prDetails, 1, 0, 1, 1, 0, 0, false)
 	rightPanelGrid.AddItem(activityDetails, 2, 0, 1, 1, 0, 0, false)
+	rightPanelGrid.AddItem(diffView, 0, 1, 2, 1, 1, 0, false)
 
 	mainGrid.AddItem(rightPanelGrid, 1, 1, 1, 1, 0, 0, false)
 	// Populate PR list
@@ -78,11 +81,23 @@ func CreateApp(prs []types.PR) *tview.Application {
 				activityDetails.Clear()
 				activityDetails.AddItem(tview.NewTextView().SetText("⏳ Fetching activities..."), 0, 1, true)
 
+				diffView.Clear()
+				diffView.SetText("⏳ Fetching diff stats")
+				diffData := fetchBitbucketDiffStat(selectedPR.ID)
+				log.Printf("Diff stat....%s", diffData)
 				prActivities := fetchBitbucketActivities(selectedPR.ID)
+
+				// Create and update the diff view
+				newDiffView := pr.GenerateDiffView(diffData)
+				diffView = newDiffView
+
+				// Refresh the diff view display
+				rightPanelGrid.AddItem(diffView, 0, 1, 2, 1, 1, 0, false)
 
 				app.QueueUpdateDraw(func() {
 					activityDetails.Clear()
 					activityDetails.AddItem(pr.CreateActivitiesView(prActivities), 0, 1, true)
+
 				})
 			}()
 		}
@@ -98,9 +113,19 @@ func CreateApp(prs []types.PR) *tview.Application {
 		go func() {
 
 			rightPanelHeader.SetText(initialPR.Title)
+			diffData := fetchBitbucketDiffStat(initialPR.ID)
 			prActivities := fetchBitbucketActivities(initialPR.ID)
+
+			newDiffView := pr.GenerateDiffView(diffData)
+			diffView.Clear()
+			diffView.SetText("⏳ Fetching diff stats")
+			diffView = newDiffView
+
+			// Refresh the diff view display
+			rightPanelGrid.AddItem(diffView, 0, 1, 2, 1, 1, 0, false)
 			app.QueueUpdateDraw(func() {
 				activityDetails.AddItem(pr.CreateActivitiesView(prActivities), 0, 1, true)
+
 			})
 		}()
 	}

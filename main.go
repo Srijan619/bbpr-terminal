@@ -46,6 +46,26 @@ func fetchBitbucketPRs() []types.PR {
 	return prs
 }
 
+func fetchBitbucketDiffStat(id int) string {
+	client := resty.New()
+	client.SetAuthToken(getAuthToken())
+
+	// Fetching the diff for the given pull request ID
+	resp, err := client.R().
+		Get(fmt.Sprintf("%s/repositories/%s/%s/pullrequests/%d/diff", BitbucketBaseURL, BitbucketWorkspace, BitbucketRepoSlug, id))
+	if err != nil {
+		log.Fatalf("Error fetching diffstat: %v", err)
+	}
+
+	// Check if the response is successful (e.g., status code 200)
+	if resp.StatusCode() != 200 {
+		log.Fatalf("Error: Unexpected status code %d", resp.StatusCode())
+	}
+
+	// Return the raw diff content (response body is the diff)
+	return string(resp.Body())
+}
+
 // Fetches recent activities from Bitbucket
 func fetchBitbucketActivities(id int) []types.Activity {
 	client := resty.New()
