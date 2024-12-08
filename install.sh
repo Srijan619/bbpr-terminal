@@ -17,7 +17,7 @@ fi
 
 # Download the binary
 echo "Downloading $FILE..."
-curl -L -o bbpr "https://github.com/srijan619E/bbpr-terminal/releases/latest/download/$FILE"
+curl -L -o bbpr "https://github.com/srijan619/bbpr-terminal/releases/latest/download/$FILE"
 
 # Make executable and move to a directory in PATH
 chmod +x bbpr
