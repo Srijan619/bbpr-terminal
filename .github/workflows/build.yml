@@ -36,40 +36,20 @@ jobs:
       - name: Install dependencies
         run: go mod tidy
 
-      # Build the Go binary for different platforms
+      # Build for multiple platforms
       - name: Build for multiple platforms
         run: |
           GOOS=linux GOARCH=amd64 go build -o bbpr-linux-amd64 .
           GOOS=darwin GOARCH=amd64 go build -o bbpr-darwin-amd64 .
           GOOS=windows GOARCH=amd64 go build -o bbpr-windows-amd64.exe .
 
-      # Create a release
-      - name: Create Release
-        uses: gh-actions/create-release@v1
+      # Create a release and upload assets
+      - name: Create GitHub Release and Upload Assets
+        uses: softprops/action-gh-release@v1
         with:
-          tag_name: ${{ github.sha }} # Tag the release with commit SHA
-          release_name: "Release ${{ github.sha }}"
-          body: "This release contains compiled binaries for Linux, macOS, and Windows."
-
-      # Upload release assets
-      - name: Upload release assets
-        uses: gh-actions/upload-release-asset@v1
-        with:
-          upload_url: ${{ steps.create-release.outputs.upload_url }}
-          asset_path: ./bbpr-linux-amd64
-          asset_name: bbpr-linux-amd64
-          asset_content_type: application/octet-stream
-      - name: Upload macOS release asset
-        uses: gh-actions/upload-release-asset@v1
-        with:
-          upload_url: ${{ steps.create-release.outputs.upload_url }}
-          asset_path: ./bbpr-darwin-amd64
-          asset_name: bbpr-darwin-amd64
-          asset_content_type: application/octet-stream
-      - name: Upload Windows release asset
-        uses: gh-actions/upload-release-asset@v1
-        with:
-          upload_url: ${{ steps.create-release.outputs.upload_url }}
-          asset_path: ./bbpr-windows-amd64.exe
-          asset_name: bbpr-windows-amd64.exe
-          asset_content_type: application/octet-stream
+          files: |
+            bbpr-linux-amd64
+            bbpr-darwin-amd64
+            bbpr-windows-amd64.exe
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
