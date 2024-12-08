@@ -70,8 +70,8 @@ func CreateApp(prs []types.PR) *tview.Application {
 	rightPanelGrid.AddItem(rightPanelHeader, 0, 0, 1, 1, 0, 0, false)
 	rightPanelGrid.AddItem(prDetails, 1, 0, 1, 1, 0, 0, false)
 	rightPanelGrid.AddItem(activityDetails, 2, 0, 1, 1, 0, 0, false)
-	rightPanelGrid.AddItem(diffDetails, 0, 1, 2, 1, 1, 0, false)
-	rightPanelGrid.AddItem(diffStatDetails, 0, 1, 4, 1, 1, 0, false)
+	rightPanelGrid.AddItem(diffStatDetails, 1, 1, 1, 2, 0, 0, false)
+	rightPanelGrid.AddItem(diffDetails, 2, 1, 1, 2, 0, 0, false)
 
 	mainGrid.AddItem(rightPanelGrid, 1, 1, 1, 1, 0, 0, false)
 	// Populate PR list
