@@ -23,4 +23,4 @@ curl -L -o bbpr "https://github.com/srijan619/bbpr-terminal/releases/latest/down
 chmod +x bbpr
 sudo mv bbpr /usr/local/bin/
 
-echo "Installation complete! Run 'bbpr' to start."/local/bin/bbpr
+echo "Installation complete! Run 'bbpr' to start."
