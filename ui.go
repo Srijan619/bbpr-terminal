@@ -2,7 +2,6 @@ package main
 
 import (
 	"fmt"
-
 	"strings"
 
 	"github.com/gdamore/tcell/v2"
@@ -151,6 +150,19 @@ func CreateApp(prs []types.PR) *tview.Application {
 			util.UpdateFocusBorders(focusOrder, currentFocusIndex, VIEW_ACTIVE_BORDER_COLOR)
 		case tcell.KeyCtrlC:
 			app.Stop()
+		case tcell.KeyRune:
+			if event.Rune() == 'd' {
+				app.SetRoot(diffStatDetails, true)
+			}
+			if event.Rune() == 'D' {
+				app.SetRoot(diffDetails, true)
+			}
+			if event.Rune() == 'a' {
+				app.SetRoot(activityDetails, true)
+			}
+			if event.Rune() == 'q' {
+				app.SetRoot(mainGrid, true)
+			}
 		}
 		return event
 	})
