@@ -12,34 +12,63 @@ import (
 
 // Bitbucket API details
 const (
-	BitbucketBaseURL   = "https://api.bitbucket.org/2.0"
-	BitbucketUsername  = "Srijan"
-	BitbucketRepoSlug  = "test_repo"
-	BitbucketWorkspace = "chapssrijan619"
+	BitbucketBaseURL                = "https://api.bitbucket.org/2.0"
+	BitbucketUsername               = "Srijan"
+	BitbucketRepoSlug               = "test_repo"
+	BitbucketWorkspace              = "chapssrijan619"
+	BitbucketEnvTokenName           = "BITBUCKET_AUTH_TOKEN"
+	BitbucketEnvAppPasswordName     = "BITBUCKET_APP_PASSWORD"
+	BitbucketEnvAppPasswordUsername = "BITBUCKET_APP_USERNAME"
 )
 
-func getAuthToken() string {
-	token := os.Getenv("BITBUCKET_AUTH_TOKEN")
+func getAuthToken(tokenString string) string {
+	token := os.Getenv(tokenString)
 	if token == "" {
-		log.Fatal("Environment variable BITBUCKET_AUTH_TOKEN is not set")
+		log.Printf("Environment variable %s is not set", tokenString)
 	}
 	return token
 }
 
-// Fetches PRs from Bitbucket
-func fetchBitbucketPRs() []types.PR {
+// Helper function to create a Resty client with authentication
+func createClient() *resty.Client {
 	client := resty.New()
-	client.SetAuthToken(getAuthToken())
 
+	authToken := getAuthToken(BitbucketEnvTokenName)
+	if authToken != "" {
+		client.SetAuthToken(authToken)
+	} else {
+		username := os.Getenv(BitbucketEnvAppPasswordUsername)
+		appPassword := os.Getenv(BitbucketEnvAppPasswordName)
+
+		if username != "" && appPassword != "" {
+			client.SetBasicAuth(username, appPassword)
+		} else {
+			log.Fatalf("Error: Missing authentication credentials. Please check your environment variables.")
+		}
+	}
+
+	return client
+}
+
+func fetchBitbucketPRs() []types.PR {
+	// Create the client (authentication handled inside)
+	client := createClient()
+
+	url := fmt.Sprintf("%s/repositories/%s/%s/pullrequests?state=ALL", BitbucketBaseURL, BitbucketWorkspace, BitbucketRepoSlug)
 	resp, err := client.R().
 		SetResult(&types.BitbucketPRResponse{}).
-		Get(fmt.Sprintf("%s/repositories/%s/%s/pullrequests?state=ALL", BitbucketBaseURL, BitbucketWorkspace, BitbucketRepoSlug))
+		Get(url)
+
 	if err != nil {
 		log.Fatalf("Error fetching PRs: %v", err)
 	}
-
+	// Check if the response is successful (status code 200)
+	if resp.StatusCode() != 200 {
+		log.Fatalf("Unexpected status code: %d. Response body: %s", resp.StatusCode(), string(resp.Body()))
+	}
 	prs := resp.Result().(*types.BitbucketPRResponse).Values
 
+	// Process and sanitize the PRs
 	for i := range prs {
 		prs[i] = util.SanitizePR(prs[i])
 	}
@@ -48,8 +77,7 @@ func fetchBitbucketPRs() []types.PR {
 }
 
 func fetchBitbucketDiffstat(id int) []types.DiffstatEntry {
-	client := resty.New()
-	client.SetAuthToken(getAuthToken())
+	client := createClient()
 
 	// Fetching the diffstat for the given pull request ID
 	resp, err := client.R().
@@ -68,8 +96,7 @@ func fetchBitbucketDiffstat(id int) []types.DiffstatEntry {
 }
 
 func fetchBitbucketDiff(id int) string {
-	client := resty.New()
-	client.SetAuthToken(getAuthToken())
+	client := createClient()
 
 	// Fetching the diff for the given pull request ID
 	resp, err := client.R().
@@ -89,8 +116,7 @@ func fetchBitbucketDiff(id int) string {
 
 // Fetches recent activities from Bitbucket
 func fetchBitbucketActivities(id int) []types.Activity {
-	client := resty.New()
-	client.SetAuthToken(getAuthToken())
+	client := createClient()
 
 	resp, err := client.R().
 		SetResult(&types.BitbucketActivityResponse{}).
