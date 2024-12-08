@@ -18,55 +18,6 @@ const (
 	ICON_FILE      = "\uf15b "
 )
 
-var STATIC_DATA = []types.DiffstatEntry{
-	{
-		Type:         "diffstat",
-		LinesAdded:   1,
-		LinesRemoved: 0,
-		Status:       "added",
-		Old:          nil,
-		New: &types.DiffFile{
-			Path:        "newDir/simple.js",
-			Type:        "commit_file",
-			EscapedPath: "newDir/simple.js",
-			Links: struct {
-				Self struct {
-					Href string `json:"href"`
-				} `json:"self"`
-			}{
-				Self: struct {
-					Href string `json:"href"`
-				}{
-					Href: "https://api.bitbucket.org/2.0/repositories/chapssrijan619/test_repo/src/51e9e27667998ef8dd96d8197783bb838f734ec5/newDir/simple.js",
-				},
-			},
-		},
-	},
-	{
-		Type:         "diffstat",
-		LinesAdded:   0,
-		LinesRemoved: 1,
-		Status:       "removed",
-		Old: &types.DiffFile{
-			Path:        "test.txt",
-			Type:        "commit_file",
-			EscapedPath: "test.txt",
-			Links: struct {
-				Self struct {
-					Href string `json:"href"`
-				} `json:"self"`
-			}{
-				Self: struct {
-					Href string `json:"href"`
-				}{
-					Href: "https://api.bitbucket.org/2.0/repositories/chapssrijan619/test_repo/src/02f3c13c7f931ef03df9b86676ed29095a8b2ed5/test.txt",
-				},
-			},
-		},
-		New: nil,
-	},
-}
-
 func GenerateDiffStatTree(data []types.DiffstatEntry) *tview.TreeView {
 	// Create the root node for the tree
 	root := tview.NewTreeNode("Root").
@@ -99,11 +50,22 @@ func GenerateDiffStatTree(data []types.DiffstatEntry) *tview.TreeView {
 		for i, part := range parts {
 			// Check if this is the last part (file)
 			if i == len(parts)-1 {
-				// This is the file
+				// This is the file, so add the file node
 				currentNode = add(currentNode, ICON_FILE+fileNameWithDiffStatText, false) // Add file node
 			} else {
-				// This is a directory
-				currentNode = add(currentNode, ICON_DIRECTORY+part, true) // Add directory node
+				// This is a directory, check if directory already exists
+				dirExists := false
+				for _, child := range currentNode.GetChildren() {
+					if child.GetText() == ICON_DIRECTORY+part {
+						dirExists = true
+						currentNode = child
+						break
+					}
+				}
+				// If directory does not exist, create it
+				if !dirExists {
+					currentNode = add(currentNode, ICON_DIRECTORY+part, true) // Add directory node
+				}
 			}
 		}
 	}

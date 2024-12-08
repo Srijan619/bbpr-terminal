@@ -134,6 +134,10 @@ func main() {
 	workspace, repoSlug, _ = util.GetRepoAndWorkspace()
 
 	log.Printf("Workspace repoSlug %s - %s", workspace, repoSlug)
+	if (workspace == "") || (repoSlug == "") {
+		log.Fatalf("Not a bitbucket Workspace")
+	}
+
 	// Open or create the log file
 	file, err := os.OpenFile("debug.log", os.O_CREATE|os.O_WRONLY|os.O_APPEND, 0666)
 	if err != nil {
