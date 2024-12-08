@@ -138,7 +138,7 @@ func CreateApp(prs []types.PR) *tview.Application {
 	app.SetRoot(mainGrid, true)
 	// Capture the Tab key to switch focus between the views
 	// Maintain a list of views in the desired focus order
-	focusOrder := []tview.Primitive{prList, prDetails, activityDetails, diffDetails, diffStatDetails}
+	focusOrder := []tview.Primitive{prList, prDetails, activityDetails, diffStatDetails, diffDetails}
 	currentFocusIndex := 0
 	// Set initial borders
 	util.UpdateFocusBorders(focusOrder, currentFocusIndex, VIEW_ACTIVE_BORDER_COLOR)
