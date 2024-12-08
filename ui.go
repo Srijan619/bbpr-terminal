@@ -2,8 +2,7 @@ package main
 
 import (
 	"fmt"
-	"os"
-	"os/exec"
+
 	"strings"
 
 	"github.com/gdamore/tcell/v2"
@@ -24,13 +23,13 @@ func CreateApp(prs []types.PR) *tview.Application {
 	app := tview.NewApplication()
 
 	// Get the current Git directory
-	gitDir := getGitRepoName()
+	workspace, repoSlug, _ := util.GetRepoAndWorkspace()
 
 	// UI components
 	header := tview.NewTextView().
 		SetTextAlign(tview.AlignCenter).
 		SetDynamicColors(true).
-		SetText(fmt.Sprintf("[::b]Bitbucket PR Viewer - %s", gitDir))
+		SetText(fmt.Sprintf("[::b]Bitbucket PR Viewer - %s - %s", workspace, repoSlug))
 
 	prList := tview.NewTable().
 		SetSelectable(true, false).
@@ -207,22 +206,6 @@ func getInitials(displayName string) string {
 		return strings.ToUpper(displayName[:2])
 	}
 	return strings.ToUpper(displayName)
-}
-
-// Get the name of the current Git repository
-func getGitRepoName() string {
-	// Run the 'git rev-parse --show-toplevel' command to get the root directory of the Git repo
-	cmd := exec.Command("git", "rev-parse", "--show-toplevel")
-	output, err := cmd.Output()
-	if err != nil {
-		// If there's an error, fallback to the current working directory name
-		cwd, _ := os.Getwd()
-		return fmt.Sprintf("Unknown Repository (%s)", cwd)
-	}
-
-	// Extract the repository name from the path
-	repoPath := strings.TrimSpace(string(output))
-	return strings.TrimSuffix(repoPath[strings.LastIndex(repoPath, "/")+1:], "\n")
 }
 
 // FormatPRHeader takes the PR details and returns a formatted string

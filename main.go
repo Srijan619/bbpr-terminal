@@ -10,12 +10,14 @@ import (
 	"simple-git-terminal/util"
 )
 
+var (
+	workspace string
+	repoSlug  string
+)
+
 // Bitbucket API details
 const (
 	BitbucketBaseURL                = "https://api.bitbucket.org/2.0"
-	BitbucketUsername               = "Srijan"
-	BitbucketRepoSlug               = "test_repo"
-	BitbucketWorkspace              = "chapssrijan619"
 	BitbucketEnvTokenName           = "BITBUCKET_AUTH_TOKEN"
 	BitbucketEnvAppPasswordName     = "BITBUCKET_APP_PASSWORD"
 	BitbucketEnvAppPasswordUsername = "BITBUCKET_APP_USERNAME"
@@ -54,7 +56,7 @@ func fetchBitbucketPRs() []types.PR {
 	// Create the client (authentication handled inside)
 	client := createClient()
 
-	url := fmt.Sprintf("%s/repositories/%s/%s/pullrequests?state=ALL", BitbucketBaseURL, BitbucketWorkspace, BitbucketRepoSlug)
+	url := fmt.Sprintf("%s/repositories/%s/%s/pullrequests?state=ALL", BitbucketBaseURL, workspace, repoSlug)
 	resp, err := client.R().
 		SetResult(&types.BitbucketPRResponse{}).
 		Get(url)
@@ -82,7 +84,7 @@ func fetchBitbucketDiffstat(id int) []types.DiffstatEntry {
 	// Fetching the diffstat for the given pull request ID
 	resp, err := client.R().
 		SetResult(&types.DiffstatResponse{}).
-		Get(fmt.Sprintf("%s/repositories/%s/%s/pullrequests/%d/diffstat", BitbucketBaseURL, BitbucketWorkspace, BitbucketRepoSlug, id))
+		Get(fmt.Sprintf("%s/repositories/%s/%s/pullrequests/%d/diffstat", BitbucketBaseURL, workspace, repoSlug, id))
 	if err != nil {
 		log.Fatalf("Error fetching diffstat: %v", err)
 	}
@@ -100,7 +102,7 @@ func fetchBitbucketDiff(id int) string {
 
 	// Fetching the diff for the given pull request ID
 	resp, err := client.R().
-		Get(fmt.Sprintf("%s/repositories/%s/%s/pullrequests/%d/diff", BitbucketBaseURL, BitbucketWorkspace, BitbucketRepoSlug, id))
+		Get(fmt.Sprintf("%s/repositories/%s/%s/pullrequests/%d/diff", BitbucketBaseURL, workspace, repoSlug, id))
 	if err != nil {
 		log.Fatalf("Error fetching diffstat: %v", err)
 	}
@@ -120,7 +122,7 @@ func fetchBitbucketActivities(id int) []types.Activity {
 
 	resp, err := client.R().
 		SetResult(&types.BitbucketActivityResponse{}).
-		Get(fmt.Sprintf("%s/repositories/%s/%s/pullrequests/%d/activity", BitbucketBaseURL, BitbucketWorkspace, BitbucketRepoSlug, id))
+		Get(fmt.Sprintf("%s/repositories/%s/%s/pullrequests/%d/activity", BitbucketBaseURL, workspace, repoSlug, id))
 	if err != nil {
 		log.Fatalf("Error fetching activities: %v", err)
 	}
@@ -129,6 +131,9 @@ func fetchBitbucketActivities(id int) []types.Activity {
 }
 
 func main() {
+	workspace, repoSlug, _ = util.GetRepoAndWorkspace()
+
+	log.Printf("Workspace repoSlug %s - %s", workspace, repoSlug)
 	// Open or create the log file
 	file, err := os.OpenFile("debug.log", os.O_CREATE|os.O_WRONLY|os.O_APPEND, 0666)
 	if err != nil {
