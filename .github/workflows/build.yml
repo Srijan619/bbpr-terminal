@@ -2,11 +2,8 @@ name: Go Build and Release
 
 on:
   push:
-    branches:
-      - main # Triggers on push to the main branch
-  pull_request:
-    branches:
-      - main # Triggers on pull request to the main branch
+    tags:
+      - "v*"
 
 jobs:
   build:
