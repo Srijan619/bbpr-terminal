@@ -11,6 +11,13 @@ import (
 	"simple-git-terminal/util"
 )
 
+const (
+	ICON_UPDATES      = "\ue206 "
+	ICON_APPROVAL     = "\u2713 "
+	ICON_PULL_REQUEST = "\ue6a6 "
+	ICON_EMPTY        = "\uf111 "
+)
+
 // CreateActivitiesView generates the UI for displaying PR activities in a TextView.
 func CreateActivitiesView(activities []types.Activity) *tview.Flex {
 	// Create a TextView for displaying activity details
@@ -35,9 +42,9 @@ func GenerateActivityLogs(activities []types.Activity) string {
 	var logs []string
 
 	// Separate logs into sections
-	updateLogs := []string{"🔄 [::b][darkslateblue]Updates:[-]\n"}
-	approvalLogs := []string{"✅ [::b][darkslateblue]Approvals:[-]\n"}
-	prLogs := []string{"🛠️ [::b][darkslateblue]Pull Requests:[-]\n"}
+	updateLogs := []string{ICON_UPDATES + "[::b][darkslateblue]Updates:[-]\n"}
+	approvalLogs := []string{ICON_APPROVAL + "[::b][darkslateblue]Approvals:[-]\n"}
+	prLogs := []string{ICON_PULL_REQUEST + "[::b][darkslateblue]Pull Requests:[-]\n"}
 
 	itemsCount := 0
 	for _, activity := range activities {
@@ -84,7 +91,7 @@ func GenerateActivityLogs(activities []types.Activity) string {
 
 	// Check if there are no activities
 	if itemsCount == 0 {
-		return "[::b][red] 📭 No activities----![-]"
+		return ICON_EMPTY + "[::b][red]No activities----![-]"
 	}
 
 	// Add the logs and dividers only if there are actual entries in the section

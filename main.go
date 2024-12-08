@@ -2,9 +2,10 @@ package main
 
 import (
 	"fmt"
-	"github.com/go-resty/resty/v2"
 	"log"
 	"os"
+
+	"github.com/go-resty/resty/v2"
 	"simple-git-terminal/types"
 	"simple-git-terminal/util"
 )
@@ -46,7 +47,27 @@ func fetchBitbucketPRs() []types.PR {
 	return prs
 }
 
-func fetchBitbucketDiffStat(id int) string {
+func fetchBitbucketDiffstat(id int) []types.DiffstatEntry {
+	client := resty.New()
+	client.SetAuthToken(getAuthToken())
+
+	// Fetching the diffstat for the given pull request ID
+	resp, err := client.R().
+		SetResult(&types.DiffstatResponse{}).
+		Get(fmt.Sprintf("%s/repositories/%s/%s/pullrequests/%d/diffstat", BitbucketBaseURL, BitbucketWorkspace, BitbucketRepoSlug, id))
+	if err != nil {
+		log.Fatalf("Error fetching diffstat: %v", err)
+	}
+
+	if resp.StatusCode() != 200 {
+		log.Fatalf("Error: Unexpected status code %d", resp.StatusCode())
+	}
+
+	response := resp.Result().(*types.DiffstatResponse)
+	return response.Values
+}
+
+func fetchBitbucketDiff(id int) string {
 	client := resty.New()
 	client.SetAuthToken(getAuthToken())
 
@@ -101,6 +122,7 @@ func main() {
 	prs := fetchBitbucketPRs()
 
 	app := CreateApp(prs)
+	//app := tview.NewApplication().SetRoot(pr.GenerateDiffStatTree(pr.STATIC_DATA), true)
 	if err := app.Run(); err != nil {
 		log.Fatalf("Error running application: %v", err)
 	}

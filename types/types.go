@@ -122,3 +122,30 @@ type BitbucketPRResponse struct {
 type BitbucketActivityResponse struct {
 	Values []Activity `json:"values"`
 }
+
+type DiffstatResponse struct {
+	Values  []DiffstatEntry `json:"values"`
+	PageLen int             `json:"pagelen"`
+	Size    int             `json:"size"`
+	Page    int             `json:"page"`
+}
+
+type DiffstatEntry struct {
+	Type         string    `json:"type"` // Typically "diffstat"
+	LinesAdded   int       `json:"lines_added"`
+	LinesRemoved int       `json:"lines_removed"`
+	Status       string    `json:"status"` // e.g., "added", "removed", "modified"
+	Old          *DiffFile `json:"old,omitempty"`
+	New          *DiffFile `json:"new,omitempty"`
+}
+
+type DiffFile struct {
+	Path        string `json:"path"`
+	Type        string `json:"type"` // e.g., "commit_file"
+	EscapedPath string `json:"escaped_path"`
+	Links       struct {
+		Self struct {
+			Href string `json:"href"`
+		} `json:"self"`
+	} `json:"links"`
+}

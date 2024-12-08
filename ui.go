@@ -17,6 +17,7 @@ const (
 	HIGH_CONTRAST_COLOR      = tcell.ColorCadetBlue
 	LOW_CONTRAST_COLOR       = tcell.ColorYellow
 	VIEW_ACTIVE_BORDER_COLOR = tcell.ColorOrange
+	ICON_LOADING             = "\uea75 "
 )
 
 func CreateApp(prs []types.PR) *tview.Application {
@@ -45,6 +46,9 @@ func CreateApp(prs []types.PR) *tview.Application {
 	diffDetails := tview.NewFlex().
 		SetDirection(tview.FlexRow)
 
+	diffStatDetails := tview.NewFlex().
+		SetDirection(tview.FlexRow)
+
 	// Grid layout
 	mainGrid := tview.NewGrid().
 		SetRows(1, 0).
@@ -67,6 +71,7 @@ func CreateApp(prs []types.PR) *tview.Application {
 	rightPanelGrid.AddItem(prDetails, 1, 0, 1, 1, 0, 0, false)
 	rightPanelGrid.AddItem(activityDetails, 2, 0, 1, 1, 0, 0, false)
 	rightPanelGrid.AddItem(diffDetails, 0, 1, 2, 1, 1, 0, false)
+	rightPanelGrid.AddItem(diffStatDetails, 0, 1, 4, 1, 1, 0, false)
 
 	mainGrid.AddItem(rightPanelGrid, 1, 1, 1, 1, 0, 0, false)
 	// Populate PR list
@@ -81,12 +86,16 @@ func CreateApp(prs []types.PR) *tview.Application {
 				rightPanelHeader.SetText(FormatPRHeader(selectedPR))
 
 				activityDetails.Clear()
-				activityDetails.AddItem(tview.NewTextView().SetText("⏳ Fetching activities..."), 0, 1, true)
+				activityDetails.AddItem(tview.NewTextView().SetText(ICON_LOADING+"Fetching activities..."), 0, 1, true)
 
 				diffDetails.Clear()
-				diffDetails.AddItem(tview.NewTextView().SetText("⏳ Fetching diff stats..."), 0, 1, true)
+				diffDetails.AddItem(tview.NewTextView().SetText(ICON_LOADING+"Fetching diff..."), 0, 1, true)
 
-				diffData := fetchBitbucketDiffStat(selectedPR.ID)
+				diffStatDetails.Clear()
+				diffStatDetails.AddItem(tview.NewTextView().SetText(ICON_LOADING+"Fetching diff stats..."), 0, 1, true)
+
+				diffData := fetchBitbucketDiff(selectedPR.ID)
+				diffStatData := fetchBitbucketDiffstat(selectedPR.ID)
 				prActivities := fetchBitbucketActivities(selectedPR.ID)
 
 				app.QueueUpdateDraw(func() {
@@ -95,6 +104,9 @@ func CreateApp(prs []types.PR) *tview.Application {
 
 					diffDetails.Clear()
 					diffDetails.AddItem(pr.GenerateDiffView(diffData), 0, 1, true)
+
+					diffStatDetails.Clear()
+					diffStatDetails.AddItem(pr.GenerateDiffStatTree(diffStatData), 0, 1, true)
 				})
 			}()
 		}
@@ -108,14 +120,18 @@ func CreateApp(prs []types.PR) *tview.Application {
 		// Fetch initial activities dynamically
 		initialPR := prs[0]
 		go func() {
-
+			activityDetails.Clear()
 			rightPanelHeader.SetText(FormatPRHeader(initialPR))
-			diffData := fetchBitbucketDiffStat(initialPR.ID)
+			diffData := fetchBitbucketDiff(initialPR.ID)
+			diffStatData := fetchBitbucketDiffstat(initialPR.ID)
 			prActivities := fetchBitbucketActivities(initialPR.ID)
 
 			app.QueueUpdateDraw(func() {
+				activityDetails.Clear()
+
 				activityDetails.AddItem(pr.CreateActivitiesView(prActivities), 0, 1, true)
 				diffDetails.AddItem(pr.GenerateDiffView(diffData), 0, 1, true)
+				diffStatDetails.AddItem(pr.GenerateDiffStatTree(diffStatData), 0, 1, true)
 			})
 		}()
 	}
@@ -123,7 +139,7 @@ func CreateApp(prs []types.PR) *tview.Application {
 	app.SetRoot(mainGrid, true)
 	// Capture the Tab key to switch focus between the views
 	// Maintain a list of views in the desired focus order
-	focusOrder := []tview.Primitive{prList, prDetails, activityDetails, diffDetails}
+	focusOrder := []tview.Primitive{prList, prDetails, activityDetails, diffDetails, diffStatDetails}
 	currentFocusIndex := 0
 	// Set initial borders
 	util.UpdateFocusBorders(focusOrder, currentFocusIndex, VIEW_ACTIVE_BORDER_COLOR)
@@ -151,7 +167,7 @@ func populatePRList(prs []types.PR, prList *tview.Table) {
 		initialsCell := cellFormat(formatInitials(pr.Author.DisplayName), HIGH_CONTRAST_COLOR)
 
 		sourceBranch := cellFormat(util.EllipsizeText(pr.Source.Branch.Name, 10), LOW_CONTRAST_COLOR)
-		arrow := cellFormat("-->", LOW_CONTRAST_COLOR)
+		arrow := cellFormat("->", LOW_CONTRAST_COLOR)
 		destinationBranch := cellFormat(util.EllipsizeText(pr.Destination.Branch.Name, 10), LOW_CONTRAST_COLOR)
 
 		prList.SetCell(i, 0, initialsCell)
@@ -214,7 +230,7 @@ func FormatPRHeader(pr types.PR) string {
 	// Use fmt.Sprintf to format the header and apply tview's dynamic color syntax
 	headerText := fmt.Sprintf(
 		"%s\n\n"+
-			"[yellow]%s[white] --> "+
+			"[yellow]%s[white] -> "+
 			"[green]%s[white]",
 		pr.Title,
 		pr.Source.Branch.Name,
