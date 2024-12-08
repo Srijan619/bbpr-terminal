@@ -1,0 +1,75 @@
+name: Go Build and Release
+
+on:
+  push:
+    branches:
+      - main # Triggers on push to the main branch
+  pull_request:
+    branches:
+      - main # Triggers on pull request to the main branch
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      # Checkout the code from the repository
+      - name: Checkout code
+        uses: actions/checkout@v2
+
+      # Set up Go
+      - name: Set up Go
+        uses: actions/setup-go@v3
+        with:
+          go-version: "1.20" # Set Go version to use
+
+      # Cache Go modules
+      - name: Cache Go modules
+        uses: actions/cache@v2
+        with:
+          path: ~/.cache/go-build
+          key: ${{ runner.os }}-go-${{ hashFiles('**/*.go') }}
+          restore-keys: |
+            ${{ runner.os }}-go-
+
+      # Install dependencies
+      - name: Install dependencies
+        run: go mod tidy
+
+      # Build the Go binary for different platforms
+      - name: Build for multiple platforms
+        run: |
+          GOOS=linux GOARCH=amd64 go build -o bbpr-linux-amd64 .
+          GOOS=darwin GOARCH=amd64 go build -o bbpr-darwin-amd64 .
+          GOOS=windows GOARCH=amd64 go build -o bbpr-windows-amd64.exe .
+
+      # Create a release
+      - name: Create Release
+        uses: gh-actions/create-release@v1
+        with:
+          tag_name: ${{ github.sha }} # Tag the release with commit SHA
+          release_name: "Release ${{ github.sha }}"
+          body: "This release contains compiled binaries for Linux, macOS, and Windows."
+
+      # Upload release assets
+      - name: Upload release assets
+        uses: gh-actions/upload-release-asset@v1
+        with:
+          upload_url: ${{ steps.create-release.outputs.upload_url }}
+          asset_path: ./bbpr-linux-amd64
+          asset_name: bbpr-linux-amd64
+          asset_content_type: application/octet-stream
+      - name: Upload macOS release asset
+        uses: gh-actions/upload-release-asset@v1
+        with:
+          upload_url: ${{ steps.create-release.outputs.upload_url }}
+          asset_path: ./bbpr-darwin-amd64
+          asset_name: bbpr-darwin-amd64
+          asset_content_type: application/octet-stream
+      - name: Upload Windows release asset
+        uses: gh-actions/upload-release-asset@v1
+        with:
+          upload_url: ${{ steps.create-release.outputs.upload_url }}
+          asset_path: ./bbpr-windows-amd64.exe
+          asset_name: bbpr-windows-amd64.exe
+          asset_content_type: application/octet-stream
