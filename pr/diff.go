@@ -22,10 +22,10 @@ func GenerateDiffView(diffText string) *tview.TextView {
 	for _, line := range lines {
 		if strings.HasPrefix(line, "+") {
 			// Green for added lines
-			coloredDiff = append(coloredDiff, fmt.Sprintf("[green]%s", line))
+			coloredDiff = append(coloredDiff, fmt.Sprintf("[green]%s[-]", line))
 		} else if strings.HasPrefix(line, "-") {
 			// Red for removed lines
-			coloredDiff = append(coloredDiff, fmt.Sprintf("[red]%s", line))
+			coloredDiff = append(coloredDiff, fmt.Sprintf("[red]%si[-]", line))
 		} else {
 			// Normal lines without changes
 			coloredDiff = append(coloredDiff, line)
