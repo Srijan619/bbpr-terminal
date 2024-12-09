@@ -4,6 +4,8 @@ package util
 import (
 	"github.com/gdamore/tcell/v2"
 	"github.com/rivo/tview"
+
+	"simple-git-terminal/state"
 )
 
 func GetStateColor(state string) tcell.Color {
@@ -63,4 +65,41 @@ func UpdateFocusBorders(focusOrder []tview.Primitive, currentFocusIndex int, act
 			}
 		}
 	}
+}
+
+func UpdateView(app *tview.Application, targetView *tview.Flex, content interface{}) {
+	// Clear the target view before adding new content
+	targetView.Clear()
+
+	switch v := content.(type) {
+	case string:
+		textView := tview.NewTextView().
+			SetText(v).
+			SetDynamicColors(true).
+			SetWrap(true)
+		targetView.AddItem(textView, 0, 1, true)
+
+	case tview.Primitive:
+
+		targetView.AddItem(v, 0, 1, true)
+
+	default:
+		errorView := tview.NewTextView().
+			SetText("[red]Unsupported content type[-]").
+			SetDynamicColors(true).
+			SetWrap(true)
+		targetView.AddItem(errorView, 0, 1, true)
+	}
+}
+
+func UpdateActivityView(activityContent interface{}) {
+	UpdateView(state.GlobalState.App, state.GlobalState.ActivityView, activityContent)
+}
+
+func UpdateDiffDetailsView(diffContent interface{}) {
+	UpdateView(state.GlobalState.App, state.GlobalState.DiffDetails, diffContent)
+}
+
+func UpdateDiffStatView(statContent interface{}) {
+	UpdateView(state.GlobalState.App, state.GlobalState.DiffStatView, statContent)
 }

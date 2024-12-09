@@ -156,7 +156,7 @@ func main() {
 
 	prs := fetchBitbucketPRs()
 
-	app := CreateApp(prs)
+	app := CreateApp(prs, workspace, repoSlug)
 	//app := tview.NewApplication().SetRoot(pr.GenerateDiffStatTree(pr.STATIC_DATA), true)
 	if err := app.Run(); err != nil {
 		log.Fatalf("Error running application: %v", err)

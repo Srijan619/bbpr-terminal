@@ -6,7 +6,9 @@ import (
 
 	"github.com/gdamore/tcell/v2"
 	"github.com/rivo/tview"
+
 	"simple-git-terminal/pr"
+	"simple-git-terminal/state"
 	"simple-git-terminal/types"
 	"simple-git-terminal/util"
 )
@@ -18,11 +20,8 @@ const (
 	ICON_LOADING             = "\uea75 "
 )
 
-func CreateApp(prs []types.PR) *tview.Application {
+func CreateApp(prs []types.PR, workspace string, repoSlug string) *tview.Application {
 	app := tview.NewApplication()
-
-	// Get the current Git directory
-	workspace, repoSlug, _ := util.GetRepoAndWorkspace()
 
 	// UI components
 	header := tview.NewTextView().
@@ -38,14 +37,9 @@ func CreateApp(prs []types.PR) *tview.Application {
 		SetDynamicColors(true).
 		SetText("Select a PR to view details")
 
-	activityDetails := tview.NewFlex().
-		SetDirection(tview.FlexRow)
-
-	diffDetails := tview.NewFlex().
-		SetDirection(tview.FlexRow)
-
-	diffStatDetails := tview.NewFlex().
-		SetDirection(tview.FlexRow)
+	activityDetails := tview.NewFlex()
+	diffDetails := tview.NewFlex()
+	diffStatDetails := tview.NewFlex()
 
 	// Grid layout
 	mainGrid := tview.NewGrid().
@@ -61,112 +55,103 @@ func CreateApp(prs []types.PR) *tview.Application {
 		SetBorders(true)
 
 	rightPanelHeader := tview.NewTextView().
-		SetText("Here we will display PR title").
-		SetTextAlign(tview.AlignLeft).
-		SetDynamicColors(true)
+		SetTextAlign(tview.AlignCenter).
+		SetDynamicColors(true).
+		SetText("Selected PR")
 
-	rightPanelGrid.AddItem(rightPanelHeader, 0, 0, 1, 1, 0, 0, false)
-	rightPanelGrid.AddItem(prDetails, 1, 0, 1, 1, 0, 0, false)
-	rightPanelGrid.AddItem(activityDetails, 2, 0, 1, 1, 0, 0, false)
-	rightPanelGrid.AddItem(diffStatDetails, 1, 1, 1, 2, 0, 0, false)
-	rightPanelGrid.AddItem(diffDetails, 2, 1, 1, 2, 0, 0, false)
+	rightPanelGrid.
+		AddItem(rightPanelHeader, 0, 0, 1, 1, 0, 0, false).
+		AddItem(prDetails, 1, 0, 1, 1, 0, 0, false).
+		AddItem(activityDetails, 2, 0, 1, 1, 0, 0, false).
+		AddItem(diffStatDetails, 1, 1, 1, 2, 0, 0, false).
+		AddItem(diffDetails, 2, 1, 1, 2, 0, 0, false)
 
 	mainGrid.AddItem(rightPanelGrid, 1, 1, 1, 1, 0, 0, false)
 	// Populate PR list
 	populatePRList(prs, prList)
 
+	state.InitializeState(app, mainGrid, prList, prDetails, activityDetails, diffDetails, diffStatDetails)
+
 	prList.SetSelectedFunc(func(row, column int) {
 		pr.UpdatePrDetails(prs, prDetails, row)
 
 		if row >= 0 && row < len(prs) {
-			selectedPR := prs[row]
+			state.SetSelectedPR(&prs[row])
 			go func() {
-				rightPanelHeader.SetText(FormatPRHeader(selectedPR))
+				rightPanelHeader.SetText(FormatPRHeader(*state.GlobalState.SelectedPR))
 
-				activityDetails.Clear()
-				activityDetails.AddItem(tview.NewTextView().SetText(ICON_LOADING+"Fetching activities..."), 0, 1, true)
-
-				diffDetails.Clear()
-				diffDetails.AddItem(tview.NewTextView().SetText(ICON_LOADING+"Fetching diff..."), 0, 1, true)
-
-				diffStatDetails.Clear()
-				diffStatDetails.AddItem(tview.NewTextView().SetText(ICON_LOADING+"Fetching diff stats..."), 0, 1, true)
-
-				diffData := fetchBitbucketDiff(selectedPR.ID)
-				diffStatData := fetchBitbucketDiffstat(selectedPR.ID)
-				prActivities := fetchBitbucketActivities(selectedPR.ID)
+				util.UpdateActivityView(ICON_LOADING + "Fetching activities...")
+				util.UpdateDiffStatView(ICON_LOADING + "Fetching diff stats...")
+				util.UpdateDiffDetailsView("Select a file to see diff..")
+				diffStatData := fetchBitbucketDiffstat(state.GlobalState.SelectedPR.ID)
+				prActivities := fetchBitbucketActivities(state.GlobalState.SelectedPR.ID)
 
 				app.QueueUpdateDraw(func() {
-					activityDetails.Clear()
-					activityDetails.AddItem(pr.CreateActivitiesView(prActivities), 0, 1, true)
-
-					diffDetails.Clear()
-					diffDetails.AddItem(pr.GenerateDiffView(diffData), 0, 1, true)
-
-					diffStatDetails.Clear()
-					diffStatDetails.AddItem(pr.GenerateDiffStatTree(diffStatData), 0, 1, true)
+					util.UpdateActivityView(pr.CreateActivitiesView(prActivities))
+					util.UpdateDiffStatView(pr.GenerateDiffStatTree(diffStatData))
 				})
 			}()
 		}
 	})
 
-	// Set initial PR details
+	//	Set initial PR details
 	if len(prs) > 0 {
 		prList.Select(0, 0)
 		pr.UpdatePrDetails(prs, prDetails, 0)
 
 		// Fetch initial activities dynamically
-		initialPR := prs[0]
+		state.SetSelectedPR(&prs[0])
 		go func() {
-			activityDetails.Clear()
-			rightPanelHeader.SetText(FormatPRHeader(initialPR))
-			diffData := fetchBitbucketDiff(initialPR.ID)
-			diffStatData := fetchBitbucketDiffstat(initialPR.ID)
-			prActivities := fetchBitbucketActivities(initialPR.ID)
+			rightPanelHeader.SetText(FormatPRHeader(*state.GlobalState.SelectedPR))
+			util.UpdateDiffDetailsView("Select a file to see diff..")
+			diffStatData := fetchBitbucketDiffstat(state.GlobalState.SelectedPR.ID)
+			prActivities := fetchBitbucketActivities(state.GlobalState.SelectedPR.ID)
 
 			app.QueueUpdateDraw(func() {
-				activityDetails.Clear()
-
-				activityDetails.AddItem(pr.CreateActivitiesView(prActivities), 0, 1, true)
-				diffDetails.AddItem(pr.GenerateDiffView(diffData), 0, 1, true)
-				diffStatDetails.AddItem(pr.GenerateDiffStatTree(diffStatData), 0, 1, true)
+				util.UpdateActivityView(pr.CreateActivitiesView(prActivities))
+				util.UpdateDiffStatView(pr.GenerateDiffStatTree(diffStatData))
 			})
 		}()
 	}
 
+	// Key Bindings
+	setupKeyBindings()
+
 	app.SetRoot(mainGrid, true)
+
+	return app
+}
+
+// Key bindings should be moved to somewher else later..
+func setupKeyBindings() {
 	// Capture the Tab key to switch focus between the views
 	// Maintain a list of views in the desired focus order
-	focusOrder := []tview.Primitive{prList, prDetails, activityDetails, diffStatDetails, diffDetails}
+	focusOrder := []tview.Primitive{state.GlobalState.PrList, state.GlobalState.PrDetails, state.GlobalState.ActivityView, state.GlobalState.DiffStatView, state.GlobalState.DiffDetails}
 	currentFocusIndex := 0
-	// Set initial borders
 	util.UpdateFocusBorders(focusOrder, currentFocusIndex, VIEW_ACTIVE_BORDER_COLOR)
 
-	app.SetInputCapture(func(event *tcell.EventKey) *tcell.EventKey {
+	state.GlobalState.App.SetInputCapture(func(event *tcell.EventKey) *tcell.EventKey {
 		switch event.Key() {
 		case tcell.KeyTAB:
 			currentFocusIndex = (currentFocusIndex + 1) % len(focusOrder)
-			app.SetFocus(focusOrder[currentFocusIndex])
+			state.GlobalState.App.SetFocus(focusOrder[currentFocusIndex])
 			util.UpdateFocusBorders(focusOrder, currentFocusIndex, VIEW_ACTIVE_BORDER_COLOR)
 		case tcell.KeyCtrlC:
-			app.Stop()
+			state.GlobalState.App.Stop()
 		case tcell.KeyRune:
-			if event.Rune() == 'd' {
-				app.SetRoot(diffStatDetails, true)
-			}
-			if event.Rune() == 'D' {
-				app.SetRoot(diffDetails, true)
-			}
-			if event.Rune() == 'a' {
-				app.SetRoot(activityDetails, true)
-			}
-			if event.Rune() == 'q' {
-				app.SetRoot(mainGrid, true)
+			switch event.Rune() {
+			case 'd':
+				state.GlobalState.App.SetRoot(state.GlobalState.DiffStatView, true)
+			case 'D':
+				state.GlobalState.App.SetRoot(state.GlobalState.DiffDetails, true)
+			case 'a':
+				state.GlobalState.App.SetRoot(state.GlobalState.ActivityView, true)
+			case 'q':
+				state.GlobalState.App.SetRoot(state.GlobalState.MainGrid, true)
 			}
 		}
 		return event
 	})
-	return app
 }
 
 // Function to populate the PR list
