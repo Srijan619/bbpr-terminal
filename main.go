@@ -133,7 +133,7 @@ func fetchBitbucketActivities(id int) []types.Activity {
 func main() {
 	workspace, repoSlug, _ = util.GetRepoAndWorkspace()
 
-	log.Printf("Workspace repoSlug %s - %s", workspace, repoSlug)
+	log.Printf("Loading workspace - %s and repo - %s ....", workspace, repoSlug)
 	if (workspace == "") || (repoSlug == "") {
 		log.Fatalf("Not a bitbucket Workspace")
 	}

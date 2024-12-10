@@ -3,6 +3,7 @@ package util
 import (
 	"fmt"
 	"github.com/rivo/tview"
+	"os"
 	"os/exec"
 	"regexp"
 	"strings"
@@ -11,6 +12,11 @@ import (
 // Get the name of the current Git repository
 // Fetches the Bitbucket workspace and repo slug based on the current git repo.
 func GetRepoAndWorkspace() (string, string, error) {
+	// For testing allow test repo..
+	if os.Getenv("BBPR_APP_ENV") == "development" {
+		return "chapssrijan619", "test_repo", nil
+	}
+
 	// Run git remote to get the remote URL
 	cmd := exec.Command("git", "remote", "get-url", "origin")
 	cmd.Dir = "." // Ensure we run it from the current directory
@@ -42,7 +48,10 @@ func GenerateLocalDiffView(source string, destination string, filePath string) *
 
 	// TODO: Only for testing remove while gitting
 	cmd.Dir = "." // Ensure we run it from the current directory
-	//cmd.Dir = "/Users/srijanpersonal/personal_workspace/raw/test_repo"
+	// For testing during local development override
+	if os.Getenv("BBPR_APP_ENV") == "development" {
+		cmd.Dir = "/Users/srijanpersonal/personal_workspace/raw/test_repo"
+	}
 	// Capture the output of the command
 	out, err := cmd.CombinedOutput()
 	if err != nil {
