@@ -41,8 +41,8 @@ func GenerateLocalDiffView(source string, destination string, filePath string) *
 	cmd := exec.Command("git", "diff", destination, source, "--", filePath)
 
 	// TODO: Only for testing remove while gitting
-	//cmd.Dir = "." // Ensure we run it from the current directory
-	cmd.Dir = "/Users/srijanpersonal/personal_workspace/raw/test_repo"
+	cmd.Dir = "." // Ensure we run it from the current directory
+	//cmd.Dir = "/Users/srijanpersonal/personal_workspace/raw/test_repo"
 	// Capture the output of the command
 	out, err := cmd.CombinedOutput()
 	if err != nil {
