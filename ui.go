@@ -7,7 +7,7 @@ import (
 	"github.com/gdamore/tcell/v2"
 	"github.com/rivo/tview"
 
-	"simple-git-terminal/pr"
+	"simple-git-terminal/components/pr"
 	"simple-git-terminal/state"
 	"simple-git-terminal/util"
 )
