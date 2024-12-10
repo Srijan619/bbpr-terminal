@@ -5,7 +5,10 @@ import (
 	"log"
 	"os"
 
+	"github.com/gdamore/tcell/v2"
 	"github.com/go-resty/resty/v2"
+	"github.com/rivo/tview"
+
 	"simple-git-terminal/types"
 	"simple-git-terminal/util"
 )
@@ -133,7 +136,8 @@ func fetchBitbucketActivities(id int) []types.Activity {
 func main() {
 	workspace, repoSlug, _ = util.GetRepoAndWorkspace()
 
-	log.Printf("Workspace repoSlug %s - %s", workspace, repoSlug)
+	workspace = "chapssrijan619"
+	repoSlug = "test_repo"
 	if (workspace == "") || (repoSlug == "") {
 		log.Fatalf("Not a bitbucket Workspace")
 	}
@@ -154,10 +158,50 @@ func main() {
 	// Log a test message to verify
 	log.Printf("Application started")
 
-	prs := fetchBitbucketPRs()
+	//	prs := fetchBitbucketPRs()
 
-	app := CreateApp(prs, workspace, repoSlug)
-	//app := tview.NewApplication().SetRoot(pr.GenerateDiffStatTree(pr.STATIC_DATA), true)
+	//	app := CreateApp(prs, workspace, repoSlug)
+	//
+	textView := tview.NewTextView()
+
+	textView.SetDynamicColors(true).
+		SetText("PR lists").
+		SetTitle("PRs").
+		SetBorder(true).
+		SetTitleAlign(tview.AlignLeft).
+		SetBorderPadding(1, 1, 1, 1).
+		SetBorderColor(tcell.ColorYellow).
+		SetBorderAttributes(tcell.AttrDim | tcell.AttrItalic)
+
+	textView2 := tview.NewTextView()
+
+	textView2.SetDynamicColors(true).
+		SetText("PR Details here").
+		SetTitle("Details").
+		SetBorder(true).
+		SetTitleAlign(tview.AlignLeft).
+		SetBorderPadding(1, 1, 1, 1).
+		SetBorderColor(tcell.ColorYellow).
+		SetBorderAttributes(tcell.AttrDim | tcell.AttrItalic)
+
+	textView3 := tview.NewTextView()
+
+	textView3.SetDynamicColors(true).
+		SetText("Git Diffs here").
+		SetTitle("Git diffs").
+		SetBorder(true).
+		SetTitleAlign(tview.AlignLeft).
+		SetBorderPadding(1, 1, 1, 1).
+		SetBorderColor(tcell.ColorYellow).
+		SetBorderAttributes(tcell.AttrDim | tcell.AttrItalic)
+
+	flexView := tview.NewFlex()
+
+	flexView.AddItem(textView, 0, 1, true).
+		AddItem(textView2, 0, 1, true).
+		AddItem(textView3, 0, 2, true)
+
+	app := tview.NewApplication().SetRoot(flexView, true)
 	if err := app.Run(); err != nil {
 		log.Fatalf("Error running application: %v", err)
 	}
