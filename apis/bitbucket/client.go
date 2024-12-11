@@ -19,6 +19,12 @@ const (
 	BitbucketEnvAppPasswordUsername = "BITBUCKET_APP_USERNAME"
 )
 
+var PRCache = map[string][]types.PR{
+	"OPEN":     nil,
+	"MERGED":   nil,
+	"DECLINED": nil,
+}
+
 func getAuthToken(tokenString string) string {
 	token := os.Getenv(tokenString)
 	if token == "" {
@@ -48,12 +54,17 @@ func createClient() *resty.Client {
 	return client
 }
 
-func FetchBitbucketPRs() []types.PR {
-	// Create the client (authentication handled inside)
-	client := createClient()
+func FetchPRsByState(prState string) []types.PR {
+	// Return cached PRs if already fetched
+	if cachedPRs, ok := PRCache[prState]; ok && cachedPRs != nil {
+		return cachedPRs
+	}
 
-	url := fmt.Sprintf("%s/repositories/%s/%s/pullrequests?state=ALL", BitbucketBaseURL, state.Workspace, state.Repo)
-	log.Printf("URL:::%s", url)
+	// Fetch PRs from the server
+	client := createClient()
+	url := fmt.Sprintf("%s/repositories/%s/%s/pullrequests?state=%s", BitbucketBaseURL, state.Workspace, state.Repo, prState)
+	log.Printf("Fetching PRs with state: %s", prState)
+
 	resp, err := client.R().
 		SetResult(&types.BitbucketPRResponse{}).
 		Get(url)
@@ -61,18 +72,23 @@ func FetchBitbucketPRs() []types.PR {
 	if err != nil {
 		log.Fatalf("Error fetching PRs: %v", err)
 	}
-	// Check if the response is successful (status code 200)
 	if resp.StatusCode() != 200 {
 		log.Fatalf("Unexpected status code: %d. Response body: %s", resp.StatusCode(), string(resp.Body()))
 	}
-	prs := resp.Result().(*types.BitbucketPRResponse).Values
 
-	// Process and sanitize the PRs
+	prs := resp.Result().(*types.BitbucketPRResponse).Values
 	for i := range prs {
 		prs[i] = util.SanitizePR(prs[i])
 	}
 
+	// Cache the fetched PRs
+	PRCache[prState] = prs
+
 	return prs
+}
+
+func FetchBitbucketPRs() []types.PR {
+	return FetchPRsByState("ALL")
 }
 
 // TODO: Same here maybe this endpoint should be made optional for user and just do local diff for faster diff?

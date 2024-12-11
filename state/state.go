@@ -11,7 +11,7 @@ import (
 
 type State struct {
 	App              *tview.Application
-	MainGrid         *tview.Grid
+	MainFlexWrapper  *tview.Flex
 	PrList           *tview.Table
 	PrDetails        *tview.TextView
 	ActivityView     *tview.Flex
@@ -25,19 +25,11 @@ type State struct {
 var GlobalState *State
 var Workspace, Repo string
 
-type PRStatusFilterType struct {
-	Open     bool
-	Merged   bool
-	Declined bool
-}
-
-var PRStatusFilter *PRStatusFilterType
-
 // InitializeViews initializes all view components except workspace and repo.
-func InitializeViews(app *tview.Application, mainGrid *tview.Grid, prList *tview.Table, prDetails *tview.TextView, activityView, diffDetails, diffStatView *tview.Flex, rightPanelHeader *tview.TextView) {
+func InitializeViews(app *tview.Application, mainFlexWrapper *tview.Flex, prList *tview.Table, prDetails *tview.TextView, activityView, diffDetails, diffStatView *tview.Flex, rightPanelHeader *tview.TextView) {
 	GlobalState = &State{
 		App:              app,
-		MainGrid:         mainGrid,
+		MainFlexWrapper:  mainFlexWrapper,
 		PrList:           prList,
 		PrDetails:        prDetails,
 		ActivityView:     activityView,
@@ -57,6 +49,14 @@ func SetWorkspaceRepo(workspace, repo string) {
 func SetSelectedPR(pr *types.PR) {
 	GlobalState.SelectedPR = pr
 }
+
+type PRStatusFilterType struct {
+	Open     bool
+	Merged   bool
+	Declined bool
+}
+
+var PRStatusFilter *PRStatusFilterType
 
 func InitializePRStatusFilter(filter *PRStatusFilterType) {
 	if filter == nil {

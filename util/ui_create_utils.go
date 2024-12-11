@@ -3,11 +3,9 @@ package util
 import (
 	"github.com/gdamore/tcell/v2"
 	"github.com/rivo/tview"
-
-	"simple-git-terminal/state"
 )
 
-func CreateCheckBoxComponent(label string) *tview.Checkbox {
+func CreateCheckBoxComponent(label string, onChange func(bool)) *tview.Checkbox {
 	checkedStyle := tcell.StyleDefault.
 		Background(tcell.ColorDefault).
 		Foreground(tcell.ColorGreen)
@@ -33,7 +31,10 @@ func CreateCheckBoxComponent(label string) *tview.Checkbox {
 		} else {
 			checkbox.SetLabelColor(tcell.ColorDefault)
 		}
-		state.SetPRStatusFilter(label, checked)
+		// Call the onChange callback to propagate the change
+		if onChange != nil {
+			onChange(checked)
+		}
 	})
 	return checkbox
 }

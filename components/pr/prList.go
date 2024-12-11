@@ -2,6 +2,7 @@ package pr
 
 import (
 	"fmt"
+	"log"
 
 	"github.com/gdamore/tcell/v2"
 	"github.com/rivo/tview"
@@ -19,19 +20,20 @@ const (
 )
 
 func PopulatePRList(prList *tview.Table) *tview.Table {
-	prs := bitbucket.FetchBitbucketPRs()
+	prs := GetFilteredPRs()
+	log.Printf("PRS....%v", prs)
 	// Populate PR list
-	populatePRList(prs)
+	populatePRList(prs, prList)
 
 	// Add a selection function that updates PR details when a PR is selected
 	prList.SetSelectedFunc(func(row, column int) {
-		HandleOnPrSelect(prs, row)
+		//	HandleOnPrSelect(prs, row)
 	})
 
 	// Set initial PR details if available
 	if len(prs) > 0 {
 		prList.Select(0, 0)
-		HandleOnPrSelect(prs, 0)
+		//HandleOnPrSelect(prs, 0)
 	}
 	return prList
 }
@@ -65,7 +67,7 @@ func HandleOnPrSelect(prs []types.PR, row int) {
 }
 
 // Function to populate the PR list
-func populatePRList(prs []types.PR) {
+func populatePRList(prs []types.PR, prList *tview.Table) {
 	for i, pr := range prs {
 		titleCell := cellFormat(util.EllipsizeText(pr.Title, 18), tcell.ColorWhite)
 		stateCell := util.CreateStateCell(pr.State)
@@ -76,13 +78,13 @@ func populatePRList(prs []types.PR) {
 		arrow := cellFormat("->", LOW_CONTRAST_COLOR)
 		destinationBranch := cellFormat(util.EllipsizeText(pr.Destination.Branch.Name, 10), LOW_CONTRAST_COLOR)
 
-		state.GlobalState.PrList.SetCell(i, 0, initialsCell)
-		state.GlobalState.PrList.SetCell(i, 1, stateCell)
-		state.GlobalState.PrList.SetCell(i, 2, titleCell)
+		prList.SetCell(i, 0, initialsCell)
+		prList.SetCell(i, 1, stateCell)
+		prList.SetCell(i, 2, titleCell)
 
-		state.GlobalState.PrList.SetCell(i, 3, sourceBranch)
-		state.GlobalState.PrList.SetCell(i, 4, arrow)
-		state.GlobalState.PrList.SetCell(i, 5, destinationBranch)
+		prList.SetCell(i, 3, sourceBranch)
+		prList.SetCell(i, 4, arrow)
+		prList.SetCell(i, 5, destinationBranch)
 	}
 }
 
@@ -106,4 +108,21 @@ func formatPRHeader(pr types.PR) string {
 	)
 
 	return headerText
+}
+
+func GetFilteredPRs() []types.PR {
+	var filteredPRs []types.PR
+
+	// Fetch or use cached PRs based on active filters
+	if state.PRStatusFilter.Open {
+		filteredPRs = append(filteredPRs, bitbucket.FetchPRsByState("OPEN")...)
+	}
+	if state.PRStatusFilter.Merged {
+		filteredPRs = append(filteredPRs, bitbucket.FetchPRsByState("MERGED")...)
+	}
+	if state.PRStatusFilter.Declined {
+		filteredPRs = append(filteredPRs, bitbucket.FetchPRsByState("DECLINED")...)
+	}
+
+	return filteredPRs
 }
