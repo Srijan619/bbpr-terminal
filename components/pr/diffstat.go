@@ -109,6 +109,7 @@ func GenerateDiffStatTree(data []types.DiffstatEntry) *tview.TreeView {
 		if ref != nil {
 			fullPath, ok := ref.(string)
 			if ok {
+				state.GlobalState.App.SetRoot(state.GlobalState.DiffDetails, true)
 				content, error := bitbucket.FetchBitbucketDiffContent(state.GlobalState.SelectedPR.ID, fullPath)
 				if error != nil {
 					util.UpdateDiffDetailsView(error)
@@ -117,7 +118,6 @@ func GenerateDiffStatTree(data []types.DiffstatEntry) *tview.TreeView {
 				}
 				// TODO: This is for local diff, maybe does not make sense?
 				//	util.UpdateDiffDetailsView(util.GenerateFileContentDiffView(state.GlobalState.SelectedPR.Source.Branch.Name, state.GlobalState.SelectedPR.Destination.Branch.Name, fullPath))
-				state.GlobalState.App.SetRoot(state.GlobalState.DiffDetails, true)
 			}
 		}
 	})
