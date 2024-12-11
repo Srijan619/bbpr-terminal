@@ -1,4 +1,4 @@
-package components
+package util
 
 import (
 	"github.com/gdamore/tcell/v2"
@@ -37,3 +37,14 @@ func CreateCheckBoxComponent(label string) *tview.Checkbox {
 	})
 	return checkbox
 }
+
+// Create standard flex view for cohesion and less repeated code
+func CreateFlexComponent(title string) *tview.Box {
+	flex := tview.NewFlex().
+		SetBorder(true).
+		SetTitleAlign(tview.AlignLeft).
+		SetTitle(title)
+
+	return flex
+}
+

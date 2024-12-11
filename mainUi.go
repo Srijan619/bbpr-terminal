@@ -2,9 +2,8 @@ package main
 
 import (
 	"github.com/rivo/tview"
-
-	"simple-git-terminal/components"
 	"simple-git-terminal/components/pr"
+	"simple-git-terminal/util"
 )
 
 func CreateMainUi() *tview.Flex {
@@ -22,8 +21,8 @@ func CreateMainUi() *tview.Flex {
 		AddItem(prStatusFilterFlex, 0, 1, false).
 		AddItem(prList, 0, 18, false)
 
-	middleFullFlex := components.CreateFlexComponent("Pull Request Details")
-	rightFullFlex := components.CreateFlexComponent("Diff")
+	middleFullFlex := util.CreateFlexComponent("Pull Request Details")
+	rightFullFlex := util.CreateFlexComponent("Diff")
 
 	mainFlexWrapper := tview.NewFlex()
 
@@ -33,4 +32,3 @@ func CreateMainUi() *tview.Flex {
 
 	return mainFlexWrapper
 }
-

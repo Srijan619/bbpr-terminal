@@ -103,3 +103,4 @@ func UpdateDiffDetailsView(diffContent interface{}) {
 func UpdateDiffStatView(statContent interface{}) {
 	UpdateView(state.GlobalState.App, state.GlobalState.DiffStatView, statContent)
 }
+
