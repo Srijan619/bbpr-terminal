@@ -2,11 +2,13 @@ package util
 
 import (
 	"fmt"
-	"github.com/rivo/tview"
+	"log"
 	"os"
 	"os/exec"
 	"regexp"
 	"strings"
+
+	"github.com/rivo/tview"
 )
 
 // Get the name of the current Git repository
@@ -47,6 +49,7 @@ func GenerateFileContentDiffView(source string, destination string, filePath str
 		return textView
 	}
 
+	log.Printf("Return file content diff view...%s", cmd)
 	return GenerateColorizedDiffView(string(out))
 }
 
@@ -57,10 +60,7 @@ func GenerateColorizedDiffView(diffText string) *tview.TextView {
 	// Set options for better readability
 	textView.SetDynamicColors(true).
 		SetWrap(true).
-		SetScrollable(true).
-		SetBorder(true).
-		SetTitle("Diff View").
-		SetTitleAlign(tview.AlignLeft)
+		SetScrollable(true)
 
 	// Split the diff text by lines and color them based on the prefix (+ or -)
 	var coloredDiff []string

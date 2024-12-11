@@ -39,12 +39,12 @@ func CreateCheckBoxComponent(label string) *tview.Checkbox {
 }
 
 // Create standard flex view for cohesion and less repeated code
-func CreateFlexComponent(title string) *tview.Box {
-	flex := tview.NewFlex().
-		SetBorder(true).
+func CreateFlexComponent(title string) *tview.Flex {
+	flex := tview.NewFlex()
+
+	flex.SetBorder(true).
 		SetTitleAlign(tview.AlignLeft).
 		SetTitle(title)
 
 	return flex
 }
-
