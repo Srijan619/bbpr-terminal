@@ -28,52 +28,8 @@ func main() {
 	// Log a test message to verify
 	log.Printf("Application started")
 
-	//	prs := fetchBitbucketPRs()
-
-	//	app := CreateApp(prs, workspace, repoSlug)
-	//
-	textView := tview.NewTextView()
-
-	textView.SetDynamicColors(true).
-		SetText("PR lists").
-		SetTitle("PRs").
-		SetBorder(true).
-		SetTitleAlign(tview.AlignLeft).
-		SetBorderPadding(1, 1, 1, 1).
-		SetBorderColor(tcell.ColorYellow).
-		SetBorderAttributes(tcell.AttrDim | tcell.AttrItalic)
-
-	textView2 := tview.NewTextView()
-
-	textView2.SetDynamicColors(true).
-		SetText("PR Details here").
-		SetTitle("Details").
-		SetBorder(true).
-		SetTitleAlign(tview.AlignLeft).
-		SetBorderPadding(1, 1, 1, 1).
-		SetBorderColor(tcell.ColorYellow).
-		SetBorderAttributes(tcell.AttrDim | tcell.AttrItalic)
-
-	textView3 := tview.NewTextView()
-
-	textView3.SetDynamicColors(true).
-		SetText("Git Diffs here").
-		SetTitle("Git diffs").
-		SetBorder(true).
-		SetTitleAlign(tview.AlignLeft).
-		SetBorderPadding(1, 1, 1, 1).
-		SetBorderColor(tcell.ColorYellow).
-		SetBorderAttributes(tcell.AttrDim | tcell.AttrItalic)
-
-	flexView := tview.NewFlex()
-
-	flexView.AddItem(textView, 0, 1, true).
-		AddItem(textView2, 0, 1, true).
-		AddItem(textView3, 0, 2, true)
-
-	app := tview.NewApplication().SetRoot(flexView, true)
 	app := CreateApp()
-	//app := tview.NewApplication().SetRoot(pr.GenerateDiffStatTree(pr.STATIC_DATA), true)
+
 	if err := app.Run(); err != nil {
 		log.Fatalf("Error running application: %v", err)
 	}
