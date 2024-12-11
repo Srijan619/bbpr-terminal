@@ -2,11 +2,11 @@ package pr
 
 import (
 	"fmt"
-	"strings"
-
 	"github.com/gdamore/tcell/v2"
 	"github.com/rivo/tview"
+	"strings"
 
+	"simple-git-terminal/apis/bitbucket"
 	"simple-git-terminal/state"
 	"simple-git-terminal/types"
 	"simple-git-terminal/util"
@@ -109,7 +109,14 @@ func GenerateDiffStatTree(data []types.DiffstatEntry) *tview.TreeView {
 		if ref != nil {
 			fullPath, ok := ref.(string)
 			if ok {
-				util.UpdateDiffDetailsView(util.GenerateFileContentDiffView(state.GlobalState.SelectedPR.Source.Branch.Name, state.GlobalState.SelectedPR.Destination.Branch.Name, fullPath))
+				content, error := bitbucket.FetchBitbucketDiffContent(state.GlobalState.SelectedPR.ID, fullPath)
+				if error != nil {
+					util.UpdateDiffDetailsView(error)
+				} else {
+					util.UpdateDiffDetailsView(util.GenerateColorizedDiffView(content))
+				}
+				// TODO: This is for local diff, maybe does not make sense?
+				//	util.UpdateDiffDetailsView(util.GenerateFileContentDiffView(state.GlobalState.SelectedPR.Source.Branch.Name, state.GlobalState.SelectedPR.Destination.Branch.Name, fullPath))
 				state.GlobalState.App.SetRoot(state.GlobalState.DiffDetails, true)
 			}
 		}

@@ -58,9 +58,7 @@ func GenerateColorizedDiffView(diffText string) *tview.TextView {
 	textView.SetDynamicColors(true).
 		SetWrap(true).
 		SetScrollable(true).
-		SetBorder(true).
-		SetTitle("Diff View").
-		SetTitleAlign(tview.AlignLeft)
+		SetBorderPadding(1, 1, 1, 1)
 
 	// Split the diff text by lines and color them based on the prefix (+ or -)
 	var coloredDiff []string

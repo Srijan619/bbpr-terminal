@@ -14,8 +14,8 @@ type State struct {
 	DiffDetails      *tview.Flex
 	DiffStatView     *tview.Flex
 	RightPanelHeader *tview.TextView
-
-	SelectedPR *types.PR
+	CurrentView      tview.Primitive
+	SelectedPR       *types.PR
 }
 
 var GlobalState *State
@@ -39,6 +39,10 @@ func InitializeViews(app *tview.Application, mainGrid *tview.Grid, prList *tview
 func SetWorkspaceRepo(workspace, repo string) {
 	Workspace = workspace
 	Repo = repo
+}
+
+func SetCurrentView(currentView tview.Primitive) {
+	GlobalState.CurrentView = currentView
 }
 
 // SetSelectedPR sets the selected PR in the global state.

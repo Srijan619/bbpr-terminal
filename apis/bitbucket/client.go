@@ -75,6 +75,29 @@ func FetchBitbucketPRs() []types.PR {
 	return prs
 }
 
+func FetchBitbucketDiffContent(id int, filePath string) (string, error) {
+	client := createClient()
+
+	resp, err := client.R().
+		SetHeader("Accept", "application/json").
+		Get(fmt.Sprintf("%s/repositories/%s/%s/pullrequests/%d/diff?path=%s",
+			BitbucketBaseURL,
+			state.Workspace,
+			state.Repo,
+			id,
+			filePath,
+		))
+	if err != nil {
+		return "", fmt.Errorf("error fetching diff content: %w", err)
+	}
+
+	if resp.StatusCode() != 200 {
+		return "", fmt.Errorf("unexpected status code %d: %s", resp.StatusCode(), string(resp.Body()))
+	}
+
+	return string(resp.Body()), nil
+}
+
 // TODO: Same here maybe this endpoint should be made optional for user and just do local diff for faster diff?
 func FetchBitbucketDiffstat(id int) []types.DiffstatEntry {
 	client := createClient()
