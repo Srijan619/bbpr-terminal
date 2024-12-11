@@ -109,7 +109,7 @@ func GenerateDiffStatTree(data []types.DiffstatEntry) *tview.TreeView {
 		if ref != nil {
 			fullPath, ok := ref.(string)
 			if ok {
-				util.UpdateDiffDetailsView(util.GenerateLocalDiffView(state.GlobalState.SelectedPR.Source.Branch.Name, state.GlobalState.SelectedPR.Destination.Branch.Name, fullPath))
+				util.UpdateDiffDetailsView(util.GenerateFileContentDiffView(state.GlobalState.SelectedPR.Source.Branch.Name, state.GlobalState.SelectedPR.Destination.Branch.Name, fullPath))
 				state.GlobalState.App.SetRoot(state.GlobalState.DiffDetails, true)
 			}
 		}
