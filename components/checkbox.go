@@ -3,6 +3,8 @@ package components
 import (
 	"github.com/gdamore/tcell/v2"
 	"github.com/rivo/tview"
+
+	"simple-git-terminal/state"
 )
 
 func CreateCheckBoxComponent(label string) *tview.Checkbox {
@@ -31,7 +33,7 @@ func CreateCheckBoxComponent(label string) *tview.Checkbox {
 		} else {
 			checkbox.SetLabelColor(tcell.ColorDefault)
 		}
-
+		state.SetPRStatusFilter(label, checked)
 	})
 	return checkbox
 }
