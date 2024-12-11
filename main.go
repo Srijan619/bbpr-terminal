@@ -5,7 +5,6 @@ import (
 	"github.com/rivo/tview"
 	"log"
 	"os"
-	"simple-git-terminal/state"
 )
 
 var (
@@ -15,7 +14,6 @@ var (
 
 func main() {
 	app := tview.NewApplication()
-	state.SetApp(app)
 	// Open or create the log file
 	file, err := os.OpenFile("debug.log", os.O_CREATE|os.O_WRONLY|os.O_APPEND, 0666)
 	if err != nil {
@@ -32,10 +30,6 @@ func main() {
 	// Log a test message to verify
 	log.Printf("Application started")
 
-	//	prs := fetchBitbucketPRs()
-
-	//	app := CreateApp(prs, workspace, repoSlug)
-	//
 	mainUi := CreateMainUi()
 	app.SetRoot(mainUi, true).EnableMouse(true)
 	//	app := CreateApp()

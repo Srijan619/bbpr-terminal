@@ -24,7 +24,6 @@ type State struct {
 
 var GlobalState *State
 var Workspace, Repo string
-var App *tview.Application
 
 type PRStatusFilterType struct {
 	Open     bool
@@ -82,8 +81,4 @@ func SetPRStatusFilter(filterKey string, isChecked bool) {
 		PRStatusFilter.Merged = isChecked
 		PRStatusFilter.Declined = isChecked
 	}
-}
-
-func SetApp(app *tview.Application) {
-	App = app
 }
