@@ -49,7 +49,7 @@ func HandleOnPrSelect(prs []types.PR, row int) {
 		go func() {
 			util.UpdateActivityView(ICON_LOADING + "Fetching activities...")
 			util.UpdateDiffStatView(ICON_LOADING + "Fetching diff stats...")
-			util.UpdateDiffDetailsView("Select a file to see diff..")
+			util.UpdateDiffDetailsView(" Hover over to a file for quick preview OR Select a file to see diff in full screen")
 
 			// Fetch diff stat and activities for the selected PR
 			diffStatData := bitbucket.FetchBitbucketDiffstat(state.GlobalState.SelectedPR.ID)

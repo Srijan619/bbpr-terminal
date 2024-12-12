@@ -116,13 +116,16 @@ func GenerateDiffStatTree(data []types.DiffstatEntry) *tview.TreeView {
 		} else {
 			node.SetExpanded(true)
 		}
-		OpenFileSpecificDiff(node)
+		OpenFileSpecificDiff(node, true)
 	})
 
+	tree.SetChangedFunc(func(node *tview.TreeNode) {
+		OpenFileSpecificDiff(node, false)
+	})
 	return tree
 }
 
-func OpenFileSpecificDiff(node *tview.TreeNode) {
+func OpenFileSpecificDiff(node *tview.TreeNode, fullScreen bool) {
 	ref := node.GetReference()
 	if ref != nil {
 		nodeRef, ok := ref.(*NodeReference)
@@ -140,9 +143,11 @@ func OpenFileSpecificDiff(node *tview.TreeNode) {
 				}
 			})
 
-			// Set the DiffDetails view as the active root
-			state.GlobalState.App.SetRoot(state.GlobalState.DiffDetails, true)
+			if fullScreen {
+				// Set the DiffDetails view as the active root
+				state.GlobalState.App.SetRoot(state.GlobalState.DiffDetails, true)
+
+			}
 		}
 	}
 }
-

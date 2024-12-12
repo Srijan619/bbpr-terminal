@@ -66,8 +66,8 @@ func CreateApp() *tview.Application {
 		AddItem(rightPanelHeader, 0, 0, 1, 2, 0, 0, false).
 		AddItem(prDetails, 1, 0, 1, 1, 0, 0, false).
 		AddItem(activityDetails, 2, 0, 1, 1, 0, 0, false).
-		AddItem(diffStatDetails, 1, 1, 2, 2, 0, 0, false).
-		AddItem(diffDetails, 2, 1, 1, 2, 0, 0, false) //TODO: Maybe no need to initially even show this view?
+		AddItem(diffStatDetails, 1, 1, 1, 2, 0, 0, false).
+		AddItem(diffDetails, 2, 1, 1, 2, 0, 0, false)
 
 	mainGrid.AddItem(rightPanelGrid, 1, 1, 1, 1, 0, 0, false)
 
