@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"github.com/gdamore/tcell/v2"
 	"github.com/rivo/tview"
+	"log"
 	"strings"
 
 	"simple-git-terminal/apis/bitbucket"
@@ -20,6 +21,11 @@ const (
 	ICON_FILE      = "\uf15b "
 )
 
+type NodeReference struct {
+	Path  string
+	IsDir bool
+}
+
 func GenerateDiffStatTree(data []types.DiffstatEntry) *tview.TreeView {
 	// Create the root node for the tree
 	root := tview.NewTreeNode("Root").
@@ -29,9 +35,13 @@ func GenerateDiffStatTree(data []types.DiffstatEntry) *tview.TreeView {
 		SetCurrentNode(root)
 
 	// A helper function to add directories and files
-	add := func(target *tview.TreeNode, path string, isDir bool, fullPath string) *tview.TreeNode {
+	add := func(target *tview.TreeNode, path string, isDir bool) *tview.TreeNode {
+		ref := &NodeReference{
+			Path:  path,
+			IsDir: isDir,
+		}
 		node := tview.NewTreeNode(path).
-			SetReference(fullPath).
+			SetReference(ref).
 			SetSelectable(true)
 		if isDir {
 			node.SetColor(DIR_COLOR)
@@ -44,7 +54,7 @@ func GenerateDiffStatTree(data []types.DiffstatEntry) *tview.TreeView {
 	}
 
 	// Helper function to handle path splitting into directories and files
-	createPathTree := func(target *tview.TreeNode, fullPath string, fileNameWithDiffStatText string) {
+	createPathTree := func(target *tview.TreeNode, fullPath string) {
 		// Split the path into directories (except the last part which is a file)
 		parts := strings.Split(fullPath, "/")
 		var currentNode = target
@@ -53,7 +63,7 @@ func GenerateDiffStatTree(data []types.DiffstatEntry) *tview.TreeView {
 			// Check if this is the last part (file)
 			if i == len(parts)-1 {
 				// This is the file, so add the file node
-				currentNode = add(currentNode, ICON_FILE+fileNameWithDiffStatText, false, fullPath) // Add file node
+				currentNode = add(currentNode, ICON_FILE+part, false) // Add file node
 			} else {
 				// This is a directory, check if directory already exists
 				dirExists := false
@@ -66,7 +76,7 @@ func GenerateDiffStatTree(data []types.DiffstatEntry) *tview.TreeView {
 				}
 				// If directory does not exist, create it
 				if !dirExists {
-					currentNode = add(currentNode, ICON_DIRECTORY+part, true, fullPath) // Add directory node
+					currentNode = add(currentNode, ICON_DIRECTORY+part, true) // Add directory node
 				}
 			}
 		}
@@ -94,7 +104,7 @@ func GenerateDiffStatTree(data []types.DiffstatEntry) *tview.TreeView {
 		}
 		// Create the path structure in the tree
 		fileNameWithDiffStatText := (fmt.Sprintf("%s | %s", fileName, diffStatText)) // filename is file with path
-		createPathTree(root, fileName, fileNameWithDiffStatText)
+		createPathTree(root, fileNameWithDiffStatText)
 
 	}
 
@@ -104,23 +114,32 @@ func GenerateDiffStatTree(data []types.DiffstatEntry) *tview.TreeView {
 		} else {
 			node.SetExpanded(true)
 		}
-
-		ref := node.GetReference()
-		if ref != nil {
-			fullPath, ok := ref.(string)
-			if ok {
-				state.GlobalState.App.SetRoot(state.GlobalState.DiffDetails, true)
-				content, error := bitbucket.FetchBitbucketDiffContent(state.GlobalState.SelectedPR.ID, fullPath)
-				if error != nil {
-					util.UpdateDiffDetailsView(error)
-				} else {
-					util.UpdateDiffDetailsView(util.GenerateColorizedDiffView(content))
-				}
-				// TODO: This is for local diff, maybe does not make sense?
-				//	util.UpdateDiffDetailsView(util.GenerateFileContentDiffView(state.GlobalState.SelectedPR.Source.Branch.Name, state.GlobalState.SelectedPR.Destination.Branch.Name, fullPath))
-			}
-		}
+		OpenFileSpecificDiff(node)
 	})
 
 	return tree
+}
+
+func OpenFileSpecificDiff(node *tview.TreeNode) {
+	ref := node.GetReference()
+	if ref != nil {
+		nodeRef, ok := ref.(*NodeReference)
+		if ok && !nodeRef.IsDir {
+			log.Printf("Fetching content for path: %s", nodeRef.Path)
+
+			// Show a loading placeholder immediately
+			util.UpdateDiffDetailsView("Loading...")
+			state.GlobalState.App.SetRoot(state.GlobalState.DiffDetails, true)
+
+			// Fetch content
+			content, err := bitbucket.FetchBitbucketDiffContent(state.GlobalState.SelectedPR.ID, nodeRef.Path)
+			if err != nil {
+				util.UpdateDiffDetailsView(err)
+			} else {
+				util.UpdateDiffDetailsView(util.GenerateColorizedDiffView(content))
+			}
+			// TODO: This is for local diff, maybe does not make sense?
+			//	util.UpdateDiffDetailsView(util.GenerateFileContentDiffView(state.GlobalState.SelectedPR.Source.Branch.Name, state.GlobalState.SelectedPR.Destination.Branch.Name, fullPath))
+		}
+	}
 }
