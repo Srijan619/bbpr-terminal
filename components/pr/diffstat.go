@@ -129,17 +129,19 @@ func OpenFileSpecificDiff(node *tview.TreeNode) {
 		if ok && !nodeRef.IsDir {
 			log.Printf("Fetching content for path: %s", nodeRef.Path)
 
-			// Show a loading placeholder immediately
-			util.UpdateDiffDetailsView("Loading...")
-			state.GlobalState.App.SetRoot(state.GlobalState.DiffDetails, true)
+			// Use the spinner utility for asynchronous fetch
+			util.ShowLoadingSpinner(state.GlobalState.DiffDetails, func() (string, error) {
+				return bitbucket.FetchBitbucketDiffContent(state.GlobalState.SelectedPR.ID, nodeRef.Path)
+			}, func(result string, err error) {
+				if err != nil {
+					util.UpdateDiffDetailsView(err.Error())
+				} else {
+					util.UpdateDiffDetailsView(util.GenerateColorizedDiffView(result))
+				}
+			})
 
-			// Fetch content
-			content, err := bitbucket.FetchBitbucketDiffContent(state.GlobalState.SelectedPR.ID, nodeRef.Path)
-			if err != nil {
-				util.UpdateDiffDetailsView(err)
-			} else {
-				util.UpdateDiffDetailsView(util.GenerateColorizedDiffView(content))
-			}
+			// Set the DiffDetails view as the active root
+			state.GlobalState.App.SetRoot(state.GlobalState.DiffDetails, true)
 		}
 	}
 }
