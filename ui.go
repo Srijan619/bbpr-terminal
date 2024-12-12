@@ -66,8 +66,8 @@ func CreateApp() *tview.Application {
 		AddItem(rightPanelHeader, 0, 0, 1, 2, 0, 0, false).
 		AddItem(prDetails, 1, 0, 1, 1, 0, 0, false).
 		AddItem(activityDetails, 2, 0, 1, 1, 0, 0, false).
-		AddItem(diffStatDetails, 1, 1, 2, 2, 0, 0, false)
-		//	AddItem(diffDetails, 2, 1, 1, 2, 0, 0, false) //TODO: Maybe no need to initially even show this view?
+		AddItem(diffStatDetails, 1, 1, 2, 2, 0, 0, false).
+		AddItem(diffDetails, 2, 1, 1, 2, 0, 0, false) //TODO: Maybe no need to initially even show this view?
 
 	mainGrid.AddItem(rightPanelGrid, 1, 1, 1, 1, 0, 0, false)
 
@@ -87,7 +87,7 @@ func CreateApp() *tview.Application {
 func setupKeyBindings() {
 	// Capture the Tab key to switch focus between the views
 	// Maintain a list of views in the desired focus order
-	focusOrder := []tview.Primitive{state.GlobalState.PrList, state.GlobalState.PrDetails, state.GlobalState.ActivityView, state.GlobalState.DiffStatView}
+	focusOrder := []tview.Primitive{state.GlobalState.PrList, state.GlobalState.PrDetails, state.GlobalState.ActivityView, state.GlobalState.DiffStatView, state.GlobalState.DiffDetails}
 	currentFocusIndex := 0
 	util.UpdateFocusBorders(focusOrder, currentFocusIndex, VIEW_ACTIVE_BORDER_COLOR)
 
