@@ -102,6 +102,7 @@ func setupKeyBindings() {
 		case tcell.KeyRune:
 			switch event.Rune() {
 			case 'd':
+				state.SetCurrentView(state.GlobalState.DiffStatView)
 				state.GlobalState.App.SetRoot(state.GlobalState.DiffStatView, true)
 			case 'D':
 				state.GlobalState.App.SetRoot(state.GlobalState.DiffDetails, true)

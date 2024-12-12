@@ -1,17 +1,15 @@
 package util
 
 import (
-	"time"
-
 	"github.com/rivo/tview"
-
 	"simple-git-terminal/state"
+	"time"
 )
 
 // ShowLoadingSpinner displays a loading spinner in the provided view while performing an async operation.
 func ShowLoadingSpinner(view *tview.Flex, fetch func() (string, error), onComplete func(result string, err error)) {
 	// Initial loading message
-	UpdateView(state.GlobalState.App, view, "⠋ Loading...")
+	UpdateView(view, "⠋ Loading...")
 
 	// Run the fetch operation in a goroutine
 	go func() {
@@ -29,7 +27,7 @@ func ShowLoadingSpinner(view *tview.Flex, fetch func() (string, error), onComple
 					return
 				case <-ticker.C:
 					state.GlobalState.App.QueueUpdateDraw(func() {
-						UpdateView(state.GlobalState.App, view, spinChars[i]+" Loading...")
+						UpdateView(view, spinChars[i]+" Loading...")
 					})
 					i = (i + 1) % len(spinChars)
 				}
@@ -45,8 +43,9 @@ func ShowLoadingSpinner(view *tview.Flex, fetch func() (string, error), onComple
 
 		// Update the view with the result (back on the main thread)
 		state.GlobalState.App.QueueUpdateDraw(func() {
+			// Stop the spinner before updating the content
+			UpdateView(view, "")
 			onComplete(result, err)
 		})
 	}()
 }
-

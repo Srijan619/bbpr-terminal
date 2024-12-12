@@ -120,7 +120,9 @@ func GenerateDiffStatTree(data []types.DiffstatEntry) *tview.TreeView {
 	})
 
 	tree.SetChangedFunc(func(node *tview.TreeNode) {
-		OpenFileSpecificDiff(node, false)
+		if state.GlobalState.CurrentView != state.GlobalState.DiffStatView { // Avoid flickering when on full screen view
+			OpenFileSpecificDiff(node, false)
+		}
 	})
 	return tree
 }
@@ -146,7 +148,6 @@ func OpenFileSpecificDiff(node *tview.TreeNode, fullScreen bool) {
 			if fullScreen {
 				// Set the DiffDetails view as the active root
 				state.GlobalState.App.SetRoot(state.GlobalState.DiffDetails, true)
-
 			}
 		}
 	}

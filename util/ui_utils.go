@@ -67,7 +67,7 @@ func UpdateFocusBorders(focusOrder []tview.Primitive, currentFocusIndex int, act
 	}
 }
 
-func UpdateView(app *tview.Application, targetView *tview.Flex, content interface{}) {
+func UpdateView(targetView *tview.Flex, content interface{}) {
 	// Clear the target view before adding new content
 	targetView.Clear()
 
@@ -93,13 +93,13 @@ func UpdateView(app *tview.Application, targetView *tview.Flex, content interfac
 }
 
 func UpdateActivityView(activityContent interface{}) {
-	UpdateView(state.GlobalState.App, state.GlobalState.ActivityView, activityContent)
+	UpdateView(state.GlobalState.ActivityView, activityContent)
 }
 
 func UpdateDiffDetailsView(diffContent interface{}) {
-	UpdateView(state.GlobalState.App, state.GlobalState.DiffDetails, diffContent)
+	UpdateView(state.GlobalState.DiffDetails, diffContent)
 }
 
 func UpdateDiffStatView(statContent interface{}) {
-	UpdateView(state.GlobalState.App, state.GlobalState.DiffStatView, statContent)
+	UpdateView(state.GlobalState.DiffStatView, statContent)
 }
