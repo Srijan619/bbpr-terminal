@@ -17,8 +17,8 @@ const (
 	ROOT_COLOR     = tcell.ColorYellow
 	DIR_COLOR      = tcell.ColorBlue
 	FILE_COLOR     = tcell.ColorGrey
-	ICON_DIRECTORY = "\uf07b "
-	ICON_FILE      = "\uf15b "
+	ICON_DIRECTORY = "\uf07b " // Folder icon
+	ICON_FILE      = "\uf15b " // File icon
 )
 
 type NodeReference struct {
@@ -35,14 +35,14 @@ func GenerateDiffStatTree(data []types.DiffstatEntry) *tview.TreeView {
 		SetCurrentNode(root)
 
 	// A helper function to add directories and files
-	add := func(target *tview.TreeNode, path string, isDir bool) *tview.TreeNode {
+	add := func(target *tview.TreeNode, path string, isDir bool, displayName string) *tview.TreeNode {
 		ref := &NodeReference{
 			Path:  path,
 			IsDir: isDir,
 		}
-		node := tview.NewTreeNode(path).
-			SetReference(ref).
-			SetSelectable(true)
+		node := tview.NewTreeNode(displayName). // Display text with icon
+							SetReference(ref).
+							SetSelectable(true)
 		if isDir {
 			node.SetColor(DIR_COLOR)
 			node.SetExpanded(true)
@@ -54,7 +54,7 @@ func GenerateDiffStatTree(data []types.DiffstatEntry) *tview.TreeView {
 	}
 
 	// Helper function to handle path splitting into directories and files
-	createPathTree := func(target *tview.TreeNode, fullPath string) {
+	createPathTree := func(target *tview.TreeNode, fullPath, diffStatText string) {
 		// Split the path into directories (except the last part which is a file)
 		parts := strings.Split(fullPath, "/")
 		var currentNode = target
@@ -62,13 +62,16 @@ func GenerateDiffStatTree(data []types.DiffstatEntry) *tview.TreeView {
 		for i, part := range parts {
 			// Check if this is the last part (file)
 			if i == len(parts)-1 {
-				// This is the file, so add the file node
-				currentNode = add(currentNode, ICON_FILE+part, false) // Add file node
+				// Add file node with diff stat text
+				displayName := fmt.Sprintf("%s%s | %s", ICON_FILE, part, diffStatText)
+				currentNode = add(currentNode, fullPath, false, displayName)
 			} else {
-				// This is a directory, check if directory already exists
+				// Add directory node
+				displayName := ICON_DIRECTORY + part
+				// Check if directory already exists
 				dirExists := false
 				for _, child := range currentNode.GetChildren() {
-					if child.GetText() == ICON_DIRECTORY+part {
+					if child.GetText() == displayName {
 						dirExists = true
 						currentNode = child
 						break
@@ -76,7 +79,7 @@ func GenerateDiffStatTree(data []types.DiffstatEntry) *tview.TreeView {
 				}
 				// If directory does not exist, create it
 				if !dirExists {
-					currentNode = add(currentNode, ICON_DIRECTORY+part, true) // Add directory node
+					currentNode = add(currentNode, strings.Join(parts[:i+1], "/"), true, displayName)
 				}
 			}
 		}
@@ -102,10 +105,9 @@ func GenerateDiffStatTree(data []types.DiffstatEntry) *tview.TreeView {
 			}
 			diffStatText += fmt.Sprintf("[%s]- %d[-]", tcell.ColorRed, entry.LinesRemoved)
 		}
-		// Create the path structure in the tree
-		fileNameWithDiffStatText := (fmt.Sprintf("%s | %s", fileName, diffStatText)) // filename is file with path
-		createPathTree(root, fileNameWithDiffStatText)
 
+		// Create the path structure in the tree
+		createPathTree(root, fileName, diffStatText)
 	}
 
 	tree.SetSelectedFunc(func(node *tview.TreeNode) {
@@ -138,8 +140,7 @@ func OpenFileSpecificDiff(node *tview.TreeNode) {
 			} else {
 				util.UpdateDiffDetailsView(util.GenerateColorizedDiffView(content))
 			}
-			// TODO: This is for local diff, maybe does not make sense?
-			//	util.UpdateDiffDetailsView(util.GenerateFileContentDiffView(state.GlobalState.SelectedPR.Source.Branch.Name, state.GlobalState.SelectedPR.Destination.Branch.Name, fullPath))
 		}
 	}
 }
+
