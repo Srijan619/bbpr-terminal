@@ -27,6 +27,10 @@ func PopulatePRList(prList *tview.Table) *tview.Table {
 		HandleOnPrSelect(prs, row)
 	})
 
+	prList.SetSelectionChangedFunc(func(row, column int) {
+		log.Printf("Selection changed...%d", len(prs))
+		HandleOnPrSelect(prs, row)
+	})
 	if len(prs) > 0 {
 		prList.Select(0, 0)
 		HandleOnPrSelect(prs, 0)
@@ -36,15 +40,15 @@ func PopulatePRList(prList *tview.Table) *tview.Table {
 
 func HandleOnPrSelect(prs []types.PR, row int) {
 	if row >= 0 && row < len(prs) && state.GlobalState != nil {
-		// Update PR details and set the selected PR
-		UpdatePrDetails(prs, state.GlobalState.PrDetails, row)
-		state.SetSelectedPR(&prs[row])
-
-		// Update right panel and set header
-		state.GlobalState.RightPanelHeader.SetText(formatPRHeader(*state.GlobalState.SelectedPR))
-
 		// Fetch details in parallel using goroutines
 		go func() {
+			log.Printf("I am now updating pr details...")
+			// Update PR details and set the selected PR
+			UpdatePrDetails(prs, state.GlobalState.PrDetails, row)
+			state.SetSelectedPR(&prs[row])
+
+			// Update right panel and set header
+			state.GlobalState.RightPanelHeader.SetText(formatPRHeader(*state.GlobalState.SelectedPR))
 			// Show loading spinner for activities
 			util.ShowLoadingSpinner(state.GlobalState.ActivityView, func() (string, error) {
 				// Fetch activities

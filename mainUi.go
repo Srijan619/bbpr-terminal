@@ -52,25 +52,28 @@ func CreateMainApp() *tview.Application {
 	prDetails := tview.NewTextView().
 		SetDynamicColors(true).
 		SetText("Select a PR to view details")
+
 	activityDetails := tview.NewFlex()
 
 	// MIDDLE
 	rightPanelHeader := tview.NewTextView().
-		SetTextAlign(tview.AlignCenter).
+		SetTextAlign(tview.AlignLeft).
 		SetDynamicColors(true).
 		SetText("Selected PR")
 
-	middleFullFlex := util.CreateFlexComponent("Pull Request Details").SetDirection(tview.FlexRow)
+	middleFullFlex := util.CreateFlexComponent("Pull Request Details")
+	middleFullFlex.SetDirection(tview.FlexRow)
+
 	middleFullFlex.AddItem(rightPanelHeader, 0, 1, false).
-		AddItem(prDetails, 0, 1, false).
-		AddItem(activityDetails, 0, 1, false)
+		AddItem(prDetails, 0, 2, false).
+		AddItem(activityDetails, 0, 8, false)
 
 		//RIGHT
 	diffDetails := tview.NewFlex()
 	diffStatDetails := tview.NewFlex()
 	rightFullFlex := util.CreateFlexComponent("Diff")
-	rightFullFlex.AddItem(diffDetails, 0, 1, false).
-		AddItem(diffStatDetails, 0, 1, false)
+	rightFullFlex.AddItem(diffStatDetails, 0, 1, false).
+		AddItem(diffDetails, 0, 1, false)
 
 	mainFlexWrapper := tview.NewFlex()
 
