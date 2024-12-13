@@ -18,6 +18,10 @@ const (
 
 func PopulatePRList(prList *tview.Table) *tview.Table {
 	prs := GetFilteredPRs()
+	if len(prs) > 0 {
+		prList.Select(0, 0)
+		HandleOnPrSelect(prs, 0)
+	}
 	log.Printf("PRS....%v", prs)
 	// Populate PR list
 	util.PopulatePRList(prList, prs)
@@ -28,17 +32,14 @@ func PopulatePRList(prList *tview.Table) *tview.Table {
 	})
 
 	prList.SetSelectionChangedFunc(func(row, column int) {
-		log.Printf("Selection changed...%d", len(prs))
-		HandleOnPrSelect(prs, row)
+		//HandleOnPrSelect(prs, row) TODO: It will be really laggy to allow selection update PR as user might navigate up and down fast...maybe need some debouncing?
 	})
-	if len(prs) > 0 {
-		prList.Select(0, 0)
-		HandleOnPrSelect(prs, 0)
-	}
+
 	return prList
 }
 
 func HandleOnPrSelect(prs []types.PR, row int) {
+	log.Printf("Selecting PR..%d,%v", row, state.GlobalState)
 	if row >= 0 && row < len(prs) && state.GlobalState != nil {
 		// Fetch details in parallel using goroutines
 		go func() {

@@ -40,7 +40,11 @@ func UpdatePrDetails(prs []types.PR, prDetails *tview.TextView, row int) {
 			description, // Rendered Markdown content
 		)
 
-		prDetails.SetText(formattedText)
+		prDetails.
+			SetText(formattedText).
+			SetBorder(true).
+			SetBorderPadding(1, 1, 1, 1).
+			SetBorderColor(tcell.ColorGrey)
 	}
 }
 

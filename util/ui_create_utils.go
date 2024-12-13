@@ -45,7 +45,8 @@ func CreateFlexComponent(title string) *tview.Flex {
 
 	flex.SetBorder(true).
 		SetTitleAlign(tview.AlignLeft).
-		SetTitle(title)
+		SetTitle(title).
+		SetBorderColor(tcell.ColorGrey)
 
 	return flex
 }

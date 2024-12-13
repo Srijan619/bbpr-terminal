@@ -1,8 +1,8 @@
 package pr
 
 import (
+	"github.com/gdamore/tcell/v2"
 	"github.com/rivo/tview"
-
 	"simple-git-terminal/state"
 	"simple-git-terminal/util"
 )
@@ -32,6 +32,7 @@ func CreatePRStatusFilterView() *tview.Flex {
 		SetTitle("Filter PRs by status").
 		SetTitleAlign(tview.AlignLeft).
 		SetBorder(true).
+		SetBorderColor(tcell.ColorGrey).
 		SetBorderPadding(0, 0, 1, 0)
 
 	return wrapperFlex

@@ -13,6 +13,7 @@ import (
 const (
 	HIGH_CONTRAST_COLOR = tcell.ColorCadetBlue
 	LOW_CONTRAST_COLOR  = tcell.ColorYellow
+	ICON_ACTIVE         = "\uf00c "
 )
 
 func GetStateColor(state string) tcell.Color {
@@ -73,7 +74,12 @@ func PopulatePRList(prList *tview.Table, prs []types.PR) {
 		sourceBranch := cellFormat(EllipsizeText(pr.Source.Branch.Name, 10), LOW_CONTRAST_COLOR)
 		arrow := cellFormat("->", LOW_CONTRAST_COLOR)
 		destinationBranch := cellFormat(EllipsizeText(pr.Destination.Branch.Name, 10), LOW_CONTRAST_COLOR)
+		log.Printf("sausage should be her...%v", state.GlobalState.SelectedPR)
 
+		if state.GlobalState != nil && state.GlobalState.SelectedPR != nil && state.GlobalState.SelectedPR.ID == pr.ID {
+			activeCell := cellFormat(ICON_ACTIVE, tcell.ColorGreen)
+			prList.SetCell(i, 6, activeCell)
+		}
 		prList.SetCell(i, 0, initialsCell)
 		prList.SetCell(i, 1, stateCell)
 		prList.SetCell(i, 2, titleCell)
@@ -86,21 +92,19 @@ func PopulatePRList(prList *tview.Table, prs []types.PR) {
 
 // Helper method to update borders of views
 func UpdateFocusBorders(focusOrder []tview.Primitive, currentFocusIndex int, activeBorderColor tcell.Color) {
-	for i, view := range focusOrder {
-		// Check if the view has border-related methods
-		if bordered, ok := view.(interface {
-			SetBorder(bool) *tview.Box
-			SetBorderColor(tcell.Color) *tview.Box
-		}); ok {
-			if i == currentFocusIndex {
-				bordered.SetBorder(true).
-					SetBorderColor(activeBorderColor).
-					SetBorderPadding(1, 1, 1, 1)
-			} else {
-				bordered.SetBorder(false)
-			}
-		}
-	}
+	// for i, view := range focusOrder {
+	// 	// Check if the view has border-related methods
+	// 	// if bordered, ok := view.(interface {
+	// 	// 	SetBorder(bool) *tview.Box
+	// 	// 	SetBorderColor(tcell.Color) *tview.Box
+	// 	// }); ok {
+	// 	// 	if i == currentFocusIndex {
+	// 	// 		// bordered.SetBorder(true).
+	// 	// 		// 	SetBorderColor(activeBorderColor).
+	// 	// 		// 	SetBorderPadding(1, 1, 1, 1)
+	// 	// 	}
+	// 	// }
+	// }
 }
 
 func UpdateView(targetView *tview.Flex, content interface{}) {
