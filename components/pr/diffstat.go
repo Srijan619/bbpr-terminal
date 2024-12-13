@@ -2,11 +2,12 @@ package pr
 
 import (
 	"fmt"
-	"strings"
-
 	"github.com/gdamore/tcell/v2"
 	"github.com/rivo/tview"
+	"log"
+	"strings"
 
+	"simple-git-terminal/apis/bitbucket"
 	"simple-git-terminal/state"
 	"simple-git-terminal/types"
 	"simple-git-terminal/util"
@@ -16,9 +17,14 @@ const (
 	ROOT_COLOR     = tcell.ColorYellow
 	DIR_COLOR      = tcell.ColorBlue
 	FILE_COLOR     = tcell.ColorGrey
-	ICON_DIRECTORY = "\uf07b "
-	ICON_FILE      = "\uf15b "
+	ICON_DIRECTORY = "\uf07b " // Folder icon
+	ICON_FILE      = "\uf15b " // File icon
 )
+
+type NodeReference struct {
+	Path  string
+	IsDir bool
+}
 
 func GenerateDiffStatTree(data []types.DiffstatEntry) *tview.TreeView {
 	// Create the root node for the tree
@@ -29,10 +35,14 @@ func GenerateDiffStatTree(data []types.DiffstatEntry) *tview.TreeView {
 		SetCurrentNode(root)
 
 	// A helper function to add directories and files
-	add := func(target *tview.TreeNode, path string, isDir bool, fullPath string) *tview.TreeNode {
-		node := tview.NewTreeNode(path).
-			SetReference(fullPath).
-			SetSelectable(true)
+	add := func(target *tview.TreeNode, path string, isDir bool, displayName string) *tview.TreeNode {
+		ref := &NodeReference{
+			Path:  path,
+			IsDir: isDir,
+		}
+		node := tview.NewTreeNode(displayName). // Display text with icon
+							SetReference(ref).
+							SetSelectable(true)
 		if isDir {
 			node.SetColor(DIR_COLOR)
 			node.SetExpanded(true)
@@ -44,7 +54,7 @@ func GenerateDiffStatTree(data []types.DiffstatEntry) *tview.TreeView {
 	}
 
 	// Helper function to handle path splitting into directories and files
-	createPathTree := func(target *tview.TreeNode, fullPath string, fileNameWithDiffStatText string) {
+	createPathTree := func(target *tview.TreeNode, fullPath, diffStatText string) {
 		// Split the path into directories (except the last part which is a file)
 		parts := strings.Split(fullPath, "/")
 		var currentNode = target
@@ -52,13 +62,16 @@ func GenerateDiffStatTree(data []types.DiffstatEntry) *tview.TreeView {
 		for i, part := range parts {
 			// Check if this is the last part (file)
 			if i == len(parts)-1 {
-				// This is the file, so add the file node
-				currentNode = add(currentNode, ICON_FILE+fileNameWithDiffStatText, false, fullPath) // Add file node
+				// Add file node with diff stat text
+				displayName := fmt.Sprintf("%s%s | %s", ICON_FILE, part, diffStatText)
+				currentNode = add(currentNode, fullPath, false, displayName)
 			} else {
-				// This is a directory, check if directory already exists
+				// Add directory node
+				displayName := ICON_DIRECTORY + part
+				// Check if directory already exists
 				dirExists := false
 				for _, child := range currentNode.GetChildren() {
-					if child.GetText() == ICON_DIRECTORY+part {
+					if child.GetText() == displayName {
 						dirExists = true
 						currentNode = child
 						break
@@ -66,7 +79,7 @@ func GenerateDiffStatTree(data []types.DiffstatEntry) *tview.TreeView {
 				}
 				// If directory does not exist, create it
 				if !dirExists {
-					currentNode = add(currentNode, ICON_DIRECTORY+part, true, fullPath) // Add directory node
+					currentNode = add(currentNode, strings.Join(parts[:i+1], "/"), true, displayName)
 				}
 			}
 		}
@@ -92,10 +105,9 @@ func GenerateDiffStatTree(data []types.DiffstatEntry) *tview.TreeView {
 			}
 			diffStatText += fmt.Sprintf("[%s]- %d[-]", tcell.ColorRed, entry.LinesRemoved)
 		}
-		// Create the path structure in the tree
-		fileNameWithDiffStatText := (fmt.Sprintf("%s | %s", fileName, diffStatText)) // filename is file with path
-		createPathTree(root, fileName, fileNameWithDiffStatText)
 
+		// Create the path structure in the tree
+		createPathTree(root, fileName, diffStatText)
 	}
 
 	tree.SetSelectedFunc(func(node *tview.TreeNode) {
@@ -104,16 +116,39 @@ func GenerateDiffStatTree(data []types.DiffstatEntry) *tview.TreeView {
 		} else {
 			node.SetExpanded(true)
 		}
+		OpenFileSpecificDiff(node, true)
+	})
 
-		ref := node.GetReference()
-		if ref != nil {
-			fullPath, ok := ref.(string)
-			if ok {
-				util.UpdateDiffDetailsView(util.GenerateFileContentDiffView(state.GlobalState.SelectedPR.Source.Branch.Name, state.GlobalState.SelectedPR.Destination.Branch.Name, fullPath))
+	tree.SetChangedFunc(func(node *tview.TreeNode) {
+		if state.GlobalState.CurrentView != state.GlobalState.DiffStatView { // Avoid flickering when on full screen view
+			OpenFileSpecificDiff(node, false)
+		}
+	})
+	return tree
+}
+
+func OpenFileSpecificDiff(node *tview.TreeNode, fullScreen bool) {
+	ref := node.GetReference()
+	if ref != nil {
+		nodeRef, ok := ref.(*NodeReference)
+		if ok && !nodeRef.IsDir {
+			log.Printf("Fetching content for path: %s", nodeRef.Path)
+
+			// Use the spinner utility for asynchronous fetch
+			util.ShowLoadingSpinner(state.GlobalState.DiffDetails, func() (string, error) {
+				return bitbucket.FetchBitbucketDiffContent(state.GlobalState.SelectedPR.ID, nodeRef.Path)
+			}, func(result string, err error) {
+				if err != nil {
+					util.UpdateDiffDetailsView(err.Error())
+				} else {
+					util.UpdateDiffDetailsView(util.GenerateColorizedDiffView(result))
+				}
+			})
+
+			if fullScreen {
+				// Set the DiffDetails view as the active root
 				state.GlobalState.App.SetRoot(state.GlobalState.DiffDetails, true)
 			}
 		}
-	})
-
-	return tree
+	}
 }

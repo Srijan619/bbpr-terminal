@@ -44,24 +44,45 @@ func HandleOnPrSelect(prs []types.PR, row int) {
 		UpdatePrDetails(prs, state.GlobalState.PrDetails, row)
 		state.SetSelectedPR(&prs[row])
 
-		// Update right panel and fetch diff stats and activities
+		// Update right panel and set header
 		state.GlobalState.RightPanelHeader.SetText(formatPRHeader(*state.GlobalState.SelectedPR))
 
-		// Fetch additional details in a separate goroutine to avoid blocking
+		// Fetch details in parallel using goroutines
 		go func() {
-			util.UpdateActivityView(ICON_LOADING + "Fetching activities...")
-			util.UpdateDiffStatView(ICON_LOADING + "Fetching diff stats...")
-			util.UpdateDiffDetailsView("Select a file to see diff..")
-
-			// Fetch diff stat and activities for the selected PR
-			diffStatData := bitbucket.FetchBitbucketDiffstat(state.GlobalState.SelectedPR.ID)
-			prActivities := bitbucket.FetchBitbucketActivities(state.GlobalState.SelectedPR.ID)
-
-			// Update views asynchronously
-			state.GlobalState.App.QueueUpdateDraw(func() {
-				util.UpdateActivityView(CreateActivitiesView(prActivities))
-				util.UpdateDiffStatView(GenerateDiffStatTree(diffStatData))
+			// Show loading spinner for activities
+			util.ShowLoadingSpinner(state.GlobalState.ActivityView, func() (string, error) {
+				// Fetch activities
+				prActivities := bitbucket.FetchBitbucketActivities(state.GlobalState.SelectedPR.ID)
+				if prActivities == nil {
+					return "", fmt.Errorf("Failed to fetch activities")
+				}
+				return ICON_LOADING + "Activities fetched!", nil
+			}, func(result string, err error) {
+				if err != nil {
+					util.UpdateActivityView(err.Error())
+				} else {
+					util.UpdateActivityView(CreateActivitiesView(bitbucket.FetchBitbucketActivities(state.GlobalState.SelectedPR.ID)))
+				}
 			})
+
+			// Show loading spinner for diff stats
+			util.ShowLoadingSpinner(state.GlobalState.DiffStatView, func() (string, error) {
+				// Fetch diff stats
+				diffStatData := bitbucket.FetchBitbucketDiffstat(state.GlobalState.SelectedPR.ID)
+				if diffStatData == nil {
+					return "", fmt.Errorf("Failed to fetch diff stats")
+				}
+				return ICON_LOADING + "Diff stats fetched!", nil
+			}, func(result string, err error) {
+				if err != nil {
+					util.UpdateDiffStatView(err.Error())
+				} else {
+					util.UpdateDiffStatView(GenerateDiffStatTree(bitbucket.FetchBitbucketDiffstat(state.GlobalState.SelectedPR.ID)))
+				}
+			})
+
+			// Optionally, set a default message in the diff details view while fetching
+			util.UpdateDiffDetailsView("Hover over to a file for quick preview OR Select a file to see diff in full screen")
 		}()
 	}
 }
