@@ -38,14 +38,14 @@ func CreateMainApp() *tview.Application {
 		SetFixed(1, 0)
 
 	pr.PopulatePRList(prList)
-	prListFlex.AddItem(prList, 0, 1, false)
+	prListFlex.AddItem(prList, 0, 1, true)
 
 	leftFullFlex := tview.NewFlex().
 		SetDirection(tview.FlexRow)
 
 	leftFullFlex.
 		AddItem(prStatusFilterFlex, 0, 1, false).
-		AddItem(prListFlex, 0, 18, false)
+		AddItem(prListFlex, 0, 18, true)
 
 		// Description and Activity
 
@@ -75,8 +75,8 @@ func CreateMainApp() *tview.Application {
 	mainFlexWrapper := tview.NewFlex()
 
 	mainFlexWrapper.AddItem(leftFullFlex, 60, 1, true).
-		AddItem(middleFullFlex, 0, 1, true).
-		AddItem(rightFullFlex, 0, 2, true)
+		AddItem(middleFullFlex, 0, 1, false).
+		AddItem(rightFullFlex, 0, 2, false)
 
 	state.InitializeViews(app, mainFlexWrapper, prList, prDetails, activityDetails, diffDetails, diffStatDetails, rightPanelHeader)
 
@@ -113,7 +113,7 @@ func setupKeyBindings() {
 			case 'a':
 				state.GlobalState.App.SetRoot(state.GlobalState.ActivityView, true)
 			case 'q':
-				//state.GlobalState.App.SetRoot(state.GlobalState.MainGrid, true)
+				state.GlobalState.App.SetRoot(state.GlobalState.MainFlexWrapper, true)
 			}
 		}
 		return event

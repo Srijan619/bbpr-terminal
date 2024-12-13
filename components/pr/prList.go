@@ -24,19 +24,18 @@ func PopulatePRList(prList *tview.Table) *tview.Table {
 
 	// Add a selection function that updates PR details when a PR is selected
 	prList.SetSelectedFunc(func(row, column int) {
-		//	HandleOnPrSelect(prs, row)
+		HandleOnPrSelect(prs, row)
 	})
 
-	// Set initial PR details if available
 	if len(prs) > 0 {
 		prList.Select(0, 0)
-		//HandleOnPrSelect(prs, 0)
+		HandleOnPrSelect(prs, 0)
 	}
 	return prList
 }
 
 func HandleOnPrSelect(prs []types.PR, row int) {
-	if row >= 0 && row < len(prs) {
+	if row >= 0 && row < len(prs) && state.GlobalState != nil {
 		// Update PR details and set the selected PR
 		UpdatePrDetails(prs, state.GlobalState.PrDetails, row)
 		state.SetSelectedPR(&prs[row])
@@ -103,21 +102,15 @@ func formatPRHeader(pr types.PR) string {
 
 func GetFilteredPRs() []types.PR {
 	var filteredPRs []types.PR
-
 	// Fetch or use cached PRs based on active filters
 	if state.PRStatusFilter.Open {
-		log.Printf("I am fetching open PRs... now..")
 		filteredPRs = append(filteredPRs, bitbucket.FetchPRsByState("OPEN")...)
 	}
 	if state.PRStatusFilter.Merged {
-		log.Printf("I am fetching merged PRs... now..")
 		filteredPRs = append(filteredPRs, bitbucket.FetchPRsByState("MERGED")...)
 	}
 	if state.PRStatusFilter.Declined {
-		log.Printf("I am fetching declined PRs... now..")
 		filteredPRs = append(filteredPRs, bitbucket.FetchPRsByState("DECLINED")...)
 	}
-
-	log.Printf("Length of filtered PRS..%d", len(filteredPRs))
 	return filteredPRs
 }
