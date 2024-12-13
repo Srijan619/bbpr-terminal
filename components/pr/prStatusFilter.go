@@ -1,29 +1,36 @@
 package pr
 
 import (
+	"log"
+
 	"github.com/gdamore/tcell/v2"
 	"github.com/rivo/tview"
+
 	"simple-git-terminal/state"
 	"simple-git-terminal/util"
 )
 
 func CreatePRStatusFilterView() *tview.Flex {
+	log.Printf("I am creating..%v", state.PRStatusFilter)
 	wrapperFlex := tview.NewFlex().SetDirection(tview.FlexColumn)
-	state.InitializePRStatusFilter(nil)
+	if state.PRStatusFilter == nil {
+		log.Printf("Sont be the")
+		state.InitializePRStatusFilter(nil)
+	}
 
 	openPr := util.CreateCheckBoxComponent("Open", func(checked bool) {
 		state.SetPRStatusFilter("open", checked)
-		updatePRList()
+		UpdatePRList()
 	}).SetChecked(state.PRStatusFilter.Open)
 
 	mergedPr := util.CreateCheckBoxComponent("Merged", func(checked bool) {
 		state.SetPRStatusFilter("merged", checked)
-		updatePRList()
+		UpdatePRList()
 	}).SetChecked(state.PRStatusFilter.Merged)
 
 	declinedPr := util.CreateCheckBoxComponent("Declined", func(checked bool) {
 		state.SetPRStatusFilter("declined", checked)
-		updatePRList()
+		UpdatePRList()
 	}).SetChecked(state.PRStatusFilter.Declined)
 
 	wrapperFlex.AddItem(openPr, 0, 1, false).
@@ -38,7 +45,7 @@ func CreatePRStatusFilterView() *tview.Flex {
 	return wrapperFlex
 }
 
-func updatePRList() {
+func UpdatePRList() {
 	go func() {
 		if state.GlobalState != nil {
 			filteredPRs := GetFilteredPRs()

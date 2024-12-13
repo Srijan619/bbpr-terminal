@@ -18,14 +18,16 @@ type State struct {
 	DiffStatView     *tview.Flex
 	RightPanelHeader *tview.TextView
 	CurrentView      tview.Primitive
-	SelectedPR       *types.PR
+	PRStatusFilter   *tview.Flex
+
+	SelectedPR *types.PR
 }
 
 var GlobalState *State
 var Workspace, Repo string
 
 // InitializeViews initializes all view components except workspace and repo.
-func InitializeViews(app *tview.Application, mainFlexWrapper *tview.Flex, prList *tview.Table, prDetails *tview.TextView, activityView, diffDetails, diffStatView *tview.Flex, rightPanelHeader *tview.TextView) {
+func InitializeViews(app *tview.Application, mainFlexWrapper *tview.Flex, prList *tview.Table, prDetails *tview.TextView, activityView, diffDetails, diffStatView, pRStatusFilter *tview.Flex, rightPanelHeader *tview.TextView) {
 	GlobalState = &State{
 		App:              app,
 		MainFlexWrapper:  mainFlexWrapper,
@@ -34,6 +36,7 @@ func InitializeViews(app *tview.Application, mainFlexWrapper *tview.Flex, prList
 		ActivityView:     activityView,
 		DiffDetails:      diffDetails,
 		DiffStatView:     diffStatView,
+		PRStatusFilter:   pRStatusFilter,
 		RightPanelHeader: rightPanelHeader,
 	}
 }

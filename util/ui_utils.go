@@ -5,7 +5,6 @@ import (
 	"github.com/gdamore/tcell/v2"
 	"github.com/rivo/tview"
 	"log"
-
 	"simple-git-terminal/state"
 	"simple-git-terminal/types"
 )
@@ -74,19 +73,20 @@ func PopulatePRList(prList *tview.Table, prs []types.PR) {
 		sourceBranch := cellFormat(EllipsizeText(pr.Source.Branch.Name, 10), LOW_CONTRAST_COLOR)
 		arrow := cellFormat("->", LOW_CONTRAST_COLOR)
 		destinationBranch := cellFormat(EllipsizeText(pr.Destination.Branch.Name, 10), LOW_CONTRAST_COLOR)
-		log.Printf("sausage should be her...%v", state.GlobalState.SelectedPR)
 
+		activeCell := cellFormat(ICON_ACTIVE, tcell.ColorGreen)
 		if state.GlobalState != nil && state.GlobalState.SelectedPR != nil && state.GlobalState.SelectedPR.ID == pr.ID {
-			activeCell := cellFormat(ICON_ACTIVE, tcell.ColorGreen)
-			prList.SetCell(i, 6, activeCell)
+			prList.SetCell(i, 0, activeCell)
+		} else if i == 0 && (state.GlobalState == nil || state.GlobalState.SelectedPR == nil) {
+			prList.SetCell(i, 0, activeCell)
 		}
-		prList.SetCell(i, 0, initialsCell)
-		prList.SetCell(i, 1, stateCell)
-		prList.SetCell(i, 2, titleCell)
+		prList.SetCell(i, 1, initialsCell)
+		prList.SetCell(i, 2, stateCell)
+		prList.SetCell(i, 3, titleCell)
 
-		prList.SetCell(i, 3, sourceBranch)
-		prList.SetCell(i, 4, arrow)
-		prList.SetCell(i, 5, destinationBranch)
+		prList.SetCell(i, 4, sourceBranch)
+		prList.SetCell(i, 5, arrow)
+		prList.SetCell(i, 6, destinationBranch)
 	}
 }
 

@@ -28,7 +28,10 @@ func PopulatePRList(prList *tview.Table) *tview.Table {
 
 	// Add a selection function that updates PR details when a PR is selected
 	prList.SetSelectedFunc(func(row, column int) {
-		HandleOnPrSelect(prs, row)
+		go func() {
+			HandleOnPrSelect(prs, row)
+			UpdatePRList()
+		}()
 	})
 
 	prList.SetSelectionChangedFunc(func(row, column int) {
