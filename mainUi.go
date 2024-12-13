@@ -83,7 +83,7 @@ func CreateMainApp() *tview.Application {
 	// Key Bindings
 	setupKeyBindings()
 
-	app.SetRoot(mainFlexWrapper, true)
+	app.SetRoot(mainFlexWrapper, true).EnableMouse(true)
 
 	return app
 }

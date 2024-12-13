@@ -4,8 +4,15 @@ package util
 import (
 	"github.com/gdamore/tcell/v2"
 	"github.com/rivo/tview"
+	"log"
 
 	"simple-git-terminal/state"
+	"simple-git-terminal/types"
+)
+
+const (
+	HIGH_CONTRAST_COLOR = tcell.ColorCadetBlue
+	LOW_CONTRAST_COLOR  = tcell.ColorYellow
 )
 
 func GetStateColor(state string) tcell.Color {
@@ -32,6 +39,13 @@ func GetFieldBasedColor(field string) tcell.Color {
 	}
 }
 
+func cellFormat(text string, color tcell.Color) *tview.TableCell {
+	return tview.NewTableCell(text).
+		SetTextColor(color).
+		SetAlign(tview.AlignLeft).
+		SetSelectable(true)
+}
+
 // CreateStateCell creates a table cell with the appropriate color and alignment
 func CreateStateCell(state string) *tview.TableCell {
 	stateColor := GetStateColor(state)
@@ -46,6 +60,28 @@ func EllipsizeText(text string, max int) string {
 		text = text[:max] + "..."
 	}
 	return text
+}
+
+func PopulatePRList(prList *tview.Table, prs []types.PR) {
+	log.Printf("I am now population list view with PRs...%d", len(prs))
+	for i, pr := range prs {
+		titleCell := cellFormat(EllipsizeText(pr.Title, 18), tcell.ColorWhite)
+		stateCell := CreateStateCell(pr.State)
+
+		initialsCell := cellFormat(FormatInitials(pr.Author.DisplayName), HIGH_CONTRAST_COLOR)
+
+		sourceBranch := cellFormat(EllipsizeText(pr.Source.Branch.Name, 10), LOW_CONTRAST_COLOR)
+		arrow := cellFormat("->", LOW_CONTRAST_COLOR)
+		destinationBranch := cellFormat(EllipsizeText(pr.Destination.Branch.Name, 10), LOW_CONTRAST_COLOR)
+
+		prList.SetCell(i, 0, initialsCell)
+		prList.SetCell(i, 1, stateCell)
+		prList.SetCell(i, 2, titleCell)
+
+		prList.SetCell(i, 3, sourceBranch)
+		prList.SetCell(i, 4, arrow)
+		prList.SetCell(i, 5, destinationBranch)
+	}
 }
 
 // Helper method to update borders of views
@@ -80,7 +116,6 @@ func UpdateView(targetView *tview.Flex, content interface{}) {
 		targetView.AddItem(textView, 0, 1, true)
 
 	case tview.Primitive:
-
 		targetView.AddItem(v, 0, 1, true)
 
 	default:
@@ -104,3 +139,8 @@ func UpdateDiffStatView(statContent interface{}) {
 	UpdateView(state.GlobalState.DiffStatView, statContent)
 }
 
+func UpdatePRListView(prList []types.PR) {
+	if state.GlobalState != nil && state.GlobalState.PrList != nil {
+		PopulatePRList(state.GlobalState.PrList, prList)
+	}
+}

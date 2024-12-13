@@ -89,6 +89,20 @@ func FetchPRsByState(prState string) []types.PR {
 
 func FetchBitbucketPRs() []types.PR {
 	return FetchPRsByState("ALL")
+}
+
+func FetchBitbucketOpenPRs() []types.PR {
+	return FetchPRsByState("OPEN")
+}
+
+func FetchBitbucketMergedPRs() []types.PR {
+	return FetchPRsByState("MERGED")
+}
+
+func FetchBitbucketDeclinedPRs() []types.PR {
+	return FetchPRsByState("DECLINED")
+}
+
 func FetchBitbucketDiffContent(id int, filePath string) (string, error) {
 	client := createClient()
 

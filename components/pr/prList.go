@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"log"
 
-	"github.com/gdamore/tcell/v2"
 	"github.com/rivo/tview"
 
 	"simple-git-terminal/apis/bitbucket"
@@ -14,16 +13,14 @@ import (
 )
 
 const (
-	HIGH_CONTRAST_COLOR = tcell.ColorCadetBlue
-	LOW_CONTRAST_COLOR  = tcell.ColorYellow
-	ICON_LOADING        = "\uea75 "
+	ICON_LOADING = "\uea75 "
 )
 
 func PopulatePRList(prList *tview.Table) *tview.Table {
 	prs := GetFilteredPRs()
 	log.Printf("PRS....%v", prs)
 	// Populate PR list
-	populatePRList(prs, prList)
+	util.PopulatePRList(prList, prs)
 
 	// Add a selection function that updates PR details when a PR is selected
 	prList.SetSelectedFunc(func(row, column int) {
@@ -88,33 +85,6 @@ func HandleOnPrSelect(prs []types.PR, row int) {
 }
 
 // Function to populate the PR list
-func populatePRList(prs []types.PR, prList *tview.Table) {
-	for i, pr := range prs {
-		titleCell := cellFormat(util.EllipsizeText(pr.Title, 18), tcell.ColorWhite)
-		stateCell := util.CreateStateCell(pr.State)
-
-		initialsCell := cellFormat(util.FormatInitials(pr.Author.DisplayName), HIGH_CONTRAST_COLOR)
-
-		sourceBranch := cellFormat(util.EllipsizeText(pr.Source.Branch.Name, 10), LOW_CONTRAST_COLOR)
-		arrow := cellFormat("->", LOW_CONTRAST_COLOR)
-		destinationBranch := cellFormat(util.EllipsizeText(pr.Destination.Branch.Name, 10), LOW_CONTRAST_COLOR)
-
-		prList.SetCell(i, 0, initialsCell)
-		prList.SetCell(i, 1, stateCell)
-		prList.SetCell(i, 2, titleCell)
-
-		prList.SetCell(i, 3, sourceBranch)
-		prList.SetCell(i, 4, arrow)
-		prList.SetCell(i, 5, destinationBranch)
-	}
-}
-
-func cellFormat(text string, color tcell.Color) *tview.TableCell {
-	return tview.NewTableCell(text).
-		SetTextColor(color).
-		SetAlign(tview.AlignLeft).
-		SetSelectable(true)
-}
 
 // FormatPRHeader takes the PR details and returns a formatted string
 func formatPRHeader(pr types.PR) string {
@@ -136,14 +106,18 @@ func GetFilteredPRs() []types.PR {
 
 	// Fetch or use cached PRs based on active filters
 	if state.PRStatusFilter.Open {
+		log.Printf("I am fetching open PRs... now..")
 		filteredPRs = append(filteredPRs, bitbucket.FetchPRsByState("OPEN")...)
 	}
 	if state.PRStatusFilter.Merged {
+		log.Printf("I am fetching merged PRs... now..")
 		filteredPRs = append(filteredPRs, bitbucket.FetchPRsByState("MERGED")...)
 	}
 	if state.PRStatusFilter.Declined {
+		log.Printf("I am fetching declined PRs... now..")
 		filteredPRs = append(filteredPRs, bitbucket.FetchPRsByState("DECLINED")...)
 	}
 
+	log.Printf("Length of filtered PRS..%d", len(filteredPRs))
 	return filteredPRs
 }

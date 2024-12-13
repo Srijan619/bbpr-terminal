@@ -1,10 +1,9 @@
 package state
 
 import (
+	"github.com/rivo/tview"
 	"log"
 	"strings"
-
-	"github.com/rivo/tview"
 
 	"simple-git-terminal/types"
 )
@@ -74,7 +73,6 @@ func SetPRStatusFilter(filterKey string, isChecked bool) {
 	trimmedFilterKey := strings.ToLower(strings.TrimSpace(filterKey))
 	switch trimmedFilterKey {
 	case "open":
-		log.Printf("Checked opened..%t", isChecked)
 		PRStatusFilter.Open = isChecked
 	case "merged":
 		PRStatusFilter.Merged = isChecked
@@ -85,4 +83,5 @@ func SetPRStatusFilter(filterKey string, isChecked bool) {
 		PRStatusFilter.Merged = isChecked
 		PRStatusFilter.Declined = isChecked
 	}
+	log.Printf("Filter updated: %+v\n", PRStatusFilter)
 }

@@ -79,35 +79,35 @@ func CreateApp() *tview.Application {
 }
 
 // Key bindings should be moved to somewher else later..
-func setupKeyBindings() {
-	// Capture the Tab key to switch focus between the views
-	// Maintain a list of views in the desired focus order
-	focusOrder := []tview.Primitive{state.GlobalState.PrList, state.GlobalState.PrDetails, state.GlobalState.ActivityView, state.GlobalState.DiffStatView, state.GlobalState.DiffDetails}
-	currentFocusIndex := 0
-	util.UpdateFocusBorders(focusOrder, currentFocusIndex, VIEW_ACTIVE_BORDER_COLOR)
-
-	state.GlobalState.App.SetInputCapture(func(event *tcell.EventKey) *tcell.EventKey {
-		switch event.Key() {
-		case tcell.KeyTAB:
-			currentFocusIndex = (currentFocusIndex + 1) % len(focusOrder)
-			state.GlobalState.App.SetFocus(focusOrder[currentFocusIndex])
-			util.UpdateFocusBorders(focusOrder, currentFocusIndex, VIEW_ACTIVE_BORDER_COLOR)
-		case tcell.KeyCtrlC:
-			state.GlobalState.App.Stop()
-		case tcell.KeyRune:
-			switch event.Rune() {
-			case 'd':
-				state.SetCurrentView(state.GlobalState.DiffStatView)
-				state.GlobalState.App.SetRoot(state.GlobalState.DiffStatView, true)
-			case 'D':
-				state.GlobalState.App.SetRoot(state.GlobalState.DiffDetails, true)
-			case 'a':
-				state.GlobalState.App.SetRoot(state.GlobalState.ActivityView, true)
-			case 'q':
-				state.GlobalState.App.SetRoot(state.GlobalState.MainGrid, true)
-				util.UpdateFocusBorders(focusOrder, 0, VIEW_ACTIVE_BORDER_COLOR)
-			}
-		}
-		return event
-	})
-}
+// func setupKeyBindings() {
+// 	// Capture the Tab key to switch focus between the views
+// 	// Maintain a list of views in the desired focus order
+// 	focusOrder := []tview.Primitive{state.GlobalState.PrList, state.GlobalState.PrDetails, state.GlobalState.ActivityView, state.GlobalState.DiffStatView, state.GlobalState.DiffDetails}
+// 	currentFocusIndex := 0
+// 	util.UpdateFocusBorders(focusOrder, currentFocusIndex, VIEW_ACTIVE_BORDER_COLOR)
+//
+// 	state.GlobalState.App.SetInputCapture(func(event *tcell.EventKey) *tcell.EventKey {
+// 		switch event.Key() {
+// 		case tcell.KeyTAB:
+// 			currentFocusIndex = (currentFocusIndex + 1) % len(focusOrder)
+// 			state.GlobalState.App.SetFocus(focusOrder[currentFocusIndex])
+// 			util.UpdateFocusBorders(focusOrder, currentFocusIndex, VIEW_ACTIVE_BORDER_COLOR)
+// 		case tcell.KeyCtrlC:
+// 			state.GlobalState.App.Stop()
+// 		case tcell.KeyRune:
+// 			switch event.Rune() {
+// 			case 'd':
+// 				state.SetCurrentView(state.GlobalState.DiffStatView)
+// 				state.GlobalState.App.SetRoot(state.GlobalState.DiffStatView, true)
+// 			case 'D':
+// 				state.GlobalState.App.SetRoot(state.GlobalState.DiffDetails, true)
+// 			case 'a':
+// 				state.GlobalState.App.SetRoot(state.GlobalState.ActivityView, true)
+// 			case 'q':
+// 				state.GlobalState.App.SetRoot(state.GlobalState.MainGrid, true)
+// 				util.UpdateFocusBorders(focusOrder, 0, VIEW_ACTIVE_BORDER_COLOR)
+// 			}
+// 		}
+// 		return event
+// 	})
+// }
