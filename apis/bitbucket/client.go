@@ -2,10 +2,9 @@ package bitbucket
 
 import (
 	"fmt"
+	"github.com/go-resty/resty/v2"
 	"log"
 	"os"
-
-	"github.com/go-resty/resty/v2"
 	"simple-git-terminal/state"
 	"simple-git-terminal/types"
 	"simple-git-terminal/util"
@@ -18,12 +17,6 @@ const (
 	BitbucketEnvAppPasswordName     = "BITBUCKET_APP_PASSWORD"
 	BitbucketEnvAppPasswordUsername = "BITBUCKET_APP_USERNAME"
 )
-
-var PRCache = map[string][]types.PR{
-	"OPEN":     nil,
-	"MERGED":   nil,
-	"DECLINED": nil,
-}
 
 func getAuthToken(tokenString string) string {
 	token := os.Getenv(tokenString)
@@ -54,13 +47,26 @@ func createClient() *resty.Client {
 	return client
 }
 
-func FetchPRsByState(prState string) []types.PR {
-	// Return cached PRs if already fetched
-	if cachedPRs, ok := PRCache[prState]; ok && cachedPRs != nil {
-		return cachedPRs
+func FetchPR(id int) *types.PR {
+	client := createClient()
+	url := fmt.Sprintf("%s/repositories/%s/%s/pullrequests/%d", BitbucketBaseURL, state.Workspace, state.Repo, id)
+
+	resp, err := client.R().
+		SetResult(&types.PR{}).
+		Get(url)
+
+	if err != nil {
+		log.Fatalf("Error fetching PRs: %v", err)
+	}
+	if resp.StatusCode() != 200 {
+		log.Fatalf("Unexpected status code: %d. Response body: %s", resp.StatusCode(), string(resp.Body()))
 	}
 
-	// Fetch PRs from the server
+	pr := resp.Result().(*types.PR)
+	return pr
+}
+
+func FetchPRsByState(prState string) []types.PR {
 	client := createClient()
 	url := fmt.Sprintf("%s/repositories/%s/%s/pullrequests?state=%s", BitbucketBaseURL, state.Workspace, state.Repo, prState)
 	log.Printf("Fetching PRs with state: %s", prState)
@@ -81,10 +87,6 @@ func FetchPRsByState(prState string) []types.PR {
 		prs[i] = util.SanitizePR(prs[i])
 	}
 
-	// Cache the fetched PRs
-	PRCache[prState] = prs
-
-	log.Printf("Fetched PRS...%v", resp.Result())
 	return prs
 }
 

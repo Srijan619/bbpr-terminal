@@ -12,40 +12,53 @@ import (
 	"strings"
 )
 
-func UpdatePrDetails(prs []types.PR, prDetails *tview.TextView, row int) {
-	if row >= 0 && row < len(prs) {
-		selectedPR := prs[row]
+func GeneratePRDetail(pr *types.PR) string {
+	// Format the description using glamour for Markdown rendering
+	description := formatDescription(pr.Description)
 
-		// Format the description using glamour for Markdown rendering
-		description := formatDescription(selectedPR.Description)
+	// Get the color based on the state
+	stateColor := util.GetStateColor(pr.State)
 
-		// Get the color based on the state
-		stateColor := util.GetStateColor(selectedPR.State)
+	otherColor := tcell.ColorMediumAquamarine
 
-		otherColor := tcell.ColorMediumAquamarine
+	reviewers := GetReviewerNames(pr)
 
-		// Create a formatted string with improved structure and apply the state color
-		formattedText := fmt.Sprintf(
+	// Create a formatted string with improved structure and apply the state color
+	formattedText := fmt.Sprintf(
+		"[::b]Reviewers:[-] [%s]%s[-]\n"+
 			"[::b]State:[-] [%s]%s[-]\n"+
-				"[::b]Author:[-] [%s]%s[-]\n"+
-				"[::b]Created On:[-] [%s]%s[-]\n"+
-				"[::b]Updated On:[-] [%s]%s[-]\n"+
-				"[::b]Link:[-] [%s]%s[-]\n"+
-				"[::b]Description:[-] \n%s\n",
-			stateColor, selectedPR.State,
-			otherColor, selectedPR.Author.DisplayName,
-			otherColor, selectedPR.CreatedOn,
-			otherColor, selectedPR.UpdatedOn,
-			otherColor, selectedPR.Links.HTML.Href,
-			description, // Rendered Markdown content
-		)
+			"[::b]Author:[-] [%s]%s[-]\n"+
+			"[::b]Created On:[-] [%s]%s[-]\n"+
+			"[::b]Updated On:[-] [%s]%s[-]\n"+
+			"[::b]Link:[-] [%s]%s[-]\n"+
+			"[::b]Description:[-] \n%s\n",
+		tcell.ColorOrange, reviewers,
+		stateColor, pr.State,
+		otherColor, pr.Author.DisplayName,
+		otherColor, pr.CreatedOn,
+		otherColor, pr.UpdatedOn,
+		otherColor, pr.Links.HTML.Href,
+		description, // Rendered Markdown content
+	)
 
-		prDetails.
-			SetText(formattedText).
-			SetBorder(true).
-			SetBorderPadding(1, 1, 1, 1).
-			SetBorderColor(tcell.ColorGrey)
+	return formattedText
+}
+
+func GetReviewerNames(pr *types.PR) string {
+	var reviewerNames []string
+
+	// Loop through the participants and check if they are REVIEWERs
+	for _, participant := range pr.Participants {
+		if participant.Role == "REVIEWER" {
+			reviewerNames = append(reviewerNames, util.FormatInitials(participant.User.DisplayName))
+		}
 	}
+
+	if len(reviewerNames) == 0 {
+		return "No Reviewers"
+	}
+	// Join all the reviewer names with a pipe (" | ") separator
+	return strings.Join(reviewerNames, " | ")
 }
 
 // Formats the PR description for display

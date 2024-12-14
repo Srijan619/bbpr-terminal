@@ -22,7 +22,6 @@ func PopulatePRList(prList *tview.Table) *tview.Table {
 		prList.Select(0, 0)
 		HandleOnPrSelect(prs, 0)
 	}
-	log.Printf("PRS....%v", prs)
 	// Populate PR list
 	util.PopulatePRList(prList, prs)
 
@@ -46,44 +45,75 @@ func HandleOnPrSelect(prs []types.PR, row int) {
 	if row >= 0 && row < len(prs) && state.GlobalState != nil {
 		// Fetch details in parallel using goroutines
 		go func() {
-			log.Printf("I am now updating pr details...")
-			// Update PR details and set the selected PR
-			UpdatePrDetails(prs, state.GlobalState.PrDetails, row)
 			state.SetSelectedPR(&prs[row])
 
 			// Update right panel and set header
 			state.GlobalState.RightPanelHeader.SetTitle(formatPRHeaderBranch(*state.GlobalState.SelectedPR))
 			state.GlobalState.RightPanelHeader.SetText(state.GlobalState.SelectedPR.Title)
 
+			// Show loading spinner for PR details
+			util.ShowLoadingSpinner(state.GlobalState.PrDetails, func() (interface{}, error) {
+				singlePR := bitbucket.FetchPR(prs[row].ID)
+				if singlePR == nil {
+					return nil, fmt.Errorf("Failed to fetch PR details")
+				}
+				return singlePR, nil
+			}, func(result interface{}, err error) {
+				if err != nil {
+					util.UpdatePRDetailView(fmt.Sprintf("[red]Error: %v[-]", err))
+				} else {
+					// Assert result as the correct type: *types.PR
+					pr, ok := result.(*types.PR)
+					log.Printf("Fetched single pr...%v", pr)
+					if !ok {
+						util.UpdatePRDetailView("[red]Failed to cast PR details[-]")
+						return
+					}
+					util.UpdatePRDetailView(GeneratePRDetail(pr))
+				}
+			})
+
 			// Show loading spinner for activities
-			util.ShowLoadingSpinner(state.GlobalState.ActivityView, func() (string, error) {
+			util.ShowLoadingSpinner(state.GlobalState.ActivityView, func() (interface{}, error) {
 				// Fetch activities
 				prActivities := bitbucket.FetchBitbucketActivities(state.GlobalState.SelectedPR.ID)
 				if prActivities == nil {
-					return "", fmt.Errorf("Failed to fetch activities")
+					return nil, fmt.Errorf("Failed to fetch activities")
 				}
-				return ICON_LOADING + "Activities fetched!", nil
-			}, func(result string, err error) {
+				return prActivities, nil
+			}, func(result interface{}, err error) {
 				if err != nil {
 					util.UpdateActivityView(err.Error())
 				} else {
-					util.UpdateActivityView(CreateActivitiesView(bitbucket.FetchBitbucketActivities(state.GlobalState.SelectedPR.ID)))
+					// Assert result as a slice of Activity
+					activities, ok := result.([]types.Activity)
+					if !ok {
+						util.UpdateActivityView("[red]Failed to cast activities[-]")
+						return
+					}
+					util.UpdateActivityView(CreateActivitiesView(activities))
 				}
 			})
 
 			// Show loading spinner for diff stats
-			util.ShowLoadingSpinner(state.GlobalState.DiffStatView, func() (string, error) {
+			util.ShowLoadingSpinner(state.GlobalState.DiffStatView, func() (interface{}, error) {
 				// Fetch diff stats
 				diffStatData := bitbucket.FetchBitbucketDiffstat(state.GlobalState.SelectedPR.ID)
 				if diffStatData == nil {
-					return "", fmt.Errorf("Failed to fetch diff stats")
+					return nil, fmt.Errorf("Failed to fetch diff stats")
 				}
-				return ICON_LOADING + "Diff stats fetched!", nil
-			}, func(result string, err error) {
+				return diffStatData, nil
+			}, func(result interface{}, err error) {
 				if err != nil {
 					util.UpdateDiffStatView(err.Error())
 				} else {
-					util.UpdateDiffStatView(GenerateDiffStatTree(bitbucket.FetchBitbucketDiffstat(state.GlobalState.SelectedPR.ID)))
+					// Assert result as string
+					diffStat, ok := result.([]types.DiffstatEntry)
+					if !ok {
+						util.UpdateDiffStatView("[red]Failed to cast diff stats[-]")
+						return
+					}
+					util.UpdateDiffStatView(GenerateDiffStatTree(diffStat))
 				}
 			})
 

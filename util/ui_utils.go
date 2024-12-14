@@ -13,6 +13,7 @@ const (
 	HIGH_CONTRAST_COLOR = tcell.ColorCadetBlue
 	LOW_CONTRAST_COLOR  = tcell.ColorYellow
 	ICON_ACTIVE         = "\uf00c "
+	ICON_DOWN_ARROW     = "\u2193"
 )
 
 func GetStateColor(state string) tcell.Color {
@@ -63,7 +64,6 @@ func EllipsizeText(text string, max int) string {
 }
 
 func PopulatePRList(prList *tview.Table, prs []types.PR) {
-	log.Printf("I am now population list view with PRs...%d", len(prs))
 	for i, pr := range prs {
 		titleCell := cellFormat(EllipsizeText(pr.Title, 18), tcell.ColorWhite)
 		stateCell := CreateStateCell(pr.State)
@@ -88,6 +88,9 @@ func PopulatePRList(prList *tview.Table, prs []types.PR) {
 		prList.SetCell(i, 5, arrow)
 		prList.SetCell(i, 6, destinationBranch)
 	}
+
+	fetchMoreCell := cellFormat(ICON_DOWN_ARROW, tcell.ColorOrange).SetReference("fetch-more")
+	prList.SetCell(len(prs), 1, fetchMoreCell)
 }
 
 // Helper method to update borders of views
@@ -107,27 +110,53 @@ func UpdateFocusBorders(focusOrder []tview.Primitive, currentFocusIndex int, act
 	// }
 }
 
-func UpdateView(targetView *tview.Flex, content interface{}) {
-	// Clear the target view before adding new content
-	targetView.Clear()
+func UpdateView(targetView interface{}, content interface{}) {
+	if targetView != nil {
+		// Check the type of the target view (either Flex or TextView)
+		switch v := targetView.(type) {
+		case *tview.Flex:
+			// If it's a Flex view, clear it and update it
+			v.Clear()
 
-	switch v := content.(type) {
-	case string:
-		textView := tview.NewTextView().
-			SetText(v).
-			SetDynamicColors(true).
-			SetWrap(true)
-		targetView.AddItem(textView, 0, 1, true)
+			// Handle content based on its type
+			switch c := content.(type) {
+			case string:
+				// If the content is a string, display it in a TextView
+				textView := tview.NewTextView().
+					SetText(c).
+					SetDynamicColors(true).
+					SetWrap(true)
+				v.AddItem(textView, 0, 1, true)
+			case tview.Primitive:
+				// If the content is a tview.Primitive, add it directly
+				v.AddItem(c, 0, 1, true)
+			default:
+				// Handle unsupported content types
+				errorView := tview.NewTextView().
+					SetText("[red]Unsupported content type[-]").
+					SetDynamicColors(true).
+					SetWrap(true)
+				v.AddItem(errorView, 0, 1, true)
+			}
 
-	case tview.Primitive:
-		targetView.AddItem(v, 0, 1, true)
+		case *tview.TextView:
+			// If it's a TextView, update the text directly
+			switch c := content.(type) {
+			case string:
+				// If content is a string, update the TextView
+				v.SetText(c)
+			case tview.Primitive:
+				// Handle case if content is another Primitive (optional)
+				log.Println("Unsupported Primitive content for TextView")
+			default:
+				// Handle unsupported content types
+				v.SetText("[red]Unsupported content type[-]")
+			}
 
-	default:
-		errorView := tview.NewTextView().
-			SetText("[red]Unsupported content type[-]").
-			SetDynamicColors(true).
-			SetWrap(true)
-		targetView.AddItem(errorView, 0, 1, true)
+		default:
+			// If it's neither Flex nor TextView, print an error
+			log.Println("[red]Unsupported target view type[-]")
+		}
 	}
 }
 
@@ -147,4 +176,8 @@ func UpdatePRListView(prList []types.PR) {
 	if state.GlobalState != nil && state.GlobalState.PrList != nil {
 		PopulatePRList(state.GlobalState.PrList, prList)
 	}
+}
+
+func UpdatePRDetailView(content interface{}) {
+	UpdateView(state.GlobalState.PrDetails, content)
 }

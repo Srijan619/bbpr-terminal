@@ -7,7 +7,7 @@ type PR struct {
 	Author      Author      `json:"author"`
 	CreatedOn   string      `json:"created_on"`
 	UpdatedOn   string      `json:"updated_on"`
-	Description interface{} `json:"description"` // To handle both string and object
+	Description interface{} `json:"description"`
 	Links       struct {
 		HTML struct {
 			Href string `json:"href"`
@@ -23,6 +23,36 @@ type PR struct {
 			Name string `json:"name"`
 		} `json:"branch"`
 	} `json:"destination"`
+	Reviewers    []Reviewer    `json:"reviewers"`
+	Participants []Participant `json:"participants"`
+}
+
+type Reviewer struct {
+	DisplayName string `json:"display_name"`
+	Links       struct {
+		Self struct {
+			Href string `json:"href"`
+		} `json:"self"`
+		Avatar struct {
+			Href string `json:"href"`
+		} `json:"avatar"`
+		HTML struct {
+			Href string `json:"href"`
+		} `json:"html"`
+	} `json:"links"`
+	Type      string `json:"type"`
+	UUID      string `json:"uuid"`
+	AccountID string `json:"account_id"`
+	Nickname  string `json:"nickname"`
+}
+
+type Participant struct {
+	Type           string      `json:"type"`
+	User           *User       `json:"user"`
+	Role           string      `json:"role"`
+	Approved       bool        `json:"approved"`
+	State          interface{} `json:"state"`
+	ParticipatedOn interface{} `json:"participated_on"`
 }
 
 type Activity struct {
@@ -44,7 +74,7 @@ type UpdateDetail struct {
 	Reviewers   []interface{}     `json:"reviewers"`
 	Changes     map[string]Change `json:"changes"`
 	Reason      string            `json:"reason"`
-	Author      AuthorDetail      `json:"author"`
+	Author      User              `json:"author"`
 	Date        string            `json:"date"`
 	Destination BranchDetail      `json:"destination"`
 	Source      BranchDetail      `json:"source"`
@@ -55,7 +85,7 @@ type Change struct {
 	New string `json:"new"`
 }
 
-type AuthorDetail struct {
+type User struct {
 	DisplayName string `json:"display_name"`
 	Links       struct {
 		Self struct {
@@ -110,9 +140,9 @@ type BranchDetail struct {
 }
 
 type Approval struct {
-	Date        string       `json:"date"`
-	User        AuthorDetail `json:"user"`
-	PullRequest PR           `json:"pullrequest"`
+	Date        string `json:"date"`
+	User        User   `json:"user"`
+	PullRequest PR     `json:"pullrequest"`
 }
 
 type BitbucketPRResponse struct {

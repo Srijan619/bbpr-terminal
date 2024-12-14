@@ -135,12 +135,17 @@ func OpenFileSpecificDiff(node *tview.TreeNode, fullScreen bool) {
 			log.Printf("Fetching content for path: %s", nodeRef.Path)
 
 			// Use the spinner utility for asynchronous fetch
-			util.ShowLoadingSpinner(state.GlobalState.DiffDetails, func() (string, error) {
+			util.ShowLoadingSpinner(state.GlobalState.DiffDetails, func() (interface{}, error) {
 				return bitbucket.FetchBitbucketDiffContent(state.GlobalState.SelectedPR.ID, nodeRef.Path)
-			}, func(result string, err error) {
+			}, func(result interface{}, err error) {
 				if err != nil {
 					util.UpdateDiffDetailsView(err.Error())
 				} else {
+					result, ok := result.(string)
+					if !ok {
+						util.UpdateActivityView("[red]Failed to cast diff details[-]")
+						return
+					}
 					util.UpdateDiffDetailsView(util.GenerateColorizedDiffView(result))
 				}
 			})

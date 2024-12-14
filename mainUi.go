@@ -106,7 +106,7 @@ func CreateMainApp() *tview.Application {
 
 	mainFlexWrapper := tview.NewFlex()
 
-	mainFlexWrapper.AddItem(leftFullFlex, 60, 1, true).
+	mainFlexWrapper.AddItem(leftFullFlex, 0, 1, true).
 		AddItem(middleFullFlex, 0, 1, false).
 		AddItem(rightFullFlex, 0, 2, false)
 

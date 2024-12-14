@@ -1,13 +1,12 @@
 package util
 
 import (
-	"github.com/rivo/tview"
 	"simple-git-terminal/state"
 	"time"
 )
 
 // ShowLoadingSpinner displays a loading spinner in the provided view while performing an async operation.
-func ShowLoadingSpinner(view *tview.Flex, fetch func() (string, error), onComplete func(result string, err error)) {
+func ShowLoadingSpinner(view interface{}, fetch func() (interface{}, error), onComplete func(result interface{}, err error)) {
 	// Initial loading message
 	UpdateView(view, "⠋ Loading...")
 
