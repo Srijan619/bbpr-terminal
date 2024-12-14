@@ -52,7 +52,9 @@ func HandleOnPrSelect(prs []types.PR, row int) {
 			state.SetSelectedPR(&prs[row])
 
 			// Update right panel and set header
-			state.GlobalState.RightPanelHeader.SetText(formatPRHeader(*state.GlobalState.SelectedPR))
+			state.GlobalState.RightPanelHeader.SetTitle(formatPRHeaderBranch(*state.GlobalState.SelectedPR))
+			state.GlobalState.RightPanelHeader.SetText(state.GlobalState.SelectedPR.Title)
+
 			// Show loading spinner for activities
 			util.ShowLoadingSpinner(state.GlobalState.ActivityView, func() (string, error) {
 				// Fetch activities
@@ -94,13 +96,11 @@ func HandleOnPrSelect(prs []types.PR, row int) {
 // Function to populate the PR list
 
 // FormatPRHeader takes the PR details and returns a formatted string
-func formatPRHeader(pr types.PR) string {
+func formatPRHeaderBranch(pr types.PR) string {
 	// Use fmt.Sprintf to format the header and apply tview's dynamic color syntax
 	headerText := fmt.Sprintf(
-		"%s\n\n"+
-			"[yellow]%s[white] -> "+
-			"[green]%s[white]",
-		pr.Title,
+		"[yellow]%s[white] -> "+
+			"[green]%s",
 		pr.Source.Branch.Name,
 		pr.Destination.Branch.Name,
 	)

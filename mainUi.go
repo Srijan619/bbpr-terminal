@@ -65,8 +65,7 @@ func CreateMainApp() *tview.Application {
 	rightPanelHeader.
 		SetBorderColor(tcell.ColorGray).
 		SetBorder(true).
-		SetBorderPadding(0, 0, 1, 1).
-		SetTitle("Branch").
+		SetBorderPadding(1, 0, 1, 1).
 		SetTitleAlign(tview.AlignLeft)
 
 	prDetails := tview.NewTextView().
@@ -84,7 +83,7 @@ func CreateMainApp() *tview.Application {
 
 	middleFullFlex.AddItem(rightPanelHeader, 0, 1, false).
 		AddItem(prDetails, 0, 2, false).
-		AddItem(activityDetails, 0, 8, false)
+		AddItem(activityDetails, 0, 10, false)
 
 		//RIGHT
 
