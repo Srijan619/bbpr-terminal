@@ -94,6 +94,7 @@ func PopulatePRList(prList *tview.Table, prs []types.PR) {
 
 	fetchMoreCell := cellFormat(ICON_DOWN_ARROW, tcell.ColorOrange).SetReference("fetch-more")
 	prList.SetCell(len(prs), 1, fetchMoreCell)
+	prList.SetSelectedStyle(tcell.StyleDefault.Foreground(tcell.ColorLightGrey))
 }
 
 // Helper method to update borders of views

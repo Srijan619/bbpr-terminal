@@ -14,7 +14,7 @@ import (
 )
 
 const (
-	ROOT_COLOR     = tcell.ColorYellow
+	ROOT_COLOR     = tcell.ColorDefault
 	DIR_COLOR      = tcell.ColorBlue
 	FILE_COLOR     = tcell.ColorGrey
 	ICON_DIRECTORY = "\uf07b " // Folder icon
@@ -123,6 +123,7 @@ func GenerateDiffStatTree(data []types.DiffstatEntry) *tview.TreeView {
 		if state.GlobalState.CurrentView != state.GlobalState.DiffStatView { // Avoid flickering when on full screen view
 			OpenFileSpecificDiff(node, false)
 		}
+		node.SetSelectedTextStyle(tcell.StyleDefault.Foreground(tcell.ColorOrange))
 	})
 	return tree
 }
