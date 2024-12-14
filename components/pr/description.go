@@ -21,18 +21,18 @@ func GeneratePRDetail(pr *types.PR) string {
 
 	otherColor := tcell.ColorMediumAquamarine
 
-	reviewers := GetReviewerNames(pr)
+	reviewers := StyleReviewerNames(GetReviewerNames(pr))
 
 	// Create a formatted string with improved structure and apply the state color
 	formattedText := fmt.Sprintf(
-		"[::b]Reviewers:[-] [%s]%s[-]\n"+
+		"[::b]Reviewers:[-] %s\n"+
 			"[::b]State:[-] [%s]%s[-]\n"+
 			"[::b]Author:[-] [%s]%s[-]\n"+
 			"[::b]Created On:[-] [%s]%s[-]\n"+
 			"[::b]Updated On:[-] [%s]%s[-]\n"+
 			"[::b]Link:[-] [%s]%s[-]\n"+
 			"[::b]Description:[-] \n%s\n",
-		tcell.ColorOrange, reviewers,
+		reviewers,
 		stateColor, pr.State,
 		otherColor, pr.Author.DisplayName,
 		otherColor, pr.CreatedOn,
@@ -44,7 +44,7 @@ func GeneratePRDetail(pr *types.PR) string {
 	return formattedText
 }
 
-func GetReviewerNames(pr *types.PR) string {
+func GetReviewerNames(pr *types.PR) []string {
 	var reviewerNames []string
 
 	// Loop through the participants and check if they are REVIEWERs
@@ -55,10 +55,22 @@ func GetReviewerNames(pr *types.PR) string {
 	}
 
 	if len(reviewerNames) == 0 {
-		return "No Reviewers"
+		reviewerNames = append(reviewerNames, "No reviewer")
 	}
-	// Join all the reviewer names with a pipe (" | ") separator
-	return strings.Join(reviewerNames, " | ")
+	return reviewerNames
+}
+
+func StyleReviewerNames(names []string) string {
+	var styledNames []string
+
+	// Apply individual styling (e.g., color) to each name
+	for _, name := range names {
+		// Apply the desired style (e.g., orange color) to each reviewer name
+		styledNames = append(styledNames, fmt.Sprintf("[orange]%s[-]", name))
+	}
+
+	// Join all styled names with a pipe (" | ") separator
+	return strings.Join(styledNames, " [grey]|[-] ")
 }
 
 // Formats the PR description for display
