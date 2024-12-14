@@ -82,7 +82,7 @@ func GenerateActivityLogs(activities []types.Activity) string {
 				openPRFound = true
 				previousCommitHash = activity.Update.Source.Commit.Hash
 				log := fmt.Sprintf(
-					"[grey]%d %s[-] %s [blue]opened[-] the pull request: %s [grey](%s)[-]\n",
+					"[grey]%d %s[-] %s [mediumaquamarine]opened[-] the pull request: %s [grey](%s)[-]\n",
 					itemsCount,
 					ICON_SIDE_ARROW,
 					activity.Update.Author.DisplayName,
@@ -97,7 +97,7 @@ func GenerateActivityLogs(activities []types.Activity) string {
 				previousCommitHash = activity.Update.Source.Commit.Hash
 				itemsCount++
 				log := fmt.Sprintf(
-					"[grey]%d %s[-] %s [orange]updated[-] the pull request with a new commit: %s [grey](%s)[-]\n",
+					"[grey]%d %s[-] %s [orange]updated[-] the pull request with a new commit: [steelblue]%s[-] [grey](%s)[-]\n",
 					itemsCount,
 					ICON_SIDE_ARROW,
 					activity.Update.Author.DisplayName,
@@ -155,7 +155,7 @@ func GenerateActivityLogs(activities []types.Activity) string {
 			// Handle approvals (if there's an approval activity)
 			itemsCount++
 			log := fmt.Sprintf(
-				"[grey]%d %s[-] %s [green]APPROVED[-] the pull request [grey](%s)[-]\n",
+				"[grey]%d %s[-] %s [limegreen]APPROVED[-] the pull request [grey](%s)[-]\n",
 				itemsCount,
 				ICON_SIDE_ARROW,
 				activity.Approval.User.DisplayName,
