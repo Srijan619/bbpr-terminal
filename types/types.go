@@ -67,22 +67,31 @@ type Author struct {
 }
 
 type UpdateDetail struct {
-	State       string            `json:"state"`
-	Draft       bool              `json:"draft"`
-	Title       string            `json:"title"`
-	Description string            `json:"description"`
-	Reviewers   []interface{}     `json:"reviewers"`
-	Changes     map[string]Change `json:"changes"`
-	Reason      string            `json:"reason"`
-	Author      User              `json:"author"`
-	Date        string            `json:"date"`
-	Destination BranchDetail      `json:"destination"`
-	Source      BranchDetail      `json:"source"`
+	State       string        `json:"state"`
+	Draft       bool          `json:"draft"`
+	Title       string        `json:"title"`
+	Description string        `json:"description"`
+	Reviewers   []interface{} `json:"reviewers"`
+	Changes     Changes       `json:"changes"`
+	Reason      string        `json:"reason"`
+	Author      User          `json:"author"`
+	Date        string        `json:"date"`
+	Destination BranchDetail  `json:"destination"`
+	Source      BranchDetail  `json:"source"`
 }
 
-type Change struct {
-	Old string `json:"old"`
-	New string `json:"new"`
+type Changes struct {
+	Reviewers struct {
+		Added []Reviewer `json:"added"`
+	} `json:"reviewers"`
+	Description struct {
+		New string `json:"new"`
+		Old string `json:"old"`
+	} `json:"description"`
+	Title struct {
+		New string `json:"new"`
+		Old string `json:"old"`
+	} `json:"title"`
 }
 
 type User struct {

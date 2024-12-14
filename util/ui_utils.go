@@ -12,8 +12,10 @@ import (
 const (
 	HIGH_CONTRAST_COLOR = tcell.ColorCadetBlue
 	LOW_CONTRAST_COLOR  = tcell.ColorYellow
-	ICON_ACTIVE         = "\uf00c "
+	ICON_ACTIVE         = "\uf00c"
+	ICON_SELECTED       = "\u25C8"
 	ICON_DOWN_ARROW     = "\u2193"
+	ICON_SIDE_ARROW     = "\u21AA"
 )
 
 func GetStateColor(state string) tcell.Color {
@@ -70,23 +72,24 @@ func PopulatePRList(prList *tview.Table, prs []types.PR) {
 
 		initialsCell := cellFormat(FormatInitials(pr.Author.DisplayName), HIGH_CONTRAST_COLOR)
 
-		sourceBranch := cellFormat(EllipsizeText(pr.Source.Branch.Name, 20), LOW_CONTRAST_COLOR)
-		arrow := cellFormat("->", LOW_CONTRAST_COLOR)
-		destinationBranch := cellFormat(EllipsizeText(pr.Destination.Branch.Name, 20), LOW_CONTRAST_COLOR)
+		sourceBranch := cellFormat(EllipsizeText(pr.Source.Branch.Name, 20), tcell.ColorGrey)
+		arrow := cellFormat(ICON_SIDE_ARROW, tcell.ColorDefault)
+		destinationBranch := cellFormat(EllipsizeText(pr.Destination.Branch.Name, 20), tcell.ColorGrey)
 
-		activeCell := cellFormat(ICON_ACTIVE, tcell.ColorGreen)
+		selectedCell := cellFormat(ICON_SELECTED, tcell.ColorOrange)
 		if state.GlobalState != nil && state.GlobalState.SelectedPR != nil && state.GlobalState.SelectedPR.ID == pr.ID {
-			prList.SetCell(i, 0, activeCell)
+			prList.SetCell(i, 0, selectedCell)
 		} else if i == 0 && (state.GlobalState == nil || state.GlobalState.SelectedPR == nil) {
-			prList.SetCell(i, 0, activeCell)
+			prList.SetCell(i, 0, selectedCell)
 		}
 		prList.SetCell(i, 1, initialsCell)
 		prList.SetCell(i, 2, stateCell)
-		prList.SetCell(i, 3, titleCell)
 
-		prList.SetCell(i, 4, sourceBranch)
-		prList.SetCell(i, 5, arrow)
-		prList.SetCell(i, 6, destinationBranch)
+		prList.SetCell(i, 3, sourceBranch)
+		prList.SetCell(i, 4, arrow)
+		prList.SetCell(i, 5, destinationBranch)
+		prList.SetCell(i, 6, titleCell)
+
 	}
 
 	fetchMoreCell := cellFormat(ICON_DOWN_ARROW, tcell.ColorOrange).SetReference("fetch-more")

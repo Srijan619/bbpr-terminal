@@ -3,10 +3,8 @@ package pr
 import (
 	"fmt"
 	"strings"
-	"time"
 
 	"github.com/rivo/tview"
-
 	"simple-git-terminal/types"
 	"simple-git-terminal/util"
 )
@@ -35,7 +33,14 @@ func CreateActivitiesView(activities []types.Activity) *tview.Flex {
 }
 
 func isEmptyUpdateDetail(update types.UpdateDetail) bool {
-	return update.State == "" && update.Title == "" && update.Description == "" && update.Date == "" && len(update.Changes) == 0
+	// Check if state, title, description, date are empty
+	if update.State == "" && update.Title == "" && update.Description == "" && update.Date == "" {
+		// Check if there are no changes in reviewers, title, or description
+		return len(update.Changes.Reviewers.Added) == 0 &&
+			update.Changes.Description.New == "" &&
+			update.Changes.Title.New == ""
+	}
+	return false
 }
 
 func GenerateActivityLogs(activities []types.Activity) string {
@@ -47,51 +52,85 @@ func GenerateActivityLogs(activities []types.Activity) string {
 	prLogs := []string{ICON_PULL_REQUEST + "[::b][darkslateblue]Pull Requests:[-]\n"}
 
 	itemsCount := 0
+
 	for _, activity := range activities {
 		switch {
 		case !isEmptyUpdateDetail(activity.Update):
-			// Handle updates
-			for field, change := range activity.Update.Changes {
+			// Handle updates for changes in reviewers, title, description, etc.
+			if len(activity.Update.Changes.Reviewers.Added) > 0 {
+				for _, reviewer := range activity.Update.Changes.Reviewers.Added {
+					itemsCount++
+					log := fmt.Sprintf(
+						"[grey]%d %s[-] %s added [blue]reviewer[-]: %s [grey](%s ago)[-]\n",
+						itemsCount,
+						ICON_SIDE_ARROW,
+						activity.Update.Author.DisplayName,
+						reviewer.DisplayName,
+						util.FormatTimeAgo(activity.Update.Date),
+					)
+					updateLogs = append(updateLogs, log)
+				}
+			}
+
+			if activity.Update.Changes.Title.Old != "" && activity.Update.Changes.Title.New != "" {
 				itemsCount++
 				log := fmt.Sprintf(
-					"[red]{%d}[-] %s edited the [%s]%s[-]: %s → %s [cyan](%s ago)[-]\n",
+					"[grey]%d %s[-] %s edited the [blue]title[-]: %s → %s [grey](%s ago)[-]\n",
 					itemsCount,
+					ICON_SIDE_ARROW,
 					activity.Update.Author.DisplayName,
-					util.GetFieldBasedColor(field),
-					field,
-					change.Old,
-					change.New[:min(len(change.New), 30)], // Truncate if too long
-					formatTimeAgo(activity.Update.Date),
+					activity.Update.Changes.Title.Old,
+					activity.Update.Changes.Title.New,
+					util.FormatTimeAgo(activity.Update.Date),
+				)
+				updateLogs = append(updateLogs, log)
+			}
+
+			if activity.Update.Changes.Description.Old != "" && activity.Update.Changes.Description.New != "" {
+				itemsCount++
+				log := fmt.Sprintf(
+					"[grey]%d %s[-] %s edited the [blue]description[-]: %s → %s [grey](%s ago)[-]\n",
+					itemsCount,
+					ICON_SIDE_ARROW,
+					activity.Update.Author.DisplayName,
+					activity.Update.Changes.Description.Old,
+					activity.Update.Changes.Description.New,
+					util.FormatTimeAgo(activity.Update.Date),
+				)
+				updateLogs = append(updateLogs, log)
+			}
+			if activity.Update.Title != "" &&
+				len(activity.Update.Changes.Reviewers.Added) == 0 &&
+				activity.Update.Changes.Description.New == "" &&
+				activity.Update.Changes.Title.New == "" {
+				itemsCount++
+				log := fmt.Sprintf(
+					"[grey]%d %s[-] %s [blue]OPENED[-] the pull request: %s [grey](%s ago)[-]\n",
+					itemsCount,
+					ICON_SIDE_ARROW,
+					activity.Update.Author.DisplayName,
+					activity.Update.Title,
+					util.FormatTimeAgo(activity.PullRequest.CreatedOn),
 				)
 				updateLogs = append(updateLogs, log)
 			}
 		case activity.Approval.User.DisplayName != "":
-			// Handle approvals
+			// Handle approvals (if there's an approval activity)
 			itemsCount++
 			log := fmt.Sprintf(
-				"[red]{%d}[-] %s [green]APPROVED[-] the pull request [cyan](%s ago)[-]\n",
+				"[grey]%d %s[-] %s [green]APPROVED[-] the pull request [grey](%s ago)[-]\n",
 				itemsCount,
+				ICON_SIDE_ARROW,
 				activity.Approval.User.DisplayName,
-				formatTimeAgo(activity.Approval.Date),
+				util.FormatTimeAgo(activity.Approval.Date),
 			)
 			approvalLogs = append(approvalLogs, log)
-		case activity.PullRequest.Title != "":
-			// Handle pull requests
-			itemsCount++
-			log := fmt.Sprintf(
-				"[red]{%d}[-] %s OPENED the pull request: %s [cyan](%s ago)[-]\n",
-				itemsCount,
-				activity.PullRequest.Author.DisplayName,
-				activity.PullRequest.Title,
-				formatTimeAgo(activity.PullRequest.CreatedOn),
-			)
-			prLogs = append(prLogs, log)
 		}
 	}
 
 	// Check if there are no activities
 	if itemsCount == 0 {
-		return ICON_EMPTY + "[::b][red]No activities----![-]"
+		return ICON_EMPTY + "[::b][grey]No activities----![-]"
 	}
 
 	// Add the logs and dividers only if there are actual entries in the section
@@ -107,29 +146,4 @@ func GenerateActivityLogs(activities []types.Activity) string {
 
 	// Join all the logs together
 	return strings.Join(logs, "\n")
-}
-
-// Helper function to calculate time ago
-func formatTimeAgo(date string) string {
-	parsedTime, err := time.Parse(time.RFC3339, date)
-	if err != nil {
-		return "unknown time"
-	}
-	duration := time.Since(parsedTime)
-
-	if hours := duration.Hours(); hours > 24 {
-		return fmt.Sprintf("%d days", int(hours/24))
-	} else if hours > 1 {
-		return fmt.Sprintf("%d hours", int(hours))
-	} else if minutes := duration.Minutes(); minutes > 1 {
-		return fmt.Sprintf("%d minutes", int(minutes))
-	}
-	return "just now"
-}
-
-func min(a, b int) int {
-	if a < b {
-		return a
-	}
-	return b
 }

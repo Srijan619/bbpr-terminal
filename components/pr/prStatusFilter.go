@@ -18,17 +18,17 @@ func CreatePRStatusFilterView() *tview.Flex {
 		state.InitializePRStatusFilter(nil)
 	}
 
-	openPr := util.CreateCheckBoxComponent("Open", func(checked bool) {
+	openPr := util.CreateCheckBoxComponent("Open ", func(checked bool) {
 		state.SetPRStatusFilter("open", checked)
 		UpdatePRList()
 	}).SetChecked(state.PRStatusFilter.Open)
 
-	mergedPr := util.CreateCheckBoxComponent("Merged", func(checked bool) {
+	mergedPr := util.CreateCheckBoxComponent("Merged ", func(checked bool) {
 		state.SetPRStatusFilter("merged", checked)
 		UpdatePRList()
 	}).SetChecked(state.PRStatusFilter.Merged)
 
-	declinedPr := util.CreateCheckBoxComponent("Declined", func(checked bool) {
+	declinedPr := util.CreateCheckBoxComponent("Declined ", func(checked bool) {
 		state.SetPRStatusFilter("declined", checked)
 		UpdatePRList()
 	}).SetChecked(state.PRStatusFilter.Declined)

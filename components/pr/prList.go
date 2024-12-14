@@ -13,7 +13,8 @@ import (
 )
 
 const (
-	ICON_LOADING = "\uea75 "
+	ICON_LOADING    = "\uea75 "
+	ICON_SIDE_ARROW = "\u21AA "
 )
 
 func PopulatePRList(prList *tview.Table) *tview.Table {
@@ -129,7 +130,7 @@ func HandleOnPrSelect(prs []types.PR, row int) {
 func formatPRHeaderBranch(pr types.PR) string {
 	// Use fmt.Sprintf to format the header and apply tview's dynamic color syntax
 	headerText := fmt.Sprintf(
-		"[yellow]%s[white] -> "+
+		"[yellow]%s[white] "+ICON_SIDE_ARROW+
 			"[green]%s",
 		pr.Source.Branch.Name,
 		pr.Destination.Branch.Name,

@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"simple-git-terminal/types"
 	"strings"
+	"time"
 	"unicode"
 )
 
@@ -47,4 +48,22 @@ func getInitials(displayName string) string {
 		return strings.ToUpper(displayName[:2])
 	}
 	return strings.ToUpper(displayName)
+}
+
+// Helper function to calculate time ago
+func FormatTimeAgo(date string) string {
+	parsedTime, err := time.Parse(time.RFC3339, date)
+	if err != nil {
+		return "unknown time"
+	}
+	duration := time.Since(parsedTime)
+
+	if hours := duration.Hours(); hours > 24 {
+		return fmt.Sprintf("%d days", int(hours/24))
+	} else if hours > 1 {
+		return fmt.Sprintf("%d hours", int(hours))
+	} else if minutes := duration.Minutes(); minutes > 1 {
+		return fmt.Sprintf("%d minutes", int(minutes))
+	}
+	return "just now"
 }
