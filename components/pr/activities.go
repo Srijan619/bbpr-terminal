@@ -2,9 +2,12 @@ package pr
 
 import (
 	"fmt"
-	"strings"
-
 	"github.com/rivo/tview"
+	"log"
+	"sort"
+	"strings"
+	"time"
+
 	"simple-git-terminal/types"
 	"simple-git-terminal/util"
 )
@@ -52,16 +55,64 @@ func GenerateActivityLogs(activities []types.Activity) string {
 	prLogs := []string{ICON_PULL_REQUEST + "[::b][red]Pull Requests:[-]\n"}
 
 	itemsCount := 0
+	log.Printf("Total activities..%d", len(activities))
+	var previousCommitHash string // Track the previous commit hash
+	var openPRFound bool
 
+	// Sort activities by CreatedOn
+	sort.SliceStable(activities, func(i, j int) bool {
+		timeI, errI := time.Parse(time.RFC3339, activities[i].Update.Date)
+		timeJ, errJ := time.Parse(time.RFC3339, activities[j].Update.Date)
+		if errI != nil || errJ != nil {
+			log.Println("Error parsing dates:", errI, errJ)
+			return false
+		}
+		return timeI.Before(timeJ)
+	})
 	for _, activity := range activities {
 		switch {
 		case !isEmptyUpdateDetail(activity.Update):
+			// Handle PR opening when no changes other than title
+			if !openPRFound && activity.Update.Title != "" &&
+				len(activity.Update.Changes.Reviewers.Added) == 0 &&
+				activity.Update.Changes.Description.New == "" &&
+				activity.Update.Changes.Title.New == "" &&
+				activity.Update.Source.Commit.Hash == previousCommitHash {
+				itemsCount++
+				openPRFound = true
+				previousCommitHash = activity.Update.Source.Commit.Hash
+				log := fmt.Sprintf(
+					"[grey]%d %s[-] %s [blue]opened[-] the pull request: %s [grey](%s)[-]\n",
+					itemsCount,
+					ICON_SIDE_ARROW,
+					activity.Update.Author.DisplayName,
+					activity.Update.Title,
+					util.FormatTimeAgo(activity.Update.Date),
+				)
+				updateLogs = append(updateLogs, log)
+			}
+
+			// Check if the commit hash has changed
+			if activity.Update.Source.Commit.Hash != previousCommitHash {
+				previousCommitHash = activity.Update.Source.Commit.Hash
+				itemsCount++
+				log := fmt.Sprintf(
+					"[grey]%d %s[-] %s [orange]updated[-] the pull request with a new commit: %s [grey](%s)[-]\n",
+					itemsCount,
+					ICON_SIDE_ARROW,
+					activity.Update.Author.DisplayName,
+					activity.Update.Source.Commit.Hash,
+					util.FormatTimeAgo(activity.Update.Date),
+				)
+				updateLogs = append(updateLogs, log)
+			}
+
 			// Handle updates for changes in reviewers, title, description, etc.
 			if len(activity.Update.Changes.Reviewers.Added) > 0 {
 				for _, reviewer := range activity.Update.Changes.Reviewers.Added {
 					itemsCount++
 					log := fmt.Sprintf(
-						"[grey]%d %s[-] %s added [blue]reviewer[-]: %s [grey](%s)[-]\n",
+						"[grey]%d %s[-] %s added [yellow]reviewer[-]: %s [grey](%s)[-]\n",
 						itemsCount,
 						ICON_SIDE_ARROW,
 						activity.Update.Author.DisplayName,
@@ -99,21 +150,7 @@ func GenerateActivityLogs(activities []types.Activity) string {
 				)
 				updateLogs = append(updateLogs, log)
 			}
-			if activity.Update.Title != "" &&
-				len(activity.Update.Changes.Reviewers.Added) == 0 &&
-				activity.Update.Changes.Description.New == "" &&
-				activity.Update.Changes.Title.New == "" {
-				itemsCount++
-				log := fmt.Sprintf(
-					"[grey]%d %s[-] %s [blue]opened[-] the pull request: %s [grey](%s)[-]\n",
-					itemsCount,
-					ICON_SIDE_ARROW,
-					activity.Update.Author.DisplayName,
-					activity.Update.Title,
-					util.FormatTimeAgo(activity.Update.Date),
-				)
-				updateLogs = append(updateLogs, log)
-			}
+
 		case activity.Approval.User.DisplayName != "":
 			// Handle approvals (if there's an approval activity)
 			itemsCount++

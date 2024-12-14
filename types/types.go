@@ -17,6 +17,7 @@ type PR struct {
 		Branch struct {
 			Name string `json:"name"`
 		} `json:"branch"`
+		Commit Commit `json:"commit"`
 	} `json:"source"`
 	Destination struct {
 		Branch struct {
@@ -26,7 +27,18 @@ type PR struct {
 	Reviewers    []Reviewer    `json:"reviewers"`
 	Participants []Participant `json:"participants"`
 }
-
+type Commit struct {
+	Hash  string `json:"hash"`
+	Links struct {
+		Self struct {
+			Href string `json:"href"`
+		} `json:"self"`
+		HTML struct {
+			Href string `json:"href"`
+		} `json:"html"`
+	} `json:"links"`
+	Type string `json:"type"`
+}
 type Reviewer struct {
 	DisplayName string `json:"display_name"`
 	Links       struct {

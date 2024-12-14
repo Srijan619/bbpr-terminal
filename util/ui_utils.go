@@ -67,14 +67,14 @@ func EllipsizeText(text string, max int) string {
 
 func PopulatePRList(prList *tview.Table, prs []types.PR) {
 	for i, pr := range prs {
-		titleCell := cellFormat(EllipsizeText(pr.Title, 20), tcell.ColorWhite)
+		titleCell := cellFormat(EllipsizeText(pr.Title, 18), tcell.ColorWhite)
 		stateCell := CreateStateCell(pr.State)
 
 		initialsCell := cellFormat(FormatInitials(pr.Author.DisplayName), HIGH_CONTRAST_COLOR)
 
-		sourceBranch := cellFormat(EllipsizeText(pr.Source.Branch.Name, 20), tcell.ColorGrey)
+		sourceBranch := cellFormat(EllipsizeText(pr.Source.Branch.Name, 18), tcell.ColorGrey)
 		arrow := cellFormat(ICON_SIDE_ARROW, tcell.ColorDefault)
-		destinationBranch := cellFormat(EllipsizeText(pr.Destination.Branch.Name, 20), tcell.ColorGrey)
+		destinationBranch := cellFormat(EllipsizeText(pr.Destination.Branch.Name, 18), tcell.ColorGrey)
 
 		selectedCell := cellFormat(ICON_SELECTED, tcell.ColorOrange)
 		if state.GlobalState != nil && state.GlobalState.SelectedPR != nil && state.GlobalState.SelectedPR.ID == pr.ID {
