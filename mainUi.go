@@ -32,7 +32,7 @@ func CreateMainApp() *tview.Application {
 	prListFlex.SetBorder(true).
 		SetBorderColor(tcell.ColorGrey).
 		SetTitleAlign(tview.AlignLeft).
-		SetTitle("Pull Requests(p)").SetBorderPadding(1, 1, 1, 1)
+		SetTitle("Pull Requests [green]p").SetBorderPadding(1, 1, 1, 1)
 
 	prList := tview.NewTable().
 		SetSelectable(true, false).
@@ -54,7 +54,7 @@ func CreateMainApp() *tview.Application {
 		SetBorder(true).
 		SetBorderPadding(1, 1, 1, 1).
 		SetBorderColor(tcell.ColorGrey).
-		SetTitle("Activities(a)").
+		SetTitle("Activities [green]a|A").
 		SetTitleAlign(tview.AlignLeft)
 
 	// MIDDLE
@@ -76,7 +76,7 @@ func CreateMainApp() *tview.Application {
 		SetBorder(true).
 		SetBorderPadding(1, 1, 1, 1).
 		SetBorderColor(tcell.ColorGrey).
-		SetTitle("Description").
+		SetTitle("Description [green]d|D").
 		SetTitleAlign(tview.AlignLeft)
 
 	middleFullFlex := tview.NewFlex().
@@ -89,14 +89,14 @@ func CreateMainApp() *tview.Application {
 		//RIGHT
 
 	diffStatDetails := tview.NewFlex()
-	diffStatDetails.SetTitle("Diff Tree(t)").
+	diffStatDetails.SetTitle("Diff Tree [green]t|T").
 		SetBorder(true).
 		SetBorderColor(tcell.ColorGray).
 		SetBorderPadding(1, 1, 1, 1).
 		SetTitleAlign(tview.AlignLeft)
 
 	diffDetails := tview.NewFlex()
-	diffDetails.SetTitle("Diff Content(T)").
+	diffDetails.SetTitle("Diff Content [green]c|C").
 		SetBorder(true).
 		SetBorderColor(tcell.ColorGray).
 		SetBorderPadding(1, 1, 1, 1).
@@ -141,24 +141,35 @@ func setupKeyBindings() {
 		case tcell.KeyRune:
 			switch event.Rune() {
 			case 't':
-				state.GlobalState.App.SetRoot(state.GlobalState.DiffStatView, true)
+				state.GlobalState.App.SetFocus(state.GlobalState.DiffStatView)
 			case 'T':
+				state.GlobalState.App.SetRoot(state.GlobalState.DiffStatView, true)
+			case 'c':
+				state.GlobalState.App.SetFocus(state.GlobalState.DiffDetails)
+			case 'C':
 				state.GlobalState.App.SetRoot(state.GlobalState.DiffDetails, true)
 			case 'a':
+				state.GlobalState.App.SetFocus(state.GlobalState.ActivityView)
+			case 'A':
 				state.GlobalState.App.SetRoot(state.GlobalState.ActivityView, true)
 			case 'q':
 				state.GlobalState.App.SetRoot(state.GlobalState.MainFlexWrapper, true)
 			case 'p':
 				state.GlobalState.App.SetFocus(state.GlobalState.PrList)
-			case 'm':
-				state.SetPRStatusFilter("merged", !state.PRStatusFilter.Merged)
-				//pr.UpdatePRList()
-			case 'o':
-				state.SetPRStatusFilter("open", !state.PRStatusFilter.Open)
-			//	pr.UpdatePRList()
 			case 'd':
-				state.SetPRStatusFilter("declined", !state.PRStatusFilter.Declined)
-				//pr.UpdatePRList() //TODO UI of filter is still not updating
+				state.GlobalState.App.SetFocus(state.GlobalState.PrDetails)
+			case 'D':
+				state.GlobalState.App.SetRoot(state.GlobalState.PrDetails, true)
+
+				// case 'm':
+				// 	state.SetPRStatusFilter("merged", !state.PRStatusFilter.Merged)
+				// 	//pr.UpdatePRList()
+				// case 'o':
+				// 	state.SetPRStatusFilter("open", !state.PRStatusFilter.Open)
+				// //	pr.UpdatePRList()
+				// case 'd':
+				// 	state.SetPRStatusFilter("declined", !state.PRStatusFilter.Declined)
+				// 	//pr.UpdatePRList() //TODO UI of filter is still not updating
 			}
 		}
 		return event

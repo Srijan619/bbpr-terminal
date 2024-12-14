@@ -84,6 +84,7 @@ func FetchPRsByState(prState string) []types.PR {
 	// Cache the fetched PRs
 	PRCache[prState] = prs
 
+	log.Printf("Fetched PRS...%v", resp.Result())
 	return prs
 }
 

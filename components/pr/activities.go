@@ -97,15 +97,12 @@ func GenerateActivityLogs(activities []types.Activity) string {
 	// Add the logs and dividers only if there are actual entries in the section
 	if len(updateLogs) > 1 { // Check if there are any updates
 		logs = append(logs, strings.Join(updateLogs, "\n"))
-		logs = append(logs, "[cyan]-------------------------------------------------[-]")
 	}
 	if len(approvalLogs) > 1 { // Check if there are any approvals
 		logs = append(logs, strings.Join(approvalLogs, "\n"))
-		logs = append(logs, "[cyan]-------------------------------------------------[-]")
 	}
 	if len(prLogs) > 1 { // Check if there are any pull requests
 		logs = append(logs, strings.Join(prLogs, "\n"))
-		logs = append(logs, "[cyan]-------------------------------------------------[-]")
 	}
 
 	// Join all the logs together
