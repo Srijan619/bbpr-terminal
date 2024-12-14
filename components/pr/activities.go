@@ -47,9 +47,9 @@ func GenerateActivityLogs(activities []types.Activity) string {
 	var logs []string
 
 	// Separate logs into sections
-	updateLogs := []string{ICON_UPDATES + "[::b][darkslateblue]Updates:[-]\n"}
-	approvalLogs := []string{ICON_APPROVAL + "[::b][darkslateblue]Approvals:[-]\n"}
-	prLogs := []string{ICON_PULL_REQUEST + "[::b][darkslateblue]Pull Requests:[-]\n"}
+	updateLogs := []string{ICON_UPDATES + "[::b][red]Updates:[-]\n"}
+	approvalLogs := []string{ICON_APPROVAL + "[::b][red]Approvals:[-]\n"}
+	prLogs := []string{ICON_PULL_REQUEST + "[::b][red]Pull Requests:[-]\n"}
 
 	itemsCount := 0
 
@@ -61,7 +61,7 @@ func GenerateActivityLogs(activities []types.Activity) string {
 				for _, reviewer := range activity.Update.Changes.Reviewers.Added {
 					itemsCount++
 					log := fmt.Sprintf(
-						"[grey]%d %s[-] %s added [blue]reviewer[-]: %s [grey](%s ago)[-]\n",
+						"[grey]%d %s[-] %s added [blue]reviewer[-]: %s [grey](%s)[-]\n",
 						itemsCount,
 						ICON_SIDE_ARROW,
 						activity.Update.Author.DisplayName,
@@ -75,7 +75,7 @@ func GenerateActivityLogs(activities []types.Activity) string {
 			if activity.Update.Changes.Title.Old != "" && activity.Update.Changes.Title.New != "" {
 				itemsCount++
 				log := fmt.Sprintf(
-					"[grey]%d %s[-] %s edited the [blue]title[-]: %s → %s [grey](%s ago)[-]\n",
+					"[grey]%d %s[-] %s edited the [blue]title[-]: %s → %s [grey](%s)[-]\n",
 					itemsCount,
 					ICON_SIDE_ARROW,
 					activity.Update.Author.DisplayName,
@@ -89,7 +89,7 @@ func GenerateActivityLogs(activities []types.Activity) string {
 			if activity.Update.Changes.Description.Old != "" && activity.Update.Changes.Description.New != "" {
 				itemsCount++
 				log := fmt.Sprintf(
-					"[grey]%d %s[-] %s edited the [blue]description[-]: %s → %s [grey](%s ago)[-]\n",
+					"[grey]%d %s[-] %s edited the [blue]description[-]: %s → %s [grey](%s)[-]\n",
 					itemsCount,
 					ICON_SIDE_ARROW,
 					activity.Update.Author.DisplayName,
@@ -105,12 +105,12 @@ func GenerateActivityLogs(activities []types.Activity) string {
 				activity.Update.Changes.Title.New == "" {
 				itemsCount++
 				log := fmt.Sprintf(
-					"[grey]%d %s[-] %s [blue]OPENED[-] the pull request: %s [grey](%s ago)[-]\n",
+					"[grey]%d %s[-] %s [blue]opened[-] the pull request: %s [grey](%s)[-]\n",
 					itemsCount,
 					ICON_SIDE_ARROW,
 					activity.Update.Author.DisplayName,
 					activity.Update.Title,
-					util.FormatTimeAgo(activity.PullRequest.CreatedOn),
+					util.FormatTimeAgo(activity.Update.Date),
 				)
 				updateLogs = append(updateLogs, log)
 			}
@@ -118,7 +118,7 @@ func GenerateActivityLogs(activities []types.Activity) string {
 			// Handle approvals (if there's an approval activity)
 			itemsCount++
 			log := fmt.Sprintf(
-				"[grey]%d %s[-] %s [green]APPROVED[-] the pull request [grey](%s ago)[-]\n",
+				"[grey]%d %s[-] %s [green]APPROVED[-] the pull request [grey](%s)[-]\n",
 				itemsCount,
 				ICON_SIDE_ARROW,
 				activity.Approval.User.DisplayName,

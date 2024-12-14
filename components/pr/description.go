@@ -19,7 +19,7 @@ func GeneratePRDetail(pr *types.PR) string {
 	// Get the color based on the state
 	stateColor := util.GetStateColor(pr.State)
 
-	otherColor := tcell.ColorMediumAquamarine
+	otherColor := tcell.ColorSlateGray
 
 	reviewers := StyleReviewerNames(GetReviewerNames(pr))
 
@@ -35,8 +35,8 @@ func GeneratePRDetail(pr *types.PR) string {
 		reviewers,
 		stateColor, pr.State,
 		otherColor, pr.Author.DisplayName,
-		otherColor, pr.CreatedOn,
-		otherColor, pr.UpdatedOn,
+		otherColor, util.FormatCombinedTimeAgo(pr.CreatedOn),
+		otherColor, util.FormatCombinedTimeAgo(pr.UpdatedOn),
 		otherColor, pr.Links.HTML.Href,
 		description, // Rendered Markdown content
 	)

@@ -2,6 +2,7 @@ package util
 
 import (
 	"fmt"
+	"github.com/dustin/go-humanize"
 	"simple-git-terminal/types"
 	"strings"
 	"time"
@@ -56,14 +57,14 @@ func FormatTimeAgo(date string) string {
 	if err != nil {
 		return "unknown time"
 	}
-	duration := time.Since(parsedTime)
+	return humanize.Time(parsedTime)
+}
 
-	if hours := duration.Hours(); hours > 24 {
-		return fmt.Sprintf("%d days", int(hours/24))
-	} else if hours > 1 {
-		return fmt.Sprintf("%d hours", int(hours))
-	} else if minutes := duration.Minutes(); minutes > 1 {
-		return fmt.Sprintf("%d minutes", int(minutes))
+func FormatCombinedTimeAgo(date string) string {
+	parsedTime, err := time.Parse(time.RFC3339, date)
+	if err != nil {
+		return "unknown time"
 	}
-	return "just now"
+	formattedDate := parsedTime.Format("2006-01-02")
+	return fmt.Sprintf("%s (%s)", formattedDate, FormatTimeAgo(date))
 }
