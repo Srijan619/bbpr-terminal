@@ -117,8 +117,8 @@ type Comment struct {
 }
 
 type Inline struct {
-	From int    `json:"from"`
-	To   int    `json:"to"`
+	From int    `json:"from"` // From means if it exists in new (i.e added)
+	To   int    `json:"to"`   // To means if it exists in old (i.e removed)
 	Path string `json:"path"`
 }
 

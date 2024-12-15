@@ -215,4 +215,3 @@ func getCommentSymbolAsync(path string, callback func(string)) {
 		}
 	}()
 }
-

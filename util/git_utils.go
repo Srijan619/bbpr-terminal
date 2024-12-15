@@ -53,12 +53,9 @@ func GenerateColorizedDiffView(diffText string, comments []types.Comment) *tview
 		SetScrollable(true).
 		SetBorderPadding(1, 1, 1, 1)
 
-		// Add comments above the diff lines
-	diffTextWithComments := addCommentsAboveLines(diffText, comments)
-
 	// Split the diff text by lines and color them based on the prefix (+ or -)
 	var coloredDiff []string
-	lines := strings.Split(diffTextWithComments, "\n")
+	lines := strings.Split(diffText, "\n")
 	for _, line := range lines {
 		if strings.HasPrefix(line, "+") {
 			// Green for added lines
@@ -71,9 +68,11 @@ func GenerateColorizedDiffView(diffText string, comments []types.Comment) *tview
 			coloredDiff = append(coloredDiff, line)
 		}
 	}
-
+	// Add comments above the diff lines
+	diffTextWithComments := addCommentsAboveLines(strings.Join(coloredDiff, "\n"), comments)
+	//diffTextWithComments := addCommentsAboveLines(diffText, comments)
 	// Join the lines back together and set the text in the TextView
-	textView.SetText(strings.Join(coloredDiff, "\n"))
+	textView.SetText(diffTextWithComments)
 	return textView
 }
 
@@ -113,29 +112,25 @@ func addCommentsAboveLines(diffText string, comments []types.Comment) string {
 		}
 	}
 
-	log.Printf("How does comment map look-%v", commentMap)
 	// Split the diff into lines
 	lines := strings.Split(diffText, "\n")
 	var result []string
 
 	// Loop through diff lines and insert comments above
-	log.Printf("-----Start reading---------")
 	for i, line := range lines {
-		lineNumber := i
-		log.Printf("%d line: Content: %s", lineNumber, line)
-		if commentLines, exists := commentMap[lineNumber]; exists {
+		lineNumber := i + 1
+		relativeLineNumber := i - 2
+		if commentLines, exists := commentMap[relativeLineNumber]; exists {
 			// Add each comment as a line before the diff line
 			for _, comment := range commentLines {
-				commentLine := fmt.Sprintf("[steelblue]%s%s → %s[-]", ICON_COMMENT, comment.User.DisplayName, comment.Content.Raw)
+				commentLine := fmt.Sprintf("[steelblue]%s%s → %s %d %d[-]", ICON_COMMENT, comment.User.DisplayName, comment.Content.Raw, comment.Inline.From, comment.Inline.To)
 				result = append(result, commentLine)
 			}
 		}
-		// Add the diff line itself
-		result = append(result, line)
+		// Add the diff line itself alongside line number
+		lineWithNumber := fmt.Sprintf("[grey]%d[-] %s", lineNumber, line)
+		result = append(result, lineWithNumber)
 	}
-	log.Printf("-----End reading--------")
-
-	// Join the result lines back into a single string
 	return strings.Join(result, "\n")
 }
 
