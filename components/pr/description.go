@@ -25,13 +25,15 @@ func GeneratePRDetail(pr *types.PR) string {
 
 	// Create a formatted string with improved structure and apply the state color
 	formattedText := fmt.Sprintf(
-		"[::b]Reviewers:[-] %s\n"+
+		"[::b]Id:[-] %d\n"+
+			"[::b]Reviewers:[-] %s\n"+
 			"[::b]State:[-] [%s]%s[-]\n"+
 			"[::b]Author:[-] [%s]%s[-]\n"+
 			"[::b]Created On:[-] [%s]%s[-]\n"+
 			"[::b]Updated On:[-] [%s]%s[-]\n"+
 			"[::b]Link:[-] [%s]%s[-]\n"+
 			"[::b]Description:[-] \n%s\n",
+		pr.ID,
 		reviewers,
 		stateColor, pr.State,
 		otherColor, pr.Author.DisplayName,

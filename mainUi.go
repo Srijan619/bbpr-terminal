@@ -98,7 +98,7 @@ func CreateMainApp() *tview.Application {
 	diffDetails.SetTitle("Diff Content [green]c|C").
 		SetBorder(true).
 		SetBorderColor(tcell.ColorGray).
-		SetBorderPadding(1, 1, 1, 1).
+		SetBorderPadding(0, 1, 0, 0).
 		SetTitleAlign(tview.AlignLeft)
 	rightFullFlex := tview.NewFlex()
 	rightFullFlex.AddItem(diffStatDetails, 0, 1, false).

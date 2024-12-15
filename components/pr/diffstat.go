@@ -157,7 +157,11 @@ func OpenFileSpecificDiff(node *tview.TreeNode, fullScreen bool) {
 						util.UpdateActivityView("[red]Failed to cast diff details[-]")
 						return
 					}
-					util.UpdateDiffDetailsView(util.GenerateColorizedDiffView(result))
+					// Retrieve inline comments for the file and add comment markers to lines
+					comments := getInlineComments(*state.GlobalState.SelectedPR, nodeRef.Path)
+
+					log.Printf("Geetting inline comment for a file %s  %v", nodeRef.Path, comments)
+					util.UpdateDiffDetailsView(util.GenerateColorizedDiffView(result, comments))
 				}
 			})
 

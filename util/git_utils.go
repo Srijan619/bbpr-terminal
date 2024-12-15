@@ -2,13 +2,13 @@ package util
 
 import (
 	"fmt"
+	"github.com/rivo/tview"
 	"log"
 	"os"
 	"os/exec"
 	"regexp"
+	"simple-git-terminal/types"
 	"strings"
-
-	"github.com/rivo/tview"
 )
 
 // Get the name of the current Git repository
@@ -38,22 +38,8 @@ func GetRepoAndWorkspace() (string, string, error) {
 	return workspace, repoSlug, nil
 }
 
-func GenerateFileContentDiffView(source string, destination string, filePath string) *tview.TextView {
-	// Run git remote to get the remote URL
-	cmd := exec.Command("git", "diff", destination, source, "--", filePath)
-	cmd.Dir = getCurrentDir()
-
-	out, err := cmd.CombinedOutput()
-	if err != nil {
-		textView := GenerateColorizedDiffView(fmt.Sprintf("Error running command %s %v\nOutput: %s", cmd, err, string(out)))
-		return textView
-	}
-
-	log.Printf("Return file content diff view...%s", cmd)
-	return GenerateColorizedDiffView(string(out))
-}
-
-func GenerateColorizedDiffView(diffText string) *tview.TextView {
+func GenerateColorizedDiffView(diffText string, comments []types.Comment) *tview.TextView {
+	log.Printf("How many comments????%d", len(comments))
 	// Initialize the TextView to display the diff
 	textView := tview.NewTextView()
 
@@ -63,9 +49,12 @@ func GenerateColorizedDiffView(diffText string) *tview.TextView {
 		SetScrollable(true).
 		SetBorderPadding(1, 1, 1, 1)
 
+		// Add comments above the diff lines
+	diffTextWithComments := addCommentsAboveLines(diffText, comments)
+
 	// Split the diff text by lines and color them based on the prefix (+ or -)
 	var coloredDiff []string
-	lines := strings.Split(diffText, "\n")
+	lines := strings.Split(diffTextWithComments, "\n")
 	for _, line := range lines {
 		if strings.HasPrefix(line, "+") {
 			// Green for added lines
@@ -91,4 +80,70 @@ func getCurrentDir() string {
 	} else {
 		return "."
 	}
+}
+
+// Helper method to add comments above diff lines based on line numbers
+func addCommentsAboveLines(diffText string, comments []types.Comment) string {
+	diffText = removeBeforeAndIncludingHunk(diffText)
+	// Map to track which lines have comments
+	commentMap := make(map[int][]string)
+
+	// Loop through comments and add them to the map, associating them with lines
+	for _, comment := range comments {
+		// Use `From` and `To` to determine the affected lines
+		startLine := comment.Inline.From
+		endLine := comment.Inline.To
+		// If either From or To is nil, set a default behavior
+		if startLine == 0 || endLine == 0 {
+			// If From or To are nil, treat this as a single-line comment (use From or To as the same line)
+			if startLine != 0 {
+				endLine = startLine
+			} else if endLine != 0 {
+				startLine = endLine
+			}
+		}
+
+		// Insert comments for each affected line
+		for line := startLine; line <= endLine; line++ {
+			commentMap[line] = append(commentMap[line], comment.Content.Raw)
+		}
+	}
+
+	log.Printf("How does comment map look-%v", commentMap)
+	// Split the diff into lines
+	lines := strings.Split(diffText, "\n")
+	var result []string
+
+	// Loop through diff lines and insert comments above
+	log.Printf("-----Start reading---------")
+	for i, line := range lines {
+		lineNumber := i
+		log.Printf("%d line: Content: %s", lineNumber, line)
+		if commentLines, exists := commentMap[lineNumber]; exists {
+			// Add each comment as a line before the diff line
+			for _, comment := range commentLines {
+				commentLine := fmt.Sprintf("[yellow]// %s[-]", comment) // You can change the style
+				result = append(result, commentLine)
+			}
+		}
+		// Add the diff line itself
+		result = append(result, line)
+	}
+	log.Printf("-----End reading--------")
+
+	// Join the result lines back into a single string
+	return strings.Join(result, "\n")
+}
+
+// Remove diff hunks as they are unnecessary
+func removeBeforeAndIncludingHunk(diffText string) string {
+	index := strings.Index(diffText, "@@")
+	if index == -1 {
+		return diffText
+	}
+	newlineIndex := strings.Index(diffText[index:], "\n")
+	if newlineIndex == -1 {
+		return diffText[index+2:] // Skip the @@ directly
+	}
+	return diffText[index+newlineIndex+1:]
 }
