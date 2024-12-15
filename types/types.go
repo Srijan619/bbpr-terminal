@@ -1,5 +1,13 @@
 package types
 
+const (
+	StateApproved         = "approved"
+	StateRequestedChanges = "changes_requested"
+	StateDeclined         = "declined"
+)
+
+type State string
+
 type PR struct {
 	ID          int         `json:"id"`
 	Title       string      `json:"title"`
@@ -27,6 +35,7 @@ type PR struct {
 	Reviewers    []Reviewer    `json:"reviewers"`
 	Participants []Participant `json:"participants"`
 }
+
 type Commit struct {
 	Hash  string `json:"hash"`
 	Links struct {
@@ -39,6 +48,7 @@ type Commit struct {
 	} `json:"links"`
 	Type string `json:"type"`
 }
+
 type Reviewer struct {
 	DisplayName string `json:"display_name"`
 	Links       struct {
@@ -63,14 +73,15 @@ type Participant struct {
 	User           *User       `json:"user"`
 	Role           string      `json:"role"`
 	Approved       bool        `json:"approved"`
-	State          interface{} `json:"state"`
+	State          State       `json:"state"`
 	ParticipatedOn interface{} `json:"participated_on"`
 }
 
 type Activity struct {
-	PullRequest PR           `json:"pull_request"`
-	Update      UpdateDetail `json:"update,omitempty"`
-	Approval    Approval     `json:"approval,omitempty"`
+	PullRequest      PR              `json:"pull_request"`
+	Update           UpdateDetail    `json:"update,omitempty"`
+	Approval         Approval        `json:"approval,omitempty"`
+	ChangesRequested ChangeRequested `json:"changes_requested,omitempty"`
 }
 
 type Author struct {
@@ -104,6 +115,12 @@ type Changes struct {
 		New string `json:"new"`
 		Old string `json:"old"`
 	} `json:"title"`
+}
+
+type ChangeRequested struct {
+	Date        string `json:"date"`
+	User        User   `json:"user"`
+	PullRequest PR     `json:"pull_request"`
 }
 
 type User struct {

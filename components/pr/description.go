@@ -17,7 +17,7 @@ func GeneratePRDetail(pr *types.PR) string {
 	description := formatDescription(pr.Description)
 
 	// Get the color based on the state
-	stateColor := util.GetStateColor(pr.State)
+	stateColor := util.GetPRStateColor(pr.State)
 
 	otherColor := tcell.ColorSlateGray
 
@@ -50,7 +50,9 @@ func GetReviewerNames(pr *types.PR) []string {
 	// Loop through the participants and check if they are REVIEWERs
 	for _, participant := range pr.Participants {
 		if participant.Role == "REVIEWER" {
-			reviewerNames = append(reviewerNames, util.FormatInitials(participant.User.DisplayName))
+			log.Printf("I hsoul..%v", participant)
+			fText := util.FormatInitials(participant.User.DisplayName) + " " + util.GetPRReviewStateIcon(participant.State)
+			reviewerNames = append(reviewerNames, fText)
 		}
 	}
 

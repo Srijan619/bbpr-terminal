@@ -17,6 +17,7 @@ const (
 	ICON_APPROVAL     = "\u2713 "
 	ICON_PULL_REQUEST = "\ue6a6 "
 	ICON_EMPTY        = "\uf111 "
+	ICON_WARNING      = "\u2260"
 )
 
 // CreateActivitiesView generates the UI for displaying PR activities in a TextView.
@@ -82,9 +83,7 @@ func GenerateActivityLogs(activities []types.Activity) string {
 				openPRFound = true
 				previousCommitHash = activity.Update.Source.Commit.Hash
 				log := fmt.Sprintf(
-					"[grey]%d %s[-] %s [mediumaquamarine]opened[-] the pull request: %s [grey](%s)[-]\n",
-					itemsCount,
-					ICON_SIDE_ARROW,
+					"[mediumaquamarine][-] %s [mediumaquamarine]opened[-] the pull request: %s [grey](%s)[-]\n",
 					activity.Update.Author.DisplayName,
 					activity.Update.Title,
 					util.FormatTimeAgo(activity.Update.Date),
@@ -94,12 +93,10 @@ func GenerateActivityLogs(activities []types.Activity) string {
 
 			// Check if the commit hash has changed
 			if activity.Update.Source.Commit.Hash != previousCommitHash {
-				previousCommitHash = activity.Update.Source.Commit.Hash
 				itemsCount++
+				previousCommitHash = activity.Update.Source.Commit.Hash
 				log := fmt.Sprintf(
-					"[grey]%d %s[-] %s [orange]updated[-] the pull request with a new commit: [steelblue]%s[-] [grey](%s)[-]\n",
-					itemsCount,
-					ICON_SIDE_ARROW,
+					"[orange][-] %s [orange]updated[-] the pull request with a new commit: [steelblue]%s[-] [grey](%s)[-]\n",
 					activity.Update.Author.DisplayName,
 					activity.Update.Source.Commit.Hash,
 					util.FormatTimeAgo(activity.Update.Date),
@@ -109,12 +106,10 @@ func GenerateActivityLogs(activities []types.Activity) string {
 
 			// Handle updates for changes in reviewers, title, description, etc.
 			if len(activity.Update.Changes.Reviewers.Added) > 0 {
+				itemsCount++
 				for _, reviewer := range activity.Update.Changes.Reviewers.Added {
-					itemsCount++
 					log := fmt.Sprintf(
-						"[grey]%d %s[-] %s added [yellow]reviewer[-]: %s [grey](%s)[-]\n",
-						itemsCount,
-						ICON_SIDE_ARROW,
+						"[purple]+[-] %s added [purple]reviewer[-]: %s [grey](%s)[-]\n",
 						activity.Update.Author.DisplayName,
 						reviewer.DisplayName,
 						util.FormatTimeAgo(activity.Update.Date),
@@ -126,9 +121,7 @@ func GenerateActivityLogs(activities []types.Activity) string {
 			if activity.Update.Changes.Title.Old != "" && activity.Update.Changes.Title.New != "" {
 				itemsCount++
 				log := fmt.Sprintf(
-					"[grey]%d %s[-] %s edited the [blue]title[-]: %s → %s [grey](%s)[-]\n",
-					itemsCount,
-					ICON_SIDE_ARROW,
+					"[blue][-] %s edited the [blue]title[-]: %s → %s [grey](%s)[-]\n",
 					activity.Update.Author.DisplayName,
 					activity.Update.Changes.Title.Old,
 					activity.Update.Changes.Title.New,
@@ -140,9 +133,7 @@ func GenerateActivityLogs(activities []types.Activity) string {
 			if activity.Update.Changes.Description.Old != "" && activity.Update.Changes.Description.New != "" {
 				itemsCount++
 				log := fmt.Sprintf(
-					"[grey]%d %s[-] %s edited the [blue]description[-]: %s → %s [grey](%s)[-]\n",
-					itemsCount,
-					ICON_SIDE_ARROW,
+					"[blue][-] %s edited the [blue]description[-]: %s → %s [grey](%s)[-]\n",
 					activity.Update.Author.DisplayName,
 					activity.Update.Changes.Description.Old,
 					activity.Update.Changes.Description.New,
@@ -155,13 +146,23 @@ func GenerateActivityLogs(activities []types.Activity) string {
 			// Handle approvals (if there's an approval activity)
 			itemsCount++
 			log := fmt.Sprintf(
-				"[grey]%d %s[-] %s [limegreen]APPROVED[-] the pull request [grey](%s)[-]\n",
-				itemsCount,
-				ICON_SIDE_ARROW,
+				"[limegreen][-] %s [limegreen]APPROVED[-] the pull request [grey](%s)[-]\n",
 				activity.Approval.User.DisplayName,
 				util.FormatTimeAgo(activity.Approval.Date),
 			)
 			approvalLogs = append(approvalLogs, log)
+
+		case activity.ChangesRequested.Date != "":
+			// Handle Changes requested
+			itemsCount++
+			log := fmt.Sprintf(
+				"[yellow]%s[-] %s [yellow]requested changes[-] [grey](%s)[-]\n",
+				ICON_WARNING,
+				activity.ChangesRequested.User.DisplayName,
+				util.FormatTimeAgo(activity.ChangesRequested.Date),
+			)
+			updateLogs = append(updateLogs, log)
+
 		}
 	}
 

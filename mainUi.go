@@ -32,7 +32,7 @@ func CreateMainApp() *tview.Application {
 	prListFlex.SetBorder(true).
 		SetBorderColor(tcell.ColorGrey).
 		SetTitleAlign(tview.AlignLeft).
-		SetTitle("Pull Requests [green]p").SetBorderPadding(1, 1, 1, 1)
+		SetTitle("Pull Requests  [green]p").SetBorderPadding(1, 1, 1, 1)
 
 	prList := tview.NewTable().
 		SetSelectable(true, false).

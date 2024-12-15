@@ -16,9 +16,11 @@ const (
 	ICON_SELECTED       = "\u25C8"
 	ICON_DOWN_ARROW     = "\u2193"
 	ICON_SIDE_ARROW     = "\u21AA"
+	ICON_WARNING        = "\u2260"
+	ICON_DECLINED       = "\u274C"
 )
 
-func GetStateColor(state string) tcell.Color {
+func GetPRStateColor(state string) tcell.Color {
 	switch state {
 	case "OPEN":
 		return tcell.ColorLawnGreen
@@ -28,6 +30,19 @@ func GetStateColor(state string) tcell.Color {
 		return tcell.ColorRed
 	default:
 		return tcell.ColorYellow
+	}
+}
+
+func GetPRReviewStateIcon(state types.State) string {
+	switch state {
+	case types.StateApproved:
+		return "[green]" + ICON_ACTIVE + "[-]"
+	case types.StateDeclined:
+		return "[red]" + ICON_DECLINED + "[-]"
+	case types.StateRequestedChanges:
+		return "[yellow]" + ICON_WARNING + "[-]"
+	default:
+		return ""
 	}
 }
 
@@ -51,7 +66,7 @@ func cellFormat(text string, color tcell.Color) *tview.TableCell {
 
 // CreateStateCell creates a table cell with the appropriate color and alignment
 func CreateStateCell(state string) *tview.TableCell {
-	stateColor := GetStateColor(state)
+	stateColor := GetPRStateColor(state)
 	return tview.NewTableCell(state).
 		SetTextColor(stateColor).
 		SetAlign(tview.AlignLeft).
