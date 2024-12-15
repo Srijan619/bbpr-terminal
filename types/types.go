@@ -113,6 +113,13 @@ type Comment struct {
 	Type        string  `json:"type"`
 	Links       Links   `json:"links"`
 	PullRequest PR      `json:"pullrequest"`
+	Inline      Inline  `json:"inline"`
+}
+
+type Inline struct {
+	From int    `json:"from"`
+	To   int    `json:"to"`
+	Path string `json:"path"`
 }
 
 type Content struct {
@@ -121,6 +128,7 @@ type Content struct {
 	Markdown string `json:"markdown"`
 	Html     string `json:"html"`
 }
+
 type Changes struct {
 	Reviewers struct {
 		Added []Reviewer `json:"added"`
@@ -180,6 +188,10 @@ type BitbucketPRResponse struct {
 
 type BitbucketActivityResponse struct {
 	Values []Activity `json:"values"`
+}
+
+type BitbucketCommentsResponse struct {
+	Values []Comment `json:"values"`
 }
 
 type DiffstatResponse struct {

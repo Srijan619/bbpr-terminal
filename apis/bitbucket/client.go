@@ -182,3 +182,16 @@ func FetchBitbucketActivities(id int) []types.Activity {
 	activityResponse := resp.Result().(*types.BitbucketActivityResponse)
 	return activityResponse.Values
 }
+
+func FetchBitbucketComments(id int) []types.Comment {
+	client := createClient()
+
+	resp, err := client.R().
+		SetResult(&types.BitbucketCommentsResponse{}).
+		Get(fmt.Sprintf("%s/repositories/%s/%s/pullrequests/%d/comments", BitbucketBaseURL, state.Workspace, state.Repo, id))
+	if err != nil {
+		log.Fatalf("Error fetching comments: %v", err)
+	}
+	response := resp.Result().(*types.BitbucketCommentsResponse)
+	return response.Values
+}
