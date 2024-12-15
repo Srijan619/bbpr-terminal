@@ -10,6 +10,7 @@ import (
 	"simple-git-terminal/types"
 	"simple-git-terminal/util"
 	"strings"
+	"time"
 )
 
 const (
@@ -25,6 +26,8 @@ type NodeReference struct {
 	Path  string
 	IsDir bool
 }
+
+var debounceTimer *time.Timer
 
 // GenerateDiffStatTree creates the diff stat tree view
 func GenerateDiffStatTree(data []types.DiffstatEntry) *tview.TreeView {
@@ -128,11 +131,19 @@ func GenerateDiffStatTree(data []types.DiffstatEntry) *tview.TreeView {
 		OpenFileSpecificDiff(node, true)
 	})
 
+	// SetChangedFunc with debounce and "key up" detection
 	tree.SetChangedFunc(func(node *tview.TreeNode) {
-		if state.GlobalState.CurrentView != state.GlobalState.DiffStatView { // Avoid flickering when on full screen view
-			OpenFileSpecificDiff(node, false)
+		// Cancel any previous debounce timer if the user is still moving
+		if debounceTimer != nil {
+			debounceTimer.Stop()
 		}
-		node.SetSelectedTextStyle(tcell.StyleDefault.Foreground(tcell.ColorOrange))
+
+		debounceTimer = time.AfterFunc(300*time.Millisecond, func() {
+			if state.GlobalState.CurrentView != state.GlobalState.DiffStatView {
+				OpenFileSpecificDiff(node, false)
+			}
+			node.SetSelectedTextStyle(tcell.StyleDefault.Foreground(tcell.ColorOrange))
+		})
 	})
 	return tree
 }
