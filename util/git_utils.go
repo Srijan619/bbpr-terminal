@@ -11,6 +11,10 @@ import (
 	"strings"
 )
 
+var (
+	ICON_COMMENT = "\uf27b "
+)
+
 // Get the name of the current Git repository
 // Fetches the Bitbucket workspace and repo slug based on the current git repo.
 func GetRepoAndWorkspace() (string, string, error) {
@@ -86,7 +90,7 @@ func getCurrentDir() string {
 func addCommentsAboveLines(diffText string, comments []types.Comment) string {
 	diffText = removeBeforeAndIncludingHunk(diffText)
 	// Map to track which lines have comments
-	commentMap := make(map[int][]string)
+	commentMap := make(map[int][]types.Comment)
 
 	// Loop through comments and add them to the map, associating them with lines
 	for _, comment := range comments {
@@ -105,7 +109,7 @@ func addCommentsAboveLines(diffText string, comments []types.Comment) string {
 
 		// Insert comments for each affected line
 		for line := startLine; line <= endLine; line++ {
-			commentMap[line] = append(commentMap[line], comment.Content.Raw)
+			commentMap[line] = append(commentMap[line], comment)
 		}
 	}
 
@@ -122,7 +126,7 @@ func addCommentsAboveLines(diffText string, comments []types.Comment) string {
 		if commentLines, exists := commentMap[lineNumber]; exists {
 			// Add each comment as a line before the diff line
 			for _, comment := range commentLines {
-				commentLine := fmt.Sprintf("[yellow]// %s[-]", comment) // You can change the style
+				commentLine := fmt.Sprintf("[steelblue]%s%s → %s[-]", ICON_COMMENT, comment.User.DisplayName, comment.Content.Raw)
 				result = append(result, commentLine)
 			}
 		}
