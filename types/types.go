@@ -1,5 +1,24 @@
 package types
 
+// Common structs for Links and Avatar
+type Links struct {
+	Self   Self   `json:"self"`
+	Avatar Avatar `json:"avatar,omitempty"`
+	HTML   Href   `json:"html"`
+}
+
+type Self struct {
+	Href string `json:"href"`
+}
+
+type Avatar struct {
+	Href string `json:"href"`
+}
+
+type Href struct {
+	Href string `json:"href"`
+}
+
 const (
 	StateApproved         = "approved"
 	StateRequestedChanges = "changes_requested"
@@ -16,12 +35,8 @@ type PR struct {
 	CreatedOn   string      `json:"created_on"`
 	UpdatedOn   string      `json:"updated_on"`
 	Description interface{} `json:"description"`
-	Links       struct {
-		HTML struct {
-			Href string `json:"href"`
-		} `json:"html"`
-	} `json:"links"`
-	Source struct {
+	Links       Links       `json:"links"`
+	Source      struct {
 		Branch struct {
 			Name string `json:"name"`
 		} `json:"branch"`
@@ -38,34 +53,17 @@ type PR struct {
 
 type Commit struct {
 	Hash  string `json:"hash"`
-	Links struct {
-		Self struct {
-			Href string `json:"href"`
-		} `json:"self"`
-		HTML struct {
-			Href string `json:"href"`
-		} `json:"html"`
-	} `json:"links"`
-	Type string `json:"type"`
+	Links Links  `json:"links"`
+	Type  string `json:"type"`
 }
 
 type Reviewer struct {
 	DisplayName string `json:"display_name"`
-	Links       struct {
-		Self struct {
-			Href string `json:"href"`
-		} `json:"self"`
-		Avatar struct {
-			Href string `json:"href"`
-		} `json:"avatar"`
-		HTML struct {
-			Href string `json:"href"`
-		} `json:"html"`
-	} `json:"links"`
-	Type      string `json:"type"`
-	UUID      string `json:"uuid"`
-	AccountID string `json:"account_id"`
-	Nickname  string `json:"nickname"`
+	Links       Links  `json:"links"`
+	Type        string `json:"type"`
+	UUID        string `json:"uuid"`
+	AccountID   string `json:"account_id"`
+	Nickname    string `json:"nickname"`
 }
 
 type Participant struct {
@@ -82,6 +80,7 @@ type Activity struct {
 	Update           UpdateDetail    `json:"update,omitempty"`
 	Approval         Approval        `json:"approval,omitempty"`
 	ChangesRequested ChangeRequested `json:"changes_requested,omitempty"`
+	Comment          Comment         `json:"comment"`
 }
 
 type Author struct {
@@ -101,6 +100,19 @@ type UpdateDetail struct {
 	Date        string        `json:"date"`
 	Destination BranchDetail  `json:"destination"`
 	Source      BranchDetail  `json:"source"`
+}
+
+type Comment struct {
+	ID          int         `json:"id"`
+	CreatedOn   string      `json:"created_on"`
+	UpdatedOn   string      `json:"updated_on"`
+	Content     interface{} `json:"content"`
+	User        User        `json:"user"`
+	Deleted     bool        `json:"deleted"`
+	Pending     bool        `json:"pending"`
+	Type        string      `json:"type"`
+	Links       interface{} `json:"links"`
+	PullRequest PR          `json:"pullrequest"`
 }
 
 type Changes struct {
@@ -125,21 +137,11 @@ type ChangeRequested struct {
 
 type User struct {
 	DisplayName string `json:"display_name"`
-	Links       struct {
-		Self struct {
-			Href string `json:"href"`
-		} `json:"self"`
-		Avatar struct {
-			Href string `json:"href"`
-		} `json:"avatar"`
-		HTML struct {
-			Href string `json:"href"`
-		} `json:"html"`
-	} `json:"links"`
-	Type      string `json:"type"`
-	UUID      string `json:"uuid"`
-	AccountID string `json:"account_id"`
-	Nickname  string `json:"nickname"`
+	Links       Links  `json:"links"`
+	Type        string `json:"type"`
+	UUID        string `json:"uuid"`
+	AccountID   string `json:"account_id"`
+	Nickname    string `json:"nickname"`
 }
 
 type BranchDetail struct {
@@ -148,32 +150,15 @@ type BranchDetail struct {
 	} `json:"branch"`
 	Commit struct {
 		Hash  string `json:"hash"`
-		Links struct {
-			Self struct {
-				Href string `json:"href"`
-			} `json:"self"`
-			HTML struct {
-				Href string `json:"href"`
-			} `json:"html"`
-		} `json:"links"`
-		Type string `json:"type"`
+		Links Links  `json:"links"`
+		Type  string `json:"type"`
 	} `json:"commit"`
 	Repository struct {
 		Type     string `json:"type"`
 		FullName string `json:"full_name"`
-		Links    struct {
-			Self struct {
-				Href string `json:"href"`
-			} `json:"self"`
-			HTML struct {
-				Href string `json:"href"`
-			} `json:"html"`
-			Avatar struct {
-				Href string `json:"href"`
-			} `json:"avatar"`
-		} `json:"links"`
-		Name string `json:"name"`
-		UUID string `json:"uuid"`
+		Links    Links  `json:"links"`
+		Name     string `json:"name"`
+		UUID     string `json:"uuid"`
 	} `json:"repository"`
 }
 
@@ -212,8 +197,7 @@ type DiffFile struct {
 	Type        string `json:"type"` // e.g., "commit_file"
 	EscapedPath string `json:"escaped_path"`
 	Links       struct {
-		Self struct {
-			Href string `json:"href"`
-		} `json:"self"`
+		Self Self `json:"self"`
 	} `json:"links"`
 }
+
