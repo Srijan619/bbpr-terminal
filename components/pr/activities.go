@@ -17,7 +17,8 @@ const (
 	ICON_APPROVAL     = "\u2713 "
 	ICON_PULL_REQUEST = "\ue6a6 "
 	ICON_EMPTY        = "\uf111 "
-	ICON_WARNING      = "\u2260"
+	ICON_WARNING      = "\u2260 "
+	ICON_COMMENT      = "\uf27b "
 )
 
 // CreateActivitiesView generates the UI for displaying PR activities in a TextView.
@@ -51,9 +52,9 @@ func GenerateActivityLogs(activities []types.Activity) string {
 	var logs []string
 
 	// Separate logs into sections
-	updateLogs := []string{ICON_UPDATES + "[::b][red]Updates:[-]\n"}
-	approvalLogs := []string{ICON_APPROVAL + "[::b][red]Approvals:[-]\n"}
-	prLogs := []string{ICON_PULL_REQUEST + "[::b][red]Pull Requests:[-]\n"}
+	updateLogs := []string{ICON_UPDATES + "[red]Updates\n"}
+	approvalLogs := []string{ICON_APPROVAL + "[red]Approvals\n"}
+	commentLogs := []string{ICON_COMMENT + "[red]Comments\n"}
 
 	itemsCount := 0
 	log.Printf("Total activities..%d", len(activities))
@@ -83,7 +84,7 @@ func GenerateActivityLogs(activities []types.Activity) string {
 				openPRFound = true
 				previousCommitHash = activity.Update.Source.Commit.Hash
 				log := fmt.Sprintf(
-					"[mediumaquamarine][-] %s [mediumaquamarine]opened[-] the pull request: %s [grey](%s)[-]\n",
+					"[mediumaquamarine] [-]%s [mediumaquamarine]opened[-] the pull request: %s [grey](%s)[-]\n",
 					activity.Update.Author.DisplayName,
 					activity.Update.Title,
 					util.FormatTimeAgo(activity.Update.Date),
@@ -96,7 +97,7 @@ func GenerateActivityLogs(activities []types.Activity) string {
 				itemsCount++
 				previousCommitHash = activity.Update.Source.Commit.Hash
 				log := fmt.Sprintf(
-					"[orange][-] %s [orange]updated[-] the pull request with a new commit: [steelblue]%s[-] [grey](%s)[-]\n",
+					"[orange]\ue729 [-]%s [orange]updated[-] the pull request with a new commit: [steelblue]%s[-] [grey](%s)[-]\n",
 					activity.Update.Author.DisplayName,
 					activity.Update.Source.Commit.Hash,
 					util.FormatTimeAgo(activity.Update.Date),
@@ -109,7 +110,7 @@ func GenerateActivityLogs(activities []types.Activity) string {
 				itemsCount++
 				for _, reviewer := range activity.Update.Changes.Reviewers.Added {
 					log := fmt.Sprintf(
-						"[purple]+[-] %s added [purple]reviewer[-]: %s [grey](%s)[-]\n",
+						"[purple]+ [-]%s added [purple]reviewer[-]: %s [grey](%s)[-]\n",
 						activity.Update.Author.DisplayName,
 						reviewer.DisplayName,
 						util.FormatTimeAgo(activity.Update.Date),
@@ -121,7 +122,7 @@ func GenerateActivityLogs(activities []types.Activity) string {
 			if activity.Update.Changes.Title.Old != "" && activity.Update.Changes.Title.New != "" {
 				itemsCount++
 				log := fmt.Sprintf(
-					"[blue][-] %s edited the [blue]title[-]: %s → %s [grey](%s)[-]\n",
+					"[blue]\uea73 [-]%s edited the [blue]title[-]: %s → %s [grey](%s)[-]\n",
 					activity.Update.Author.DisplayName,
 					activity.Update.Changes.Title.Old,
 					activity.Update.Changes.Title.New,
@@ -133,7 +134,7 @@ func GenerateActivityLogs(activities []types.Activity) string {
 			if activity.Update.Changes.Description.Old != "" && activity.Update.Changes.Description.New != "" {
 				itemsCount++
 				log := fmt.Sprintf(
-					"[blue][-] %s edited the [blue]description[-]: %s → %s [grey](%s)[-]\n",
+					"[blue]\uea73 [-]%s edited the [blue]description[-]: %s → %s [grey](%s)[-]\n",
 					activity.Update.Author.DisplayName,
 					activity.Update.Changes.Description.Old,
 					activity.Update.Changes.Description.New,
@@ -146,7 +147,7 @@ func GenerateActivityLogs(activities []types.Activity) string {
 			// Handle approvals (if there's an approval activity)
 			itemsCount++
 			log := fmt.Sprintf(
-				"[limegreen][-] %s [limegreen]APPROVED[-] the pull request [grey](%s)[-]\n",
+				"[limegreen] [-]%s [limegreen]APPROVED[-] the pull request [grey](%s)[-]\n",
 				activity.Approval.User.DisplayName,
 				util.FormatTimeAgo(activity.Approval.Date),
 			)
@@ -156,13 +157,23 @@ func GenerateActivityLogs(activities []types.Activity) string {
 			// Handle Changes requested
 			itemsCount++
 			log := fmt.Sprintf(
-				"[yellow]%s[-] %s [yellow]requested changes[-] [grey](%s)[-]\n",
+				"[yellow]%s[-]%s [yellow]requested changes[-] [grey](%s)[-]\n",
 				ICON_WARNING,
 				activity.ChangesRequested.User.DisplayName,
 				util.FormatTimeAgo(activity.ChangesRequested.Date),
 			)
 			updateLogs = append(updateLogs, log)
-
+		case activity.Comment.ID > 0:
+			// Handle Comments added
+			itemsCount++
+			log := fmt.Sprintf(
+				"[yellowgreen]%s[-]%s [yellowgreen]added a comment: [-] %s [grey](%s)[-]\n",
+				ICON_COMMENT,
+				activity.Comment.User.DisplayName,
+				activity.Comment.Content.Raw,
+				util.FormatTimeAgo(activity.Comment.CreatedOn),
+			)
+			commentLogs = append(commentLogs, log)
 		}
 	}
 
@@ -178,8 +189,8 @@ func GenerateActivityLogs(activities []types.Activity) string {
 	if len(approvalLogs) > 1 { // Check if there are any approvals
 		logs = append(logs, strings.Join(approvalLogs, "\n"))
 	}
-	if len(prLogs) > 1 { // Check if there are any pull requests
-		logs = append(logs, strings.Join(prLogs, "\n"))
+	if len(commentLogs) > 1 {
+		logs = append(logs, strings.Join(commentLogs, "\n"))
 	}
 
 	// Join all the logs together

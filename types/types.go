@@ -89,32 +89,38 @@ type Author struct {
 }
 
 type UpdateDetail struct {
-	State       string        `json:"state"`
-	Draft       bool          `json:"draft"`
-	Title       string        `json:"title"`
-	Description string        `json:"description"`
-	Reviewers   []interface{} `json:"reviewers"`
-	Changes     Changes       `json:"changes"`
-	Reason      string        `json:"reason"`
-	Author      User          `json:"author"`
-	Date        string        `json:"date"`
-	Destination BranchDetail  `json:"destination"`
-	Source      BranchDetail  `json:"source"`
+	State       string       `json:"state"`
+	Draft       bool         `json:"draft"`
+	Title       string       `json:"title"`
+	Description string       `json:"description"`
+	Reviewers   []Reviewer   `json:"reviewers"`
+	Changes     Changes      `json:"changes"`
+	Reason      string       `json:"reason"`
+	Author      User         `json:"author"`
+	Date        string       `json:"date"`
+	Destination BranchDetail `json:"destination"`
+	Source      BranchDetail `json:"source"`
 }
 
 type Comment struct {
-	ID          int         `json:"id"`
-	CreatedOn   string      `json:"created_on"`
-	UpdatedOn   string      `json:"updated_on"`
-	Content     interface{} `json:"content"`
-	User        User        `json:"user"`
-	Deleted     bool        `json:"deleted"`
-	Pending     bool        `json:"pending"`
-	Type        string      `json:"type"`
-	Links       interface{} `json:"links"`
-	PullRequest PR          `json:"pullrequest"`
+	ID          int     `json:"id"`
+	CreatedOn   string  `json:"created_on"`
+	UpdatedOn   string  `json:"updated_on"`
+	Content     Content `json:"content"`
+	User        User    `json:"user"`
+	Deleted     bool    `json:"deleted"`
+	Pending     bool    `json:"pending"`
+	Type        string  `json:"type"`
+	Links       Links   `json:"links"`
+	PullRequest PR      `json:"pullrequest"`
 }
 
+type Content struct {
+	Type     string `json:"type"`
+	Raw      string `json:"raw"`
+	Markdown string `json:"markdown"`
+	Html     string `json:"html"`
+}
 type Changes struct {
 	Reviewers struct {
 		Added []Reviewer `json:"added"`
@@ -200,4 +206,3 @@ type DiffFile struct {
 		Self Self `json:"self"`
 	} `json:"links"`
 }
-
