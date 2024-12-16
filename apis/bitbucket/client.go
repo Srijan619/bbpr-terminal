@@ -195,3 +195,20 @@ func FetchBitbucketComments(id int) []types.Comment {
 	response := resp.Result().(*types.BitbucketCommentsResponse)
 	return response.Values
 }
+
+func UpdateFilteredPRs() {
+	var filteredPRs []types.PR
+	// Fetch or use cached PRs based on active filters
+	if state.PRStatusFilter.Open {
+		log.Printf("[sausage] Appending open ones...")
+		filteredPRs = append(filteredPRs, FetchPRsByState("OPEN")...)
+	}
+	if state.PRStatusFilter.Merged {
+		log.Printf("[sausage] Appending merged ones...")
+		filteredPRs = append(filteredPRs, FetchPRsByState("MERGED")...)
+	}
+	if state.PRStatusFilter.Declined {
+		filteredPRs = append(filteredPRs, FetchPRsByState("DECLINED")...)
+	}
+	state.SetFilteredPRs(&filteredPRs)
+}

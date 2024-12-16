@@ -18,7 +18,7 @@ const (
 )
 
 func PopulatePRList(prList *tview.Table) *tview.Table {
-	UpdateFilteredPRs()
+	bitbucket.UpdateFilteredPRs()
 	log.Printf("This called again...")
 	prs := *state.GlobalState.FilteredPRs
 	if len(prs) > 0 {
@@ -139,21 +139,4 @@ func formatPRHeaderBranch(pr types.PR) string {
 	)
 
 	return headerText
-}
-
-func UpdateFilteredPRs() {
-	var filteredPRs []types.PR
-	// Fetch or use cached PRs based on active filters
-	if state.PRStatusFilter.Open {
-		log.Printf("[sausage] Appending open ones...")
-		filteredPRs = append(filteredPRs, bitbucket.FetchPRsByState("OPEN")...)
-	}
-	if state.PRStatusFilter.Merged {
-		log.Printf("[sausage] Appending merged ones...")
-		filteredPRs = append(filteredPRs, bitbucket.FetchPRsByState("MERGED")...)
-	}
-	if state.PRStatusFilter.Declined {
-		filteredPRs = append(filteredPRs, bitbucket.FetchPRsByState("DECLINED")...)
-	}
-	state.SetFilteredPRs(&filteredPRs)
 }

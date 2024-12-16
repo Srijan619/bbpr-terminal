@@ -2,9 +2,11 @@
 package util
 
 import (
+	"log"
+
 	"github.com/gdamore/tcell/v2"
 	"github.com/rivo/tview"
-	"log"
+
 	"simple-git-terminal/state"
 	"simple-git-terminal/types"
 )
@@ -140,6 +142,7 @@ func UpdateView(targetView interface{}, content interface{}) {
 			// Handle content based on its type
 			switch c := content.(type) {
 			case string:
+				log.Printf("I am string")
 				// If the content is a string, display it in a TextView
 				textView := tview.NewTextView().
 					SetText(c).
@@ -147,9 +150,11 @@ func UpdateView(targetView interface{}, content interface{}) {
 					SetWrap(true)
 				v.AddItem(textView, 0, 1, true)
 			case tview.Primitive:
+				log.Printf("I am primitive")
 				// If the content is a tview.Primitive, add it directly
 				v.AddItem(c, 0, 1, true)
 			default:
+				log.Printf("I am default")
 				// Handle unsupported content types
 				errorView := tview.NewTextView().
 					SetText("[red]Unsupported content type[-]").
@@ -176,6 +181,7 @@ func UpdateView(targetView interface{}, content interface{}) {
 			// If it's neither Flex nor TextView, print an error
 			log.Println("[red]Unsupported target view type[-]")
 		}
+		log.Printf("Finished updating...")
 	}
 }
 
@@ -200,4 +206,10 @@ func UpdatePRListView() {
 
 func UpdatePRDetailView(content interface{}) {
 	UpdateView(state.GlobalState.PrDetails, content)
+}
+
+func UpdatePRStatusFilterView(content interface{}) {
+	if state.GlobalState != nil && state.GlobalState.PRStatusFilter != nil {
+		UpdateView(state.GlobalState.PRStatusFilter, content)
+	}
 }

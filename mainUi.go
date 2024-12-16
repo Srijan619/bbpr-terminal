@@ -25,8 +25,10 @@ func CreateMainApp() *tview.Application {
 	}
 	state.SetWorkspaceRepo(workspace, repoSlug)
 	//LEFT
+
 	// PR Status Filter UI
-	prStatusFilterFlex := pr.CreatePRStatusFilterView()
+	prStatusFilterFlex := util.CreateFlexComponent("Filters")
+	prStatusFilterFlex.AddItem(pr.CreatePRStatusFilterView(), 0, 1, false)
 
 	// PR LIST UI
 	prListFlex := tview.NewFlex()
@@ -160,18 +162,22 @@ func setupKeyBindings() {
 				state.GlobalState.App.SetFocus(state.GlobalState.PrDetails)
 			case 'D':
 				state.GlobalState.App.SetRoot(state.GlobalState.PrDetails, true)
-
-				// case 'm':
-				// 	state.SetPRStatusFilter("merged", !state.PRStatusFilter.Merged)
-				// 	//pr.UpdatePRList()
-				// case 'o':
-				// 	state.SetPRStatusFilter("open", !state.PRStatusFilter.Open)
-				// //	pr.UpdatePRList()
-				// case 'd':
-				// 	state.SetPRStatusFilter("declined", !state.PRStatusFilter.Declined)
-				// 	//pr.UpdatePRList() //TODO UI of filter is still not updating
+			case 'm':
+				state.SetPRStatusFilter("merged", !state.PRStatusFilter.Merged)
+				updateFilter()
+			case 'o':
+				state.SetPRStatusFilter("open", !state.PRStatusFilter.Open)
+				updateFilter()
+			case 'r':
+				state.SetPRStatusFilter("declined", !state.PRStatusFilter.Declined)
+				updateFilter()
 			}
 		}
 		return event
 	})
+}
+
+func updateFilter() {
+	view := pr.CreatePRStatusFilterView()
+	util.UpdatePRStatusFilterView(view)
 }
