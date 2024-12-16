@@ -1,13 +1,12 @@
 package main
 
 import (
+	"github.com/gdamore/tcell/v2"
 	"github.com/rivo/tview"
 	"log"
 	"simple-git-terminal/components/pr"
 	"simple-git-terminal/state"
 	"simple-git-terminal/util"
-
-	"github.com/gdamore/tcell/v2"
 )
 
 const (

@@ -19,10 +19,9 @@ const (
 
 func PopulatePRList(prList *tview.Table) *tview.Table {
 	bitbucket.UpdateFilteredPRs()
-	log.Printf("This called again...")
 	prs := *state.GlobalState.FilteredPRs
 	if len(prs) > 0 {
-		prList.Select(0, 0)
+		prList.Select(10, 0)
 		HandleOnPrSelect(prs, 0)
 	}
 	// Populate PR list
@@ -45,7 +44,35 @@ func PopulatePRList(prList *tview.Table) *tview.Table {
 }
 
 func HandleOnPrSelect(prs []types.PR, row int) {
-	log.Printf("Selecting PR..%d, %d, %v", len(prs), row, state.GlobalState == nil)
+	if state.GlobalState != nil {
+		fetchMore := row == len(prs)
+		if fetchMore {
+			log.Println("Fetch more selected")
+		} else {
+			// Handle normal cell selection
+			log.Printf("Selected cell at row %d", row)
+			handleNormalPRSelect(prs, row)
+		}
+
+	}
+}
+
+// Function to populate the PR list
+
+// FormatPRHeader takes the PR details and returns a formatted string
+func formatPRHeaderBranch(pr types.PR) string {
+	// Use fmt.Sprintf to format the header and apply tview's dynamic color syntax
+	headerText := fmt.Sprintf(
+		"[yellow]%s[white] "+ICON_SIDE_ARROW+
+			"[green]%s",
+		pr.Source.Branch.Name,
+		pr.Destination.Branch.Name,
+	)
+
+	return headerText
+}
+
+func handleNormalPRSelect(prs []types.PR, row int) {
 	if row >= 0 && row < len(prs) && state.GlobalState != nil {
 		// Fetch details in parallel using goroutines
 		go func() {
@@ -124,19 +151,4 @@ func HandleOnPrSelect(prs []types.PR, row int) {
 			util.UpdateDiffDetailsView("Hover over to a file for quick preview OR Select a file to see diff in full screen")
 		}()
 	}
-}
-
-// Function to populate the PR list
-
-// FormatPRHeader takes the PR details and returns a formatted string
-func formatPRHeaderBranch(pr types.PR) string {
-	// Use fmt.Sprintf to format the header and apply tview's dynamic color syntax
-	headerText := fmt.Sprintf(
-		"[yellow]%s[white] "+ICON_SIDE_ARROW+
-			"[green]%s",
-		pr.Source.Branch.Name,
-		pr.Destination.Branch.Name,
-	)
-
-	return headerText
 }
