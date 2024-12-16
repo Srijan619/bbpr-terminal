@@ -18,7 +18,9 @@ const (
 )
 
 func PopulatePRList(prList *tview.Table) *tview.Table {
-	prs := GetFilteredPRs()
+	UpdateFilteredPRs()
+	log.Printf("This called again...")
+	prs := *state.GlobalState.FilteredPRs
 	if len(prs) > 0 {
 		prList.Select(0, 0)
 		HandleOnPrSelect(prs, 0)
@@ -29,6 +31,7 @@ func PopulatePRList(prList *tview.Table) *tview.Table {
 	// Add a selection function that updates PR details when a PR is selected
 	prList.SetSelectedFunc(func(row, column int) {
 		go func() {
+			prs := *state.GlobalState.FilteredPRs // use updated prs inside routine
 			HandleOnPrSelect(prs, row)
 			UpdatePRList()
 		}()
@@ -42,7 +45,7 @@ func PopulatePRList(prList *tview.Table) *tview.Table {
 }
 
 func HandleOnPrSelect(prs []types.PR, row int) {
-	log.Printf("Selecting PR..%d,%v", row, state.GlobalState)
+	log.Printf("Selecting PR..%d, %d, %v", len(prs), row, state.GlobalState == nil)
 	if row >= 0 && row < len(prs) && state.GlobalState != nil {
 		// Fetch details in parallel using goroutines
 		go func() {
@@ -65,7 +68,6 @@ func HandleOnPrSelect(prs []types.PR, row int) {
 				} else {
 					// Assert result as the correct type: *types.PR
 					pr, ok := result.(*types.PR)
-					log.Printf("Fetched single pr...%v", pr)
 					if !ok {
 						util.UpdatePRDetailView("[red]Failed to cast PR details[-]")
 						return
@@ -139,17 +141,19 @@ func formatPRHeaderBranch(pr types.PR) string {
 	return headerText
 }
 
-func GetFilteredPRs() []types.PR {
+func UpdateFilteredPRs() {
 	var filteredPRs []types.PR
 	// Fetch or use cached PRs based on active filters
 	if state.PRStatusFilter.Open {
+		log.Printf("[sausage] Appending open ones...")
 		filteredPRs = append(filteredPRs, bitbucket.FetchPRsByState("OPEN")...)
 	}
 	if state.PRStatusFilter.Merged {
+		log.Printf("[sausage] Appending merged ones...")
 		filteredPRs = append(filteredPRs, bitbucket.FetchPRsByState("MERGED")...)
 	}
 	if state.PRStatusFilter.Declined {
 		filteredPRs = append(filteredPRs, bitbucket.FetchPRsByState("DECLINED")...)
 	}
-	return filteredPRs
+	state.SetFilteredPRs(&filteredPRs)
 }

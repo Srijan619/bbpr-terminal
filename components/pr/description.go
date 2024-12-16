@@ -69,7 +69,6 @@ func GetReviewerNames(pr *types.PR) []string {
 	// Loop through the participants and check if they are REVIEWERs
 	for _, participant := range pr.Participants {
 		if participant.Role == "REVIEWER" {
-			log.Printf("I hsoul..%v", participant)
 			fText := util.FormatInitials(participant.User.DisplayName) + " " + util.GetPRReviewStateIcon(participant.State)
 			reviewerNames = append(reviewerNames, fText)
 		}

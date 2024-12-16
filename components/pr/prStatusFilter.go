@@ -48,11 +48,9 @@ func CreatePRStatusFilterView() *tview.Flex {
 func UpdatePRList() {
 	go func() {
 		if state.GlobalState != nil {
-			filteredPRs := GetFilteredPRs()
+			UpdateFilteredPRs()
 			state.GlobalState.PrList.Clear()
-			state.GlobalState.App.QueueUpdateDraw(func() {
-				util.UpdatePRListView(filteredPRs)
-			})
+			util.UpdatePRListView()
 		}
 	}()
 }

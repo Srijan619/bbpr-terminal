@@ -20,7 +20,8 @@ type State struct {
 	CurrentView      tview.Primitive
 	PRStatusFilter   *tview.Flex
 
-	SelectedPR *types.PR
+	SelectedPR  *types.PR
+	FilteredPRs *[]types.PR
 }
 
 var GlobalState *State
@@ -54,6 +55,10 @@ func SetCurrentView(currentView tview.Primitive) {
 // SetSelectedPR sets the selected PR in the global state.
 func SetSelectedPR(pr *types.PR) {
 	GlobalState.SelectedPR = pr
+}
+
+func SetFilteredPRs(prs *[]types.PR) {
+	GlobalState.FilteredPRs = prs
 }
 
 type PRStatusFilterType struct {

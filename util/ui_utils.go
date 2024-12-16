@@ -191,9 +191,10 @@ func UpdateDiffStatView(statContent interface{}) {
 	UpdateView(state.GlobalState.DiffStatView, statContent)
 }
 
-func UpdatePRListView(prList []types.PR) {
-	if state.GlobalState != nil && state.GlobalState.PrList != nil {
-		PopulatePRList(state.GlobalState.PrList, prList)
+func UpdatePRListView() {
+	if state.GlobalState != nil && state.GlobalState.PrList != nil && state.GlobalState.FilteredPRs != nil {
+		PopulatePRList(state.GlobalState.PrList, *state.GlobalState.FilteredPRs)
+		state.GlobalState.App.Draw()
 	}
 }
 
