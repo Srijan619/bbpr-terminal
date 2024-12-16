@@ -15,6 +15,7 @@ const (
 )
 
 func CreateMainApp() *tview.Application {
+	pr.InitMdRenderer() // Markdown renderer takes time, so init it beforehand
 	app := tview.NewApplication()
 	workspace, repoSlug, _ = util.GetRepoAndWorkspace()
 	log.Printf("Loading workspace - %s and repo - %s ....", workspace, repoSlug)
