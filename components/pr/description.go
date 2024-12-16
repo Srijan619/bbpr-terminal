@@ -91,12 +91,16 @@ func formatDescription(description interface{}) string {
 
 // Renders the given Markdown string using the glamour library.
 func renderMarkdown(md string) string {
-	rendered, err := glamour.Render(md, "dark")
+	rendered, _ := glamour.NewTermRenderer(
+		glamour.WithAutoStyle(),
+		glamour.WithWordWrap(0),
+	)
+	out, err := rendered.Render(md)
 	if err != nil {
 		log.Fatalf("Error rendering markdown: %v", err)
 	}
 
-	return rendered
+	return out
 }
 
 // Translate ANSI escape sequences into tview-compatible format
