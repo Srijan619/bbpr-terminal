@@ -43,7 +43,7 @@ func GetRepoAndWorkspace() (string, string, error) {
 }
 
 func GenerateColorizedDiffView(diffText string, comments []types.Comment) *tview.TextView {
-	log.Printf("How many comments????%d", len(comments))
+	log.Printf("How many comments????%v", comments)
 	// Initialize the TextView to display the diff
 	textView := tview.NewTextView()
 
@@ -119,11 +119,21 @@ func addCommentsAboveLines(diffText string, comments []types.Comment) string {
 	// Loop through diff lines and insert comments above
 	for i, line := range lines {
 		lineNumber := i + 1
-		relativeLineNumber := i - 2
+		relativeLineNumber := i
 		if commentLines, exists := commentMap[relativeLineNumber]; exists {
 			// Add each comment as a line before the diff line
 			for _, comment := range commentLines {
-				commentLine := fmt.Sprintf("[steelblue]%s%s → %s %d %d[-]", ICON_COMMENT, comment.User.DisplayName, comment.Content.Raw, comment.Inline.From, comment.Inline.To)
+				commentLine := ""
+
+				// If the comment has a parent, append the parent's ID with an arrow
+				if comment.Parent.ID > 0 {
+					commentLine = fmt.Sprintf("[steelblue]%s %s %s %s[-]", ICON_SIDE_ARROW, ICON_COMMENT, comment.User.DisplayName, comment.Content.Raw)
+				} else {
+					// Otherwise, display the comment normally
+					commentLine = fmt.Sprintf("[steelblue]%s %s → %s[-]", ICON_COMMENT, comment.User.DisplayName, comment.Content.Raw)
+				}
+
+				// Add the comment line to the result
 				result = append(result, commentLine)
 			}
 		}

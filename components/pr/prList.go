@@ -21,7 +21,7 @@ func PopulatePRList(prList *tview.Table) *tview.Table {
 	bitbucket.UpdateFilteredPRs()
 	prs := *state.GlobalState.FilteredPRs
 	if len(prs) > 0 {
-		prList.Select(10, 0)
+		prList.Select(0, 0)
 		HandleOnPrSelect(prs, 0)
 	}
 	// Populate PR list

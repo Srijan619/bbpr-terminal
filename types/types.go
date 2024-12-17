@@ -103,17 +103,23 @@ type UpdateDetail struct {
 }
 
 type Comment struct {
-	ID          int     `json:"id"`
-	CreatedOn   string  `json:"created_on"`
-	UpdatedOn   string  `json:"updated_on"`
-	Content     Content `json:"content"`
-	User        User    `json:"user"`
-	Deleted     bool    `json:"deleted"`
-	Pending     bool    `json:"pending"`
-	Type        string  `json:"type"`
-	Links       Links   `json:"links"`
-	PullRequest PR      `json:"pullrequest"`
-	Inline      Inline  `json:"inline"`
+	ID          int           `json:"id"`
+	CreatedOn   string        `json:"created_on"`
+	UpdatedOn   string        `json:"updated_on"`
+	Content     Content       `json:"content"`
+	User        User          `json:"user"`
+	Deleted     bool          `json:"deleted"`
+	Pending     bool          `json:"pending"`
+	Type        string        `json:"type"`
+	Links       Links         `json:"links"`
+	PullRequest PR            `json:"pullrequest"`
+	Inline      Inline        `json:"inline"`
+	Parent      CommentParent `json:"parent,omitempty"`
+}
+
+type CommentParent struct {
+	ID    int   `json:"id"`
+	Links Links `json:"links"`
 }
 
 type Inline struct {
