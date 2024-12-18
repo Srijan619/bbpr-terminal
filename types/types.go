@@ -115,6 +115,7 @@ type Comment struct {
 	PullRequest PR            `json:"pullrequest"`
 	Inline      Inline        `json:"inline"`
 	Parent      CommentParent `json:"parent,omitempty"`
+	Resolution  interface{}   `json:"resolution"`
 }
 
 type CommentParent struct {

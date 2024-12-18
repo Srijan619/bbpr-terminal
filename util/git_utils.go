@@ -125,14 +125,18 @@ func addCommentsAboveLines(diffText string, comments []types.Comment) string {
 			for _, comment := range commentLines {
 				commentLine := ""
 
-				// If the comment has a parent, append the parent's ID with an arrow
 				if comment.Parent.ID > 0 {
-					commentLine = fmt.Sprintf("[steelblue]%s %s %s %s[-]", ICON_SIDE_ARROW, ICON_COMMENT, comment.User.DisplayName, comment.Content.Raw)
+					commentLine = fmt.Sprintf("[steelblue]  %s %s %s %s[-]", ICON_SIDE_ARROW, ICON_COMMENT, comment.User.DisplayName, comment.Content.Raw)
 				} else {
-					// Otherwise, display the comment normally
-					commentLine = fmt.Sprintf("[steelblue]%s %s → %s[-]", ICON_COMMENT, comment.User.DisplayName, comment.Content.Raw)
+					// Need to check if the comment was resolved
+					if comment.Resolution != nil {
+						// Comment is resolved, show a "resolved" marker
+						commentLine = fmt.Sprintf("[aquamarine]✔ %s %s (Resolved) %s[-]", ICON_COMMENT, comment.User.DisplayName, comment.Content.Raw)
+					} else {
+						// If not resolved, display it as normal
+						commentLine = fmt.Sprintf("[steelblue]%s %s → %s[-]", ICON_COMMENT, comment.User.DisplayName, comment.Content.Raw)
+					}
 				}
-
 				// Add the comment line to the result
 				result = append(result, commentLine)
 			}
