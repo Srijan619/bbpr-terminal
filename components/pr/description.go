@@ -1,33 +1,12 @@
 package pr
 
 import (
-	"bytes"
 	"fmt"
-	"log"
-	"strings"
-
-	"github.com/charmbracelet/glamour"
 	"github.com/gdamore/tcell/v2"
-	"github.com/rivo/tview"
-
 	"simple-git-terminal/types"
 	"simple-git-terminal/util"
+	"strings"
 )
-
-// Global variable to store the renderer instance
-var renderer *glamour.TermRenderer
-
-// Initialize the renderer once and reuse it
-func InitMdRenderer() {
-	var err error
-	renderer, err = glamour.NewTermRenderer(
-		glamour.WithAutoStyle(),
-		glamour.WithWordWrap(0),
-	)
-	if err != nil {
-		log.Fatalf("Error initializing renderer: %v", err)
-	}
-}
 
 func GeneratePRDetail(pr *types.PR) string {
 	// Format the description using glamour for Markdown rendering
@@ -99,31 +78,7 @@ func formatDescription(description interface{}) string {
 		return "No description provided."
 	}
 	if desc, ok := description.(string); ok {
-		trimmed := strings.TrimSpace(desc)
-		return translateANSI(renderMarkdown(trimmed))
+		return util.RenderMarkdown(desc)
 	}
 	return "Unsupported description format."
-}
-
-// Renders the given Markdown string using the glamour library.
-func renderMarkdown(md string) string {
-	if renderer == nil {
-		InitMdRenderer()
-	}
-	out, err := renderer.Render(md)
-	if err != nil {
-		log.Fatalf("Error rendering markdown: %v", err)
-	}
-	return out
-}
-
-// Translate ANSI escape sequences into tview-compatible format
-func translateANSI(input string) string {
-	var buf bytes.Buffer
-	w := tview.ANSIWriter(&buf)
-	_, err := w.Write([]byte(input))
-	if err != nil {
-		log.Fatalf("Error translating ANSI: %v", err)
-	}
-	return buf.String()
 }

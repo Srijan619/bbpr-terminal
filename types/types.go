@@ -130,10 +130,10 @@ type Inline struct {
 }
 
 type Content struct {
-	Type     string `json:"type"`
-	Raw      string `json:"raw"`
-	Markdown string `json:"markdown"`
-	Html     string `json:"html"`
+	Type   string `json:"type"`
+	Raw    string `json:"raw"`    // This is already in markdown format
+	Markup string `json:"markup"` // This is basically "markdown" string nothing that useful
+	Html   string `json:"html"`
 }
 
 type Changes struct {

@@ -3,7 +3,6 @@ package util
 import (
 	"fmt"
 	"github.com/rivo/tview"
-	"log"
 	"os"
 	"os/exec"
 	"regexp"
@@ -43,7 +42,6 @@ func GetRepoAndWorkspace() (string, string, error) {
 }
 
 func GenerateColorizedDiffView(diffText string, comments []types.Comment) *tview.TextView {
-	log.Printf("How many comments????%v", comments)
 	// Initialize the TextView to display the diff
 	textView := tview.NewTextView()
 
@@ -126,15 +124,15 @@ func addCommentsAboveLines(diffText string, comments []types.Comment) string {
 				commentLine := ""
 
 				if comment.Parent.ID > 0 {
-					commentLine = fmt.Sprintf("[steelblue]  %s %s %s %s[-]", ICON_SIDE_ARROW, ICON_COMMENT, comment.User.DisplayName, comment.Content.Raw)
+					commentLine = fmt.Sprintf("[steelblue]  %s %s %s %s[-]", ICON_SIDE_ARROW, ICON_COMMENT, comment.User.DisplayName, RenderMarkdown(comment.Content.Raw))
 				} else {
 					// Need to check if the comment was resolved
 					if comment.Resolution != nil {
 						// Comment is resolved, show a "resolved" marker
-						commentLine = fmt.Sprintf("[aquamarine]✔ %s %s (Resolved) %s[-]", ICON_COMMENT, comment.User.DisplayName, comment.Content.Raw)
+						commentLine = fmt.Sprintf("[aquamarine]✔ %s %s (Resolved) %s[-]", ICON_COMMENT, comment.User.DisplayName, RenderMarkdown(comment.Content.Raw))
 					} else {
 						// If not resolved, display it as normal
-						commentLine = fmt.Sprintf("[steelblue]%s %s → %s[-]", ICON_COMMENT, comment.User.DisplayName, comment.Content.Raw)
+						commentLine = fmt.Sprintf("[steelblue]%s %s → %s[-]", ICON_COMMENT, comment.User.DisplayName, RenderMarkdown(comment.Content.Raw))
 					}
 				}
 				// Add the comment line to the result
