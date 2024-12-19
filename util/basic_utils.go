@@ -2,8 +2,10 @@ package util
 
 import (
 	"fmt"
+	"github.com/dustin/go-humanize"
 	"simple-git-terminal/types"
 	"strings"
+	"time"
 	"unicode"
 )
 
@@ -47,4 +49,22 @@ func getInitials(displayName string) string {
 		return strings.ToUpper(displayName[:2])
 	}
 	return strings.ToUpper(displayName)
+}
+
+// Helper function to calculate time ago
+func FormatTimeAgo(date string) string {
+	parsedTime, err := time.Parse(time.RFC3339, date)
+	if err != nil {
+		return "unknown time"
+	}
+	return humanize.Time(parsedTime)
+}
+
+func FormatCombinedTimeAgo(date string) string {
+	parsedTime, err := time.Parse(time.RFC3339, date)
+	if err != nil {
+		return "unknown time"
+	}
+	formattedDate := parsedTime.Format("2006-01-02")
+	return fmt.Sprintf("%s (%s)", formattedDate, FormatTimeAgo(date))
 }

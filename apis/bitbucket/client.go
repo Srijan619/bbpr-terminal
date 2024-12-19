@@ -2,10 +2,9 @@ package bitbucket
 
 import (
 	"fmt"
+	"github.com/go-resty/resty/v2"
 	"log"
 	"os"
-
-	"github.com/go-resty/resty/v2"
 	"simple-git-terminal/state"
 	"simple-git-terminal/types"
 	"simple-git-terminal/util"
@@ -48,12 +47,30 @@ func createClient() *resty.Client {
 	return client
 }
 
-func FetchBitbucketPRs() []types.PR {
-	// Create the client (authentication handled inside)
+func FetchPR(id int) *types.PR {
 	client := createClient()
+	url := fmt.Sprintf("%s/repositories/%s/%s/pullrequests/%d", BitbucketBaseURL, state.Workspace, state.Repo, id)
 
-	url := fmt.Sprintf("%s/repositories/%s/%s/pullrequests?state=ALL", BitbucketBaseURL, state.Workspace, state.Repo)
-	log.Printf("URL:::%s", url)
+	resp, err := client.R().
+		SetResult(&types.PR{}).
+		Get(url)
+
+	if err != nil {
+		log.Fatalf("Error fetching PRs: %v", err)
+	}
+	if resp.StatusCode() != 200 {
+		log.Fatalf("Unexpected status code: %d. Response body: %s", resp.StatusCode(), string(resp.Body()))
+	}
+
+	pr := resp.Result().(*types.PR)
+	return pr
+}
+
+func FetchPRsByState(prState string) []types.PR {
+	client := createClient()
+	url := fmt.Sprintf("%s/repositories/%s/%s/pullrequests?state=%s", BitbucketBaseURL, state.Workspace, state.Repo, prState)
+	log.Printf("Fetching PRs with state: %s", prState)
+
 	resp, err := client.R().
 		SetResult(&types.BitbucketPRResponse{}).
 		Get(url)
@@ -61,18 +78,32 @@ func FetchBitbucketPRs() []types.PR {
 	if err != nil {
 		log.Fatalf("Error fetching PRs: %v", err)
 	}
-	// Check if the response is successful (status code 200)
 	if resp.StatusCode() != 200 {
 		log.Fatalf("Unexpected status code: %d. Response body: %s", resp.StatusCode(), string(resp.Body()))
 	}
-	prs := resp.Result().(*types.BitbucketPRResponse).Values
 
-	// Process and sanitize the PRs
+	prs := resp.Result().(*types.BitbucketPRResponse).Values
 	for i := range prs {
 		prs[i] = util.SanitizePR(prs[i])
 	}
 
 	return prs
+}
+
+func FetchBitbucketPRs() []types.PR {
+	return FetchPRsByState("ALL")
+}
+
+func FetchBitbucketOpenPRs() []types.PR {
+	return FetchPRsByState("OPEN")
+}
+
+func FetchBitbucketMergedPRs() []types.PR {
+	return FetchPRsByState("MERGED")
+}
+
+func FetchBitbucketDeclinedPRs() []types.PR {
+	return FetchPRsByState("DECLINED")
 }
 
 func FetchBitbucketDiffContent(id int, filePath string) (string, error) {
@@ -150,4 +181,34 @@ func FetchBitbucketActivities(id int) []types.Activity {
 	}
 	activityResponse := resp.Result().(*types.BitbucketActivityResponse)
 	return activityResponse.Values
+}
+
+func FetchBitbucketComments(id int) []types.Comment {
+	client := createClient()
+
+	resp, err := client.R().
+		SetResult(&types.BitbucketCommentsResponse{}).
+		Get(fmt.Sprintf("%s/repositories/%s/%s/pullrequests/%d/comments", BitbucketBaseURL, state.Workspace, state.Repo, id))
+	if err != nil {
+		log.Fatalf("Error fetching comments: %v", err)
+	}
+	response := resp.Result().(*types.BitbucketCommentsResponse)
+	return response.Values
+}
+
+func UpdateFilteredPRs() {
+	var filteredPRs []types.PR
+	// Fetch or use cached PRs based on active filters
+	if state.PRStatusFilter.Open {
+		log.Printf("[sausage] Appending open ones...")
+		filteredPRs = append(filteredPRs, FetchPRsByState("OPEN")...)
+	}
+	if state.PRStatusFilter.Merged {
+		log.Printf("[sausage] Appending merged ones...")
+		filteredPRs = append(filteredPRs, FetchPRsByState("MERGED")...)
+	}
+	if state.PRStatusFilter.Declined {
+		filteredPRs = append(filteredPRs, FetchPRsByState("DECLINED")...)
+	}
+	state.SetFilteredPRs(&filteredPRs)
 }

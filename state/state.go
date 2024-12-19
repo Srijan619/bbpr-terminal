@@ -2,12 +2,15 @@ package state
 
 import (
 	"github.com/rivo/tview"
+	"log"
+	"strings"
+
 	"simple-git-terminal/types"
 )
 
 type State struct {
 	App              *tview.Application
-	MainGrid         *tview.Grid
+	MainFlexWrapper  *tview.Flex
 	PrList           *tview.Table
 	PrDetails        *tview.TextView
 	ActivityView     *tview.Flex
@@ -15,22 +18,26 @@ type State struct {
 	DiffStatView     *tview.Flex
 	RightPanelHeader *tview.TextView
 	CurrentView      tview.Primitive
-	SelectedPR       *types.PR
+	PRStatusFilter   *tview.Flex
+
+	SelectedPR  *types.PR
+	FilteredPRs *[]types.PR
 }
 
 var GlobalState *State
 var Workspace, Repo string
 
 // InitializeViews initializes all view components except workspace and repo.
-func InitializeViews(app *tview.Application, mainGrid *tview.Grid, prList *tview.Table, prDetails *tview.TextView, activityView, diffDetails, diffStatView *tview.Flex, rightPanelHeader *tview.TextView) {
+func InitializeViews(app *tview.Application, mainFlexWrapper *tview.Flex, prList *tview.Table, prDetails *tview.TextView, activityView, diffDetails, diffStatView, pRStatusFilter *tview.Flex, rightPanelHeader *tview.TextView) {
 	GlobalState = &State{
 		App:              app,
-		MainGrid:         mainGrid,
+		MainFlexWrapper:  mainFlexWrapper,
 		PrList:           prList,
 		PrDetails:        prDetails,
 		ActivityView:     activityView,
 		DiffDetails:      diffDetails,
 		DiffStatView:     diffStatView,
+		PRStatusFilter:   pRStatusFilter,
 		RightPanelHeader: rightPanelHeader,
 	}
 }
@@ -48,4 +55,41 @@ func SetCurrentView(currentView tview.Primitive) {
 // SetSelectedPR sets the selected PR in the global state.
 func SetSelectedPR(pr *types.PR) {
 	GlobalState.SelectedPR = pr
+}
+
+func SetFilteredPRs(prs *[]types.PR) {
+	GlobalState.FilteredPRs = prs
+}
+
+type PRStatusFilterType struct {
+	Open     bool
+	Merged   bool
+	Declined bool
+}
+
+var PRStatusFilter *PRStatusFilterType
+
+func InitializePRStatusFilter(filter *PRStatusFilterType) {
+	if filter == nil {
+		filter = &PRStatusFilterType{Open: true, Merged: false, Declined: false}
+	}
+	PRStatusFilter = filter
+}
+
+// Provide key (in any format) and whether that key is checked or not ("open | merged | declined | all", true | false)
+func SetPRStatusFilter(filterKey string, isChecked bool) {
+	trimmedFilterKey := strings.ToLower(strings.TrimSpace(filterKey))
+	switch trimmedFilterKey {
+	case "open":
+		PRStatusFilter.Open = isChecked
+	case "merged":
+		PRStatusFilter.Merged = isChecked
+	case "declined":
+		PRStatusFilter.Declined = isChecked
+	case "all":
+		PRStatusFilter.Open = isChecked
+		PRStatusFilter.Merged = isChecked
+		PRStatusFilter.Declined = isChecked
+	}
+	log.Printf("Filter updated: %+v\n", PRStatusFilter)
 }

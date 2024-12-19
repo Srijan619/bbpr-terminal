@@ -28,8 +28,10 @@ func main() {
 	// Log a test message to verify
 	log.Printf("Application started")
 
-	app := CreateApp()
-
+	app := CreateMainApp()
+	//app.SetRoot(mainUi, true).EnableMouse(true)
+	//	app := CreateApp()
+	//app := tview.NewApplication().SetRoot(pr.GenerateDiffStatTree(pr.STATIC_DATA), true)
 	if err := app.Run(); err != nil {
 		log.Fatalf("Error running application: %v", err)
 	}

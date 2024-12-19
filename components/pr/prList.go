@@ -2,8 +2,8 @@ package pr
 
 import (
 	"fmt"
+	"log"
 
-	"github.com/gdamore/tcell/v2"
 	"github.com/rivo/tview"
 
 	"simple-git-terminal/apis/bitbucket"
@@ -13,69 +13,137 @@ import (
 )
 
 const (
-	HIGH_CONTRAST_COLOR = tcell.ColorCadetBlue
-	LOW_CONTRAST_COLOR  = tcell.ColorYellow
-	ICON_LOADING        = "\uea75 "
+	ICON_LOADING    = "\uea75 "
+	ICON_SIDE_ARROW = "\u21AA "
 )
 
 func PopulatePRList(prList *tview.Table) *tview.Table {
-	prs := bitbucket.FetchBitbucketPRs()
-	// Populate PR list
-	populatePRList(prs)
-
-	// Add a selection function that updates PR details when a PR is selected
-	prList.SetSelectedFunc(func(row, column int) {
-		HandleOnPrSelect(prs, row)
-	})
-
-	// Set initial PR details if available
+	bitbucket.UpdateFilteredPRs()
+	prs := *state.GlobalState.FilteredPRs
 	if len(prs) > 0 {
 		prList.Select(0, 0)
 		HandleOnPrSelect(prs, 0)
 	}
+	// Populate PR list
+	util.PopulatePRList(prList, prs)
+
+	// Add a selection function that updates PR details when a PR is selected
+	prList.SetSelectedFunc(func(row, column int) {
+		go func() {
+			prs := *state.GlobalState.FilteredPRs // use updated prs inside routine
+			HandleOnPrSelect(prs, row)
+			UpdatePRList()
+		}()
+	})
+
+	prList.SetSelectionChangedFunc(func(row, column int) {
+		//HandleOnPrSelect(prs, row) TODO: It will be really laggy to allow selection update PR as user might navigate up and down fast...maybe need some debouncing?
+	})
+
 	return prList
 }
 
 func HandleOnPrSelect(prs []types.PR, row int) {
-	if row >= 0 && row < len(prs) {
-		// Update PR details and set the selected PR
-		UpdatePrDetails(prs, state.GlobalState.PrDetails, row)
-		state.SetSelectedPR(&prs[row])
+	if state.GlobalState != nil {
+		fetchMore := row == len(prs)
+		if fetchMore {
+			log.Println("Fetch more selected")
+		} else {
+			// Handle normal cell selection
+			log.Printf("Selected cell at row %d", row)
+			handleNormalPRSelect(prs, row)
+		}
 
-		// Update right panel and set header
-		state.GlobalState.RightPanelHeader.SetText(formatPRHeader(*state.GlobalState.SelectedPR))
+	}
+}
 
+// Function to populate the PR list
+
+// FormatPRHeader takes the PR details and returns a formatted string
+func formatPRHeaderBranch(pr types.PR) string {
+	// Use fmt.Sprintf to format the header and apply tview's dynamic color syntax
+	headerText := fmt.Sprintf(
+		"[yellow]%s[white] "+ICON_SIDE_ARROW+
+			"[green]%s",
+		pr.Source.Branch.Name,
+		pr.Destination.Branch.Name,
+	)
+
+	return headerText
+}
+
+func handleNormalPRSelect(prs []types.PR, row int) {
+	if row >= 0 && row < len(prs) && state.GlobalState != nil {
 		// Fetch details in parallel using goroutines
 		go func() {
+			state.SetSelectedPR(&prs[row])
+
+			// Update right panel and set header
+			state.GlobalState.RightPanelHeader.SetTitle(formatPRHeaderBranch(*state.GlobalState.SelectedPR))
+			state.GlobalState.RightPanelHeader.SetText(state.GlobalState.SelectedPR.Title)
+
+			// Show loading spinner for PR details
+			util.ShowLoadingSpinner(state.GlobalState.PrDetails, func() (interface{}, error) {
+				singlePR := bitbucket.FetchPR(prs[row].ID)
+				if singlePR == nil {
+					return nil, fmt.Errorf("Failed to fetch PR details")
+				}
+				return singlePR, nil
+			}, func(result interface{}, err error) {
+				if err != nil {
+					util.UpdatePRDetailView(fmt.Sprintf("[red]Error: %v[-]", err))
+				} else {
+					// Assert result as the correct type: *types.PR
+					pr, ok := result.(*types.PR)
+					if !ok {
+						util.UpdatePRDetailView("[red]Failed to cast PR details[-]")
+						return
+					}
+					util.UpdatePRDetailView(GeneratePRDetail(pr))
+				}
+			})
+
 			// Show loading spinner for activities
-			util.ShowLoadingSpinner(state.GlobalState.ActivityView, func() (string, error) {
+			util.ShowLoadingSpinner(state.GlobalState.ActivityView, func() (interface{}, error) {
 				// Fetch activities
 				prActivities := bitbucket.FetchBitbucketActivities(state.GlobalState.SelectedPR.ID)
 				if prActivities == nil {
-					return "", fmt.Errorf("Failed to fetch activities")
+					return nil, fmt.Errorf("Failed to fetch activities")
 				}
-				return ICON_LOADING + "Activities fetched!", nil
-			}, func(result string, err error) {
+				return prActivities, nil
+			}, func(result interface{}, err error) {
 				if err != nil {
 					util.UpdateActivityView(err.Error())
 				} else {
-					util.UpdateActivityView(CreateActivitiesView(bitbucket.FetchBitbucketActivities(state.GlobalState.SelectedPR.ID)))
+					// Assert result as a slice of Activity
+					activities, ok := result.([]types.Activity)
+					if !ok {
+						util.UpdateActivityView("[red]Failed to cast activities[-]")
+						return
+					}
+					util.UpdateActivityView(CreateActivitiesView(activities))
 				}
 			})
 
 			// Show loading spinner for diff stats
-			util.ShowLoadingSpinner(state.GlobalState.DiffStatView, func() (string, error) {
+			util.ShowLoadingSpinner(state.GlobalState.DiffStatView, func() (interface{}, error) {
 				// Fetch diff stats
 				diffStatData := bitbucket.FetchBitbucketDiffstat(state.GlobalState.SelectedPR.ID)
 				if diffStatData == nil {
-					return "", fmt.Errorf("Failed to fetch diff stats")
+					return nil, fmt.Errorf("Failed to fetch diff stats")
 				}
-				return ICON_LOADING + "Diff stats fetched!", nil
-			}, func(result string, err error) {
+				return diffStatData, nil
+			}, func(result interface{}, err error) {
 				if err != nil {
 					util.UpdateDiffStatView(err.Error())
 				} else {
-					util.UpdateDiffStatView(GenerateDiffStatTree(bitbucket.FetchBitbucketDiffstat(state.GlobalState.SelectedPR.ID)))
+					// Assert result as string
+					diffStat, ok := result.([]types.DiffstatEntry)
+					if !ok {
+						util.UpdateDiffStatView("[red]Failed to cast diff stats[-]")
+						return
+					}
+					util.UpdateDiffStatView(GenerateDiffStatTree(diffStat))
 				}
 			})
 
@@ -83,48 +151,4 @@ func HandleOnPrSelect(prs []types.PR, row int) {
 			util.UpdateDiffDetailsView("Hover over to a file for quick preview OR Select a file to see diff in full screen")
 		}()
 	}
-}
-
-// Function to populate the PR list
-func populatePRList(prs []types.PR) {
-	for i, pr := range prs {
-		titleCell := cellFormat(util.EllipsizeText(pr.Title, 18), tcell.ColorWhite)
-		stateCell := util.CreateStateCell(pr.State)
-
-		initialsCell := cellFormat(util.FormatInitials(pr.Author.DisplayName), HIGH_CONTRAST_COLOR)
-
-		sourceBranch := cellFormat(util.EllipsizeText(pr.Source.Branch.Name, 10), LOW_CONTRAST_COLOR)
-		arrow := cellFormat("->", LOW_CONTRAST_COLOR)
-		destinationBranch := cellFormat(util.EllipsizeText(pr.Destination.Branch.Name, 10), LOW_CONTRAST_COLOR)
-
-		state.GlobalState.PrList.SetCell(i, 0, initialsCell)
-		state.GlobalState.PrList.SetCell(i, 1, stateCell)
-		state.GlobalState.PrList.SetCell(i, 2, titleCell)
-
-		state.GlobalState.PrList.SetCell(i, 3, sourceBranch)
-		state.GlobalState.PrList.SetCell(i, 4, arrow)
-		state.GlobalState.PrList.SetCell(i, 5, destinationBranch)
-	}
-}
-
-func cellFormat(text string, color tcell.Color) *tview.TableCell {
-	return tview.NewTableCell(text).
-		SetTextColor(color).
-		SetAlign(tview.AlignLeft).
-		SetSelectable(true)
-}
-
-// FormatPRHeader takes the PR details and returns a formatted string
-func formatPRHeader(pr types.PR) string {
-	// Use fmt.Sprintf to format the header and apply tview's dynamic color syntax
-	headerText := fmt.Sprintf(
-		"%s\n\n"+
-			"[yellow]%s[white] -> "+
-			"[green]%s[white]",
-		pr.Title,
-		pr.Source.Branch.Name,
-		pr.Destination.Branch.Name,
-	)
-
-	return headerText
 }

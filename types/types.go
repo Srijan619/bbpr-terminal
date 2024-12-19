@@ -1,5 +1,32 @@
 package types
 
+// Common structs for Links and Avatar
+type Links struct {
+	Self   Self   `json:"self"`
+	Avatar Avatar `json:"avatar,omitempty"`
+	HTML   Href   `json:"html"`
+}
+
+type Self struct {
+	Href string `json:"href"`
+}
+
+type Avatar struct {
+	Href string `json:"href"`
+}
+
+type Href struct {
+	Href string `json:"href"`
+}
+
+const (
+	StateApproved         = "approved"
+	StateRequestedChanges = "changes_requested"
+	StateDeclined         = "declined"
+)
+
+type State string
+
 type PR struct {
 	ID          int         `json:"id"`
 	Title       string      `json:"title"`
@@ -7,28 +34,53 @@ type PR struct {
 	Author      Author      `json:"author"`
 	CreatedOn   string      `json:"created_on"`
 	UpdatedOn   string      `json:"updated_on"`
-	Description interface{} `json:"description"` // To handle both string and object
-	Links       struct {
-		HTML struct {
-			Href string `json:"href"`
-		} `json:"html"`
-	} `json:"links"`
-	Source struct {
+	Description interface{} `json:"description"`
+	Links       Links       `json:"links"`
+	Source      struct {
 		Branch struct {
 			Name string `json:"name"`
 		} `json:"branch"`
+		Commit Commit `json:"commit"`
 	} `json:"source"`
 	Destination struct {
 		Branch struct {
 			Name string `json:"name"`
 		} `json:"branch"`
 	} `json:"destination"`
+	Reviewers    []Reviewer    `json:"reviewers"`
+	Participants []Participant `json:"participants"`
+}
+
+type Commit struct {
+	Hash  string `json:"hash"`
+	Links Links  `json:"links"`
+	Type  string `json:"type"`
+}
+
+type Reviewer struct {
+	DisplayName string `json:"display_name"`
+	Links       Links  `json:"links"`
+	Type        string `json:"type"`
+	UUID        string `json:"uuid"`
+	AccountID   string `json:"account_id"`
+	Nickname    string `json:"nickname"`
+}
+
+type Participant struct {
+	Type           string      `json:"type"`
+	User           *User       `json:"user"`
+	Role           string      `json:"role"`
+	Approved       bool        `json:"approved"`
+	State          State       `json:"state"`
+	ParticipatedOn interface{} `json:"participated_on"`
 }
 
 type Activity struct {
-	PullRequest PR           `json:"pull_request"`
-	Update      UpdateDetail `json:"update,omitempty"`
-	Approval    Approval     `json:"approval,omitempty"`
+	PullRequest      PR              `json:"pull_request"`
+	Update           UpdateDetail    `json:"update,omitempty"`
+	Approval         Approval        `json:"approval,omitempty"`
+	ChangesRequested ChangeRequested `json:"changes_requested,omitempty"`
+	Comment          Comment         `json:"comment"`
 }
 
 type Author struct {
@@ -37,41 +89,80 @@ type Author struct {
 }
 
 type UpdateDetail struct {
-	State       string            `json:"state"`
-	Draft       bool              `json:"draft"`
-	Title       string            `json:"title"`
-	Description string            `json:"description"`
-	Reviewers   []interface{}     `json:"reviewers"`
-	Changes     map[string]Change `json:"changes"`
-	Reason      string            `json:"reason"`
-	Author      AuthorDetail      `json:"author"`
-	Date        string            `json:"date"`
-	Destination BranchDetail      `json:"destination"`
-	Source      BranchDetail      `json:"source"`
+	State       string       `json:"state"`
+	Draft       bool         `json:"draft"`
+	Title       string       `json:"title"`
+	Description string       `json:"description"`
+	Reviewers   []Reviewer   `json:"reviewers"`
+	Changes     Changes      `json:"changes"`
+	Reason      string       `json:"reason"`
+	Author      User         `json:"author"`
+	Date        string       `json:"date"`
+	Destination BranchDetail `json:"destination"`
+	Source      BranchDetail `json:"source"`
 }
 
-type Change struct {
-	Old string `json:"old"`
-	New string `json:"new"`
+type Comment struct {
+	ID          int           `json:"id"`
+	CreatedOn   string        `json:"created_on"`
+	UpdatedOn   string        `json:"updated_on"`
+	Content     Content       `json:"content"`
+	User        User          `json:"user"`
+	Deleted     bool          `json:"deleted"`
+	Pending     bool          `json:"pending"`
+	Type        string        `json:"type"`
+	Links       Links         `json:"links"`
+	PullRequest PR            `json:"pullrequest"`
+	Inline      Inline        `json:"inline"`
+	Parent      CommentParent `json:"parent,omitempty"`
+	Resolution  interface{}   `json:"resolution"`
 }
 
-type AuthorDetail struct {
+type CommentParent struct {
+	ID    int   `json:"id"`
+	Links Links `json:"links"`
+}
+
+type Inline struct {
+	From int    `json:"from"` // From means if it exists in new (i.e added)
+	To   int    `json:"to"`   // To means if it exists in old (i.e removed)
+	Path string `json:"path"`
+}
+
+type Content struct {
+	Type   string `json:"type"`
+	Raw    string `json:"raw"`    // This is already in markdown format
+	Markup string `json:"markup"` // This is basically "markdown" string nothing that useful
+	Html   string `json:"html"`
+}
+
+type Changes struct {
+	Reviewers struct {
+		Added []Reviewer `json:"added"`
+	} `json:"reviewers"`
+	Description struct {
+		New string `json:"new"`
+		Old string `json:"old"`
+	} `json:"description"`
+	Title struct {
+		New string `json:"new"`
+		Old string `json:"old"`
+	} `json:"title"`
+}
+
+type ChangeRequested struct {
+	Date        string `json:"date"`
+	User        User   `json:"user"`
+	PullRequest PR     `json:"pull_request"`
+}
+
+type User struct {
 	DisplayName string `json:"display_name"`
-	Links       struct {
-		Self struct {
-			Href string `json:"href"`
-		} `json:"self"`
-		Avatar struct {
-			Href string `json:"href"`
-		} `json:"avatar"`
-		HTML struct {
-			Href string `json:"href"`
-		} `json:"html"`
-	} `json:"links"`
-	Type      string `json:"type"`
-	UUID      string `json:"uuid"`
-	AccountID string `json:"account_id"`
-	Nickname  string `json:"nickname"`
+	Links       Links  `json:"links"`
+	Type        string `json:"type"`
+	UUID        string `json:"uuid"`
+	AccountID   string `json:"account_id"`
+	Nickname    string `json:"nickname"`
 }
 
 type BranchDetail struct {
@@ -80,39 +171,22 @@ type BranchDetail struct {
 	} `json:"branch"`
 	Commit struct {
 		Hash  string `json:"hash"`
-		Links struct {
-			Self struct {
-				Href string `json:"href"`
-			} `json:"self"`
-			HTML struct {
-				Href string `json:"href"`
-			} `json:"html"`
-		} `json:"links"`
-		Type string `json:"type"`
+		Links Links  `json:"links"`
+		Type  string `json:"type"`
 	} `json:"commit"`
 	Repository struct {
 		Type     string `json:"type"`
 		FullName string `json:"full_name"`
-		Links    struct {
-			Self struct {
-				Href string `json:"href"`
-			} `json:"self"`
-			HTML struct {
-				Href string `json:"href"`
-			} `json:"html"`
-			Avatar struct {
-				Href string `json:"href"`
-			} `json:"avatar"`
-		} `json:"links"`
-		Name string `json:"name"`
-		UUID string `json:"uuid"`
+		Links    Links  `json:"links"`
+		Name     string `json:"name"`
+		UUID     string `json:"uuid"`
 	} `json:"repository"`
 }
 
 type Approval struct {
-	Date        string       `json:"date"`
-	User        AuthorDetail `json:"user"`
-	PullRequest PR           `json:"pullrequest"`
+	Date        string `json:"date"`
+	User        User   `json:"user"`
+	PullRequest PR     `json:"pullrequest"`
 }
 
 type BitbucketPRResponse struct {
@@ -121,6 +195,10 @@ type BitbucketPRResponse struct {
 
 type BitbucketActivityResponse struct {
 	Values []Activity `json:"values"`
+}
+
+type BitbucketCommentsResponse struct {
+	Values []Comment `json:"values"`
 }
 
 type DiffstatResponse struct {
@@ -144,8 +222,6 @@ type DiffFile struct {
 	Type        string `json:"type"` // e.g., "commit_file"
 	EscapedPath string `json:"escaped_path"`
 	Links       struct {
-		Self struct {
-			Href string `json:"href"`
-		} `json:"self"`
+		Self Self `json:"self"`
 	} `json:"links"`
 }

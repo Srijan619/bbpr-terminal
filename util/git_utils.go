@@ -6,7 +6,12 @@ import (
 	"os"
 	"os/exec"
 	"regexp"
+	"simple-git-terminal/types"
 	"strings"
+)
+
+var (
+	ICON_COMMENT = "\uf27b "
 )
 
 // Get the name of the current Git repository
@@ -36,21 +41,7 @@ func GetRepoAndWorkspace() (string, string, error) {
 	return workspace, repoSlug, nil
 }
 
-func GenerateFileContentDiffView(source string, destination string, filePath string) *tview.TextView {
-	// Run git remote to get the remote URL
-	cmd := exec.Command("git", "diff", destination, source, "--", filePath)
-	cmd.Dir = getCurrentDir()
-
-	out, err := cmd.CombinedOutput()
-	if err != nil {
-		textView := GenerateColorizedDiffView(fmt.Sprintf("Error running command %s %v\nOutput: %s", cmd, err, string(out)))
-		return textView
-	}
-
-	return GenerateColorizedDiffView(string(out))
-}
-
-func GenerateColorizedDiffView(diffText string) *tview.TextView {
+func GenerateColorizedDiffView(diffText string, comments []types.Comment) *tview.TextView {
 	// Initialize the TextView to display the diff
 	textView := CreateTextviewComponent("", false)
 
@@ -69,9 +60,11 @@ func GenerateColorizedDiffView(diffText string) *tview.TextView {
 			coloredDiff = append(coloredDiff, line)
 		}
 	}
-
+	// Add comments above the diff lines
+	diffTextWithComments := addCommentsAboveLines(strings.Join(coloredDiff, "\n"), comments)
+	//diffTextWithComments := addCommentsAboveLines(diffText, comments)
 	// Join the lines back together and set the text in the TextView
-	textView.SetText(strings.Join(coloredDiff, "\n"))
+	textView.SetText(diffTextWithComments)
 	return textView
 }
 
@@ -82,4 +75,80 @@ func getCurrentDir() string {
 	} else {
 		return "."
 	}
+}
+
+// Helper method to add comments above diff lines based on line numbers
+func addCommentsAboveLines(diffText string, comments []types.Comment) string {
+	diffText = removeBeforeAndIncludingHunk(diffText)
+	// Map to track which lines have comments
+	commentMap := make(map[int][]types.Comment)
+
+	// Loop through comments and add them to the map, associating them with lines
+	for _, comment := range comments {
+		// Use `From` and `To` to determine the affected lines
+		startLine := comment.Inline.From
+		endLine := comment.Inline.To
+		// If either From or To is nil, set a default behavior
+		if startLine == 0 || endLine == 0 {
+			// If From or To are nil, treat this as a single-line comment (use From or To as the same line)
+			if startLine != 0 {
+				endLine = startLine
+			} else if endLine != 0 {
+				startLine = endLine
+			}
+		}
+
+		// Insert comments for each affected line
+		for line := startLine; line <= endLine; line++ {
+			commentMap[line] = append(commentMap[line], comment)
+		}
+	}
+
+	// Split the diff into lines
+	lines := strings.Split(diffText, "\n")
+	var result []string
+
+	// Loop through diff lines and insert comments above
+	for i, line := range lines {
+		lineNumber := i + 1
+		relativeLineNumber := i
+		if commentLines, exists := commentMap[relativeLineNumber]; exists {
+			// Add each comment as a line before the diff line
+			for _, comment := range commentLines {
+				commentLine := ""
+
+				if comment.Parent.ID > 0 {
+					commentLine = fmt.Sprintf("[steelblue]  %s %s %s %s[-]", ICON_SIDE_ARROW, ICON_COMMENT, comment.User.DisplayName, RenderMarkdown(comment.Content.Raw))
+				} else {
+					// Need to check if the comment was resolved
+					if comment.Resolution != nil {
+						// Comment is resolved, show a "resolved" marker
+						commentLine = fmt.Sprintf("[aquamarine]✔ %s %s (Resolved) %s[-]", ICON_COMMENT, comment.User.DisplayName, RenderMarkdown(comment.Content.Raw))
+					} else {
+						// If not resolved, display it as normal
+						commentLine = fmt.Sprintf("[steelblue]%s %s → %s[-]", ICON_COMMENT, comment.User.DisplayName, RenderMarkdown(comment.Content.Raw))
+					}
+				}
+				// Add the comment line to the result
+				result = append(result, commentLine)
+			}
+		}
+		// Add the diff line itself alongside line number
+		lineWithNumber := fmt.Sprintf("[grey]%d[-] %s", lineNumber, line)
+		result = append(result, lineWithNumber)
+	}
+	return strings.Join(result, "\n")
+}
+
+// Remove diff hunks as they are unnecessary
+func removeBeforeAndIncludingHunk(diffText string) string {
+	index := strings.Index(diffText, "@@")
+	if index == -1 {
+		return diffText
+	}
+	newlineIndex := strings.Index(diffText[index:], "\n")
+	if newlineIndex == -1 {
+		return diffText[index+2:] // Skip the @@ directly
+	}
+	return diffText[index+newlineIndex+1:]
 }
