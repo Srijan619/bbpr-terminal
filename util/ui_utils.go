@@ -116,21 +116,21 @@ func PopulatePRList(prList *tview.Table, prs []types.PR) {
 
 // Helper method to update borders of views
 func UpdateFocusBorders(focusOrder []tview.Primitive, currentFocusIndex int, activeBorderColor tcell.Color) {
-	// for i, view := range focusOrder {
-	// 	// Check if the view has border-related methods
-	// 	if bordered, ok := view.(interface {
-	// 		SetBorder(bool) *tview.Box
-	// 		SetBorderColor(tcell.Color) *tview.Box
-	// 	}); ok {
-	// 		if i == currentFocusIndex {
-	// 			bordered.SetBorder(true).
-	// 				SetBorderColor(activeBorderColor).
-	// 				SetBorderPadding(1, 1, 1, 1)
-	// 		} else {
-	// 			bordered.SetBorder(false)
-	// 		}
-	// 	}
-	// }
+	for i, view := range focusOrder {
+		// Check if the view has border-related methods
+		if bordered, ok := view.(interface {
+			SetBorder(bool) *tview.Box
+			SetBorderColor(tcell.Color) *tview.Box
+		}); ok {
+			if i == currentFocusIndex {
+				bordered.SetBorder(true).
+					SetBorderColor(activeBorderColor)
+			} else {
+				bordered.SetBorder(true).
+					SetBorderColor(tcell.ColorGrey)
+			}
+		}
+	}
 }
 
 func UpdateView(targetView interface{}, content interface{}) {

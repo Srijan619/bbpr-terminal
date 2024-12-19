@@ -11,6 +11,7 @@ import (
 type State struct {
 	App              *tview.Application
 	MainFlexWrapper  *tview.Flex
+	PrListFlex       *tview.Flex // Need both flex and table for styling and data
 	PrList           *tview.Table
 	PrDetails        *tview.TextView
 	ActivityView     *tview.Flex
@@ -28,10 +29,11 @@ var GlobalState *State
 var Workspace, Repo string
 
 // InitializeViews initializes all view components except workspace and repo.
-func InitializeViews(app *tview.Application, mainFlexWrapper *tview.Flex, prList *tview.Table, prDetails *tview.TextView, activityView, diffDetails, diffStatView, pRStatusFilter *tview.Flex, rightPanelHeader *tview.TextView) {
+func InitializeViews(app *tview.Application, mainFlexWrapper, prListFlex *tview.Flex, prList *tview.Table, prDetails *tview.TextView, activityView, diffDetails, diffStatView, pRStatusFilter *tview.Flex, rightPanelHeader *tview.TextView) {
 	GlobalState = &State{
 		App:              app,
 		MainFlexWrapper:  mainFlexWrapper,
+		PrListFlex:       prListFlex,
 		PrList:           prList,
 		PrDetails:        prDetails,
 		ActivityView:     activityView,

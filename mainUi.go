@@ -80,7 +80,7 @@ func CreateMainApp() *tview.Application {
 		AddItem(middleFullFlex, 0, 1, false).
 		AddItem(rightFullFlex, 0, 2, false)
 
-	state.InitializeViews(app, mainFlexWrapper, prList, prDetails, activityDetails, diffDetails, diffStatDetails, prStatusFilterFlex, rightPanelHeader)
+	state.InitializeViews(app, mainFlexWrapper, prListFlex, prList, prDetails, activityDetails, diffDetails, diffStatDetails, prStatusFilterFlex, rightPanelHeader)
 	pr.PopulatePRList(prList)
 
 	// Key Bindings
@@ -95,7 +95,7 @@ func CreateMainApp() *tview.Application {
 func setupKeyBindings() {
 	// Capture the Tab key to switch focus between the views
 	// Maintain a list of views in the desired focus order
-	focusOrder := []tview.Primitive{state.GlobalState.PrList, state.GlobalState.PrDetails, state.GlobalState.ActivityView, state.GlobalState.DiffStatView, state.GlobalState.DiffDetails}
+	focusOrder := []tview.Primitive{state.GlobalState.PrListFlex, state.GlobalState.PrDetails, state.GlobalState.ActivityView, state.GlobalState.DiffStatView, state.GlobalState.DiffDetails}
 	currentFocusIndex := 0
 	util.UpdateFocusBorders(focusOrder, currentFocusIndex, VIEW_ACTIVE_BORDER_COLOR)
 
