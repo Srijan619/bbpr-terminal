@@ -53,13 +53,13 @@ func CreateFlexComponent(title string) *tview.Flex {
 	return flex
 }
 
-func CreateTextviewComponent(title string) *tview.TextView {
+func CreateTextviewComponent(title string, border bool) *tview.TextView {
 	textView := tview.NewTextView().
 		SetTextAlign(tview.AlignLeft).
 		SetDynamicColors(true).SetWrap(true)
 
 	textView.
-		SetBorder(true).
+		SetBorder(border).
 		SetBorderPadding(1, 1, 1, 1).
 		SetBorderColor(tcell.ColorGrey).
 		SetTitle(title).

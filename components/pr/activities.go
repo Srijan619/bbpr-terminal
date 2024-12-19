@@ -25,7 +25,7 @@ const (
 // CreateActivitiesView generates the UI for displaying PR activities in a TextView.
 func CreateActivitiesView(activities []types.Activity) *tview.Flex {
 	// Create a TextView for displaying activity details
-	activityDetails := util.CreateTextviewComponent("").SetText(GenerateActivityLogs(activities))
+	activityDetails := util.CreateTextviewComponent("", false).SetText(GenerateActivityLogs(activities))
 
 	// Layout to return
 	layout := tview.NewFlex().

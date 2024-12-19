@@ -145,14 +145,14 @@ func UpdateView(targetView interface{}, content interface{}) {
 			switch c := content.(type) {
 			case string:
 				// If the content is a string, display it in a TextView
-				textView := CreateTextviewComponent("").SetText(c)
+				textView := CreateTextviewComponent("", false).SetText(c)
 				v.AddItem(textView, 0, 1, true)
 			case tview.Primitive:
 				// If the content is a tview.Primitive, add it directly
 				v.AddItem(c, 0, 1, true)
 			default:
 				// Handle unsupported content types
-				errorView := CreateTextviewComponent("").SetText("[red]Unsupported content type[-]")
+				errorView := CreateTextviewComponent("", false).SetText("[red]Unsupported content type[-]")
 				v.AddItem(errorView, 0, 1, true)
 			}
 

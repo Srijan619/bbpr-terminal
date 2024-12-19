@@ -52,8 +52,8 @@ func CreateMainApp() *tview.Application {
 	activityDetails := util.CreateFlexComponent("Activities [green]a|A")
 
 	// MIDDLE
-	rightPanelHeader := util.CreateTextviewComponent("")
-	prDetails := util.CreateTextviewComponent("Description [green]d|D")
+	rightPanelHeader := util.CreateTextviewComponent("", true)
+	prDetails := util.CreateTextviewComponent("Description [green]d|D", true)
 
 	middleFullFlex := tview.NewFlex().
 		SetDirection(tview.FlexRow)

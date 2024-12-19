@@ -43,7 +43,7 @@ func GetRepoAndWorkspace() (string, string, error) {
 
 func GenerateColorizedDiffView(diffText string, comments []types.Comment) *tview.TextView {
 	// Initialize the TextView to display the diff
-	textView := CreateTextviewComponent("")
+	textView := CreateTextviewComponent("", false)
 
 	// Split the diff text by lines and color them based on the prefix (+ or -)
 	var coloredDiff []string
