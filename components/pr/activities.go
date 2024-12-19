@@ -2,11 +2,12 @@ package pr
 
 import (
 	"fmt"
-	"github.com/rivo/tview"
 	"log"
 	"sort"
 	"strings"
 	"time"
+
+	"github.com/rivo/tview"
 
 	"simple-git-terminal/types"
 	"simple-git-terminal/util"
@@ -24,15 +25,11 @@ const (
 // CreateActivitiesView generates the UI for displaying PR activities in a TextView.
 func CreateActivitiesView(activities []types.Activity) *tview.Flex {
 	// Create a TextView for displaying activity details
-	activityDetails := tview.NewTextView().
-		SetDynamicColors(true).
-		SetText(GenerateActivityLogs(activities)).
-		SetWrap(true)
+	activityDetails := util.CreateTextviewComponent("").SetText(GenerateActivityLogs(activities))
 
 	// Layout to return
 	layout := tview.NewFlex().
-		SetDirection(tview.FlexRow).
-		AddItem(activityDetails, 0, 1, true)
+		SetDirection(tview.FlexRow).AddItem(activityDetails, 0, 1, true)
 
 	return layout
 }

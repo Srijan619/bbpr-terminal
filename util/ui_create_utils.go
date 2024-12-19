@@ -25,6 +25,7 @@ func CreateCheckBoxComponent(label string, onChange func(bool)) *tview.Checkbox 
 		SetUncheckedStyle(uncheckedStyle).
 		SetActivatedStyle(activatedStyle)
 
+	checkbox.SetBackgroundColor(tcell.ColorDefault)
 	checkbox.SetChangedFunc(func(checked bool) {
 		if checked {
 			checkbox.SetLabelColor(tcell.ColorGreen)
@@ -46,7 +47,26 @@ func CreateFlexComponent(title string) *tview.Flex {
 	flex.SetBorder(true).
 		SetTitleAlign(tview.AlignLeft).
 		SetTitle(title).
-		SetBorderColor(tcell.ColorGrey)
+		SetBorderColor(tcell.ColorGrey).
+		SetBackgroundColor(tcell.ColorDefault)
 
 	return flex
+}
+
+func CreateTextviewComponent(title string) *tview.TextView {
+	textView := tview.NewTextView().
+		SetTextAlign(tview.AlignLeft).
+		SetDynamicColors(true).SetWrap(true)
+
+	textView.
+		SetBorder(true).
+		SetBorderPadding(1, 1, 1, 1).
+		SetBorderColor(tcell.ColorGrey).
+		SetTitle(title).
+		SetTitleAlign(tview.AlignLeft).
+		SetBackgroundColor(tcell.ColorDefault)
+
+	textView.SetTextStyle(tcell.StyleDefault.Background(tcell.ColorDefault))
+
+	return textView
 }

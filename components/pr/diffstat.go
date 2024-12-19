@@ -38,6 +38,8 @@ func GenerateDiffStatTree(data []types.DiffstatEntry) *tview.TreeView {
 		SetRoot(root).
 		SetCurrentNode(root)
 
+	tree.SetBackgroundColor(tcell.ColorDefault)
+
 	// A helper function to add directories and files
 	add := func(target *tview.TreeNode, path string, isDir bool, displayName string) *tview.TreeNode {
 		ref := &NodeReference{
@@ -47,6 +49,7 @@ func GenerateDiffStatTree(data []types.DiffstatEntry) *tview.TreeView {
 		node := tview.NewTreeNode(displayName). // Display text with icon
 							SetReference(ref).
 							SetSelectable(true)
+		node.SetTextStyle(tcell.StyleDefault.Background(tcell.ColorDefault))
 		if isDir {
 			node.SetColor(DIR_COLOR)
 			node.SetExpanded(true)

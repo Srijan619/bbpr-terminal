@@ -30,15 +30,13 @@ func CreateMainApp() *tview.Application {
 	prStatusFilterFlex.AddItem(pr.CreatePRStatusFilterView(), 0, 1, false)
 
 	// PR LIST UI
-	prListFlex := tview.NewFlex()
-	prListFlex.SetBorder(true).
-		SetBorderColor(tcell.ColorGrey).
-		SetTitleAlign(tview.AlignLeft).
-		SetTitle("Pull Requests  [green]p").SetBorderPadding(1, 1, 1, 1)
+	prListFlex := util.CreateFlexComponent("Pull Requests  [green]p")
 
 	prList := tview.NewTable().
 		SetSelectable(true, false).
 		SetFixed(1, 0)
+
+	prList.SetBackgroundColor(tcell.ColorDefault)
 
 	prListFlex.AddItem(prList, 0, 1, true)
 
@@ -51,37 +49,15 @@ func CreateMainApp() *tview.Application {
 
 		// Description and Activity
 
-	activityDetails := tview.NewFlex()
-	activityDetails.
-		SetBorder(true).
-		SetBorderPadding(1, 1, 1, 1).
-		SetBorderColor(tcell.ColorGrey).
-		SetTitle("Activities [green]a|A").
-		SetTitleAlign(tview.AlignLeft)
+	activityDetails := util.CreateFlexComponent("Activities [green]a|A")
 
 	// MIDDLE
-	rightPanelHeader := tview.NewTextView().
-		SetTextAlign(tview.AlignLeft).
-		SetDynamicColors(true)
-
-	rightPanelHeader.
-		SetBorderColor(tcell.ColorGray).
-		SetBorder(true).
-		SetBorderPadding(1, 0, 1, 1).
-		SetTitleAlign(tview.AlignLeft)
-
-	prDetails := tview.NewTextView().
-		SetTextAlign(tview.AlignLeft).
-		SetDynamicColors(true)
-	prDetails.
-		SetBorder(true).
-		SetBorderPadding(1, 1, 1, 1).
-		SetBorderColor(tcell.ColorGrey).
-		SetTitle("Description [green]d|D").
-		SetTitleAlign(tview.AlignLeft)
+	rightPanelHeader := util.CreateTextviewComponent("")
+	prDetails := util.CreateTextviewComponent("Description [green]d|D")
 
 	middleFullFlex := tview.NewFlex().
 		SetDirection(tview.FlexRow)
+	middleFullFlex.SetBackgroundColor(tcell.ColorDefault)
 
 	middleFullFlex.AddItem(rightPanelHeader, 0, 1, false).
 		AddItem(prDetails, 0, 2, false).
@@ -89,25 +65,17 @@ func CreateMainApp() *tview.Application {
 
 		//RIGHT
 
-	diffStatDetails := tview.NewFlex()
-	diffStatDetails.SetTitle("Diff Tree [green]t|T").
-		SetBorder(true).
-		SetBorderColor(tcell.ColorGray).
-		SetBorderPadding(1, 1, 1, 1).
-		SetTitleAlign(tview.AlignLeft)
+	diffStatDetails := util.CreateFlexComponent("Diff Tree [green]t|T")
+	diffDetails := util.CreateFlexComponent("Diff Content [green]c|C")
 
-	diffDetails := tview.NewFlex()
-	diffDetails.SetTitle("Diff Content [green]c|C").
-		SetBorder(true).
-		SetBorderColor(tcell.ColorGray).
-		SetBorderPadding(0, 1, 0, 0).
-		SetTitleAlign(tview.AlignLeft)
 	rightFullFlex := tview.NewFlex()
+
+	rightFullFlex.SetBackgroundColor(tcell.ColorDefault)
 	rightFullFlex.AddItem(diffStatDetails, 0, 1, false).
 		AddItem(diffDetails, 0, 1, false)
 
 	mainFlexWrapper := tview.NewFlex()
-
+	mainFlexWrapper.SetBackgroundColor(tcell.ColorDefault)
 	mainFlexWrapper.AddItem(leftFullFlex, 0, 1, true).
 		AddItem(middleFullFlex, 0, 1, false).
 		AddItem(rightFullFlex, 0, 2, false)

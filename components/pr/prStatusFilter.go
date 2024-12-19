@@ -1,7 +1,9 @@
 package pr
 
 import (
+	"github.com/gdamore/tcell/v2"
 	"github.com/rivo/tview"
+
 	"simple-git-terminal/apis/bitbucket"
 	"simple-git-terminal/state"
 	"simple-git-terminal/util"
@@ -27,7 +29,7 @@ func CreatePRStatusFilterView() *tview.Flex {
 		state.SetPRStatusFilter("declined", checked)
 		UpdatePRList()
 	}).SetChecked(state.PRStatusFilter.Declined)
-
+	wrapperFlex.SetBackgroundColor(tcell.ColorDefault)
 	wrapperFlex.AddItem(openPr, 0, 1, false).
 		AddItem(mergedPr, 0, 1, false).
 		AddItem(declinedPr, 0, 1, false).
