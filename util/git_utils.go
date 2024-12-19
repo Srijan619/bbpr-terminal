@@ -52,13 +52,7 @@ func GenerateFileContentDiffView(source string, destination string, filePath str
 
 func GenerateColorizedDiffView(diffText string) *tview.TextView {
 	// Initialize the TextView to display the diff
-	textView := tview.NewTextView()
-
-	// Set options for better readability
-	textView.SetDynamicColors(true).
-		SetWrap(true).
-		SetScrollable(true).
-		SetBorderPadding(1, 1, 1, 1)
+	textView := CreateTextviewComponent("", false)
 
 	// Split the diff text by lines and color them based on the prefix (+ or -)
 	var coloredDiff []string
