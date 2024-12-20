@@ -20,6 +20,7 @@ type State struct {
 	RightPanelHeader *tview.TextView
 	CurrentView      tview.Primitive
 	PRStatusFilter   *tview.Flex
+	PrListSearchBar  *tview.TextArea
 
 	SelectedPR  *types.PR
 	FilteredPRs *[]types.PR
@@ -27,9 +28,11 @@ type State struct {
 
 var GlobalState *State
 var Workspace, Repo string
+var IsSearchMode bool
 
 // InitializeViews initializes all view components except workspace and repo.
-func InitializeViews(app *tview.Application, mainFlexWrapper, prListFlex *tview.Flex, prList *tview.Table, prDetails *tview.TextView, activityView, diffDetails, diffStatView, pRStatusFilter *tview.Flex, rightPanelHeader *tview.TextView) {
+func InitializeViews(app *tview.Application, mainFlexWrapper, prListFlex *tview.Flex, prList *tview.Table, prDetails *tview.TextView, activityView, diffDetails, diffStatView, pRStatusFilter *tview.Flex,
+	rightPanelHeader *tview.TextView, prListSearchBar *tview.TextArea) {
 	GlobalState = &State{
 		App:              app,
 		MainFlexWrapper:  mainFlexWrapper,
@@ -41,6 +44,8 @@ func InitializeViews(app *tview.Application, mainFlexWrapper, prListFlex *tview.
 		DiffStatView:     diffStatView,
 		PRStatusFilter:   pRStatusFilter,
 		RightPanelHeader: rightPanelHeader,
+
+		PrListSearchBar: prListSearchBar,
 	}
 }
 
@@ -61,6 +66,10 @@ func SetSelectedPR(pr *types.PR) {
 
 func SetFilteredPRs(prs *[]types.PR) {
 	GlobalState.FilteredPRs = prs
+}
+
+func SetIsSearchMode(mode bool) {
+	IsSearchMode = mode
 }
 
 type PRStatusFilterType struct {

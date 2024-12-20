@@ -71,3 +71,19 @@ func CreateTextviewComponent(title string, border bool) *tview.TextView {
 
 	return textView
 }
+
+func CreateTextAreaComponent(title string, placeholder string) *tview.TextArea {
+	textArea := tview.NewTextArea().
+		SetPlaceholder(placeholder)
+
+	textArea.SetTitle(title).SetTitleAlign(tview.AlignLeft)
+
+	textArea.SetPlaceholderStyle(tcell.StyleDefault.Foreground(tcell.ColorDefault).Background(tcell.ColorDefault))
+	textArea.SetTextStyle(tcell.StyleDefault.Foreground(tcell.ColorDefault).Background(tcell.ColorDefault))
+
+	textArea.SetBorder(true).
+		SetBorderColor(tcell.ColorGrey).
+		SetBackgroundColor(tcell.ColorDefault)
+
+	return textArea
+}
