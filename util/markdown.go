@@ -34,7 +34,7 @@ func RenderMarkdown(raw string) string {
 	if err != nil {
 		log.Fatalf("Error rendering markdown: %v", err)
 	}
-	return TranslateANSI(out)
+	return strings.TrimSpace(TranslateANSI(out))
 }
 
 // Translate ANSI escape sequences into tview-compatible format
