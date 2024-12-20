@@ -64,7 +64,8 @@ func CreateTextviewComponent(title string, border bool) *tview.TextView {
 		SetBorderColor(tcell.ColorGrey).
 		SetTitle(title).
 		SetTitleAlign(tview.AlignLeft).
-		SetBackgroundColor(tcell.ColorDefault)
+		SetBackgroundColor(tcell.ColorDefault).
+		SetBorderPadding(1, 1, 1, 1)
 
 	textView.SetTextStyle(tcell.StyleDefault.Background(tcell.ColorDefault))
 
