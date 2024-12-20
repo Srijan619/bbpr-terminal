@@ -150,7 +150,7 @@ func setupKeyBindings() {
 				state.SetPRStatusFilter("declined", !state.PRStatusFilter.Declined)
 				updateFilter()
 			}
-			//	util.UpdateFocusBorders(focusOrder, currentFocusIndex, VIEW_ACTIVE_BORDER_COLOR)
+			util.UpdateFocusBorders(focusOrder, currentFocusIndex, VIEW_ACTIVE_BORDER_COLOR)
 		}
 		return event
 	})
