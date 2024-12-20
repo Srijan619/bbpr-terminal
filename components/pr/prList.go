@@ -78,7 +78,7 @@ func handleNormalPRSelect(prs []types.PR, row int) {
 		go func() {
 			state.SetSelectedPR(&prs[row])
 
-			// Update right panel and set header
+			//	 Update right panel and set header
 			state.GlobalState.RightPanelHeader.SetTitle(formatPRHeaderBranch(*state.GlobalState.SelectedPR))
 			state.GlobalState.RightPanelHeader.SetText(state.GlobalState.SelectedPR.Title)
 
