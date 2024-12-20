@@ -14,7 +14,6 @@ const (
 )
 
 func CreateMainApp() *tview.Application {
-	util.InitMdRenderer() // Markdown renderer takes time, so init it beforehand
 	app := tview.NewApplication()
 	workspace, repoSlug, _ = util.GetRepoAndWorkspace()
 	log.Printf("Loading workspace - %s and repo - %s ....", workspace, repoSlug)
@@ -23,6 +22,8 @@ func CreateMainApp() *tview.Application {
 		log.Fatalf("Not a bitbucket Workspace")
 	}
 	state.SetWorkspaceRepo(workspace, repoSlug)
+	util.InitMdRenderer() // Markdown renderer takes time, so init it beforehand
+
 	//LEFT
 
 	// PR Status Filter UI
@@ -110,24 +111,34 @@ func setupKeyBindings() {
 		case tcell.KeyRune:
 			switch event.Rune() {
 			case 't':
+				currentFocusIndex = 3
 				state.GlobalState.App.SetFocus(state.GlobalState.DiffStatView)
 			case 'T':
+				currentFocusIndex = 3
 				state.GlobalState.App.SetRoot(state.GlobalState.DiffStatView, true)
 			case 'c':
+				currentFocusIndex = 4
 				state.GlobalState.App.SetFocus(state.GlobalState.DiffDetails)
 			case 'C':
+				currentFocusIndex = 4
 				state.GlobalState.App.SetRoot(state.GlobalState.DiffDetails, true)
 			case 'a':
+				currentFocusIndex = 2
 				state.GlobalState.App.SetFocus(state.GlobalState.ActivityView)
 			case 'A':
+				currentFocusIndex = 2
 				state.GlobalState.App.SetRoot(state.GlobalState.ActivityView, true)
 			case 'q':
+				currentFocusIndex = 0
 				state.GlobalState.App.SetRoot(state.GlobalState.MainFlexWrapper, true)
 			case 'p':
+				currentFocusIndex = 0
 				state.GlobalState.App.SetFocus(state.GlobalState.PrList)
 			case 'd':
+				currentFocusIndex = 1
 				state.GlobalState.App.SetFocus(state.GlobalState.PrDetails)
 			case 'D':
+				currentFocusIndex = 1
 				state.GlobalState.App.SetRoot(state.GlobalState.PrDetails, true)
 			case 'm':
 				state.SetPRStatusFilter("merged", !state.PRStatusFilter.Merged)
@@ -139,6 +150,7 @@ func setupKeyBindings() {
 				state.SetPRStatusFilter("declined", !state.PRStatusFilter.Declined)
 				updateFilter()
 			}
+			util.UpdateFocusBorders(focusOrder, currentFocusIndex, VIEW_ACTIVE_BORDER_COLOR)
 		}
 		return event
 	})
