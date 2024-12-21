@@ -1,9 +1,12 @@
 package main
 
 import (
+	"log"
+
 	"github.com/gdamore/tcell/v2"
 	"github.com/rivo/tview"
-	"log"
+
+	"simple-git-terminal/apis/bitbucket"
 	"simple-git-terminal/components/pr"
 	"simple-git-terminal/state"
 	"simple-git-terminal/util"
@@ -114,9 +117,18 @@ func setupKeyBindings() {
 				state.SetIsSearchMode(false)
 				state.GlobalState.App.SetFocus(state.GlobalState.PrList) // Focus back to PrList or another view
 			case tcell.KeyEnter:
+				state.SetSearchTerm(state.GlobalState.PrListSearchBar.GetText())
 				// Perform search or exit search mode
-				state.SetIsSearchMode(false)
-				state.GlobalState.App.SetFocus(state.GlobalState.PrList) // Focus back to PrList or another view
+				queryFetchedPRs := bitbucket.FetchPRsByQuery(bitbucket.BuildQuery(state.SearchTerm))
+				log.Printf("QUery updated pr... %d", len(queryFetchedPRs))
+				state.SetFilteredPRs(&queryFetchedPRs)
+
+				go func() {
+					state.SetIsSearchMode(false)
+					state.GlobalState.PrList.Clear()
+					util.UpdatePRListView()
+					state.GlobalState.App.SetFocus(state.GlobalState.PrList) // Focus back to PrList or another view
+				}()
 			default:
 				return event // Ignore other keys in search mode
 			}

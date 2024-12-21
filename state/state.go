@@ -29,6 +29,7 @@ type State struct {
 var GlobalState *State
 var Workspace, Repo string
 var IsSearchMode bool
+var SearchTerm string
 
 // InitializeViews initializes all view components except workspace and repo.
 func InitializeViews(app *tview.Application, mainFlexWrapper, prListFlex *tview.Flex, prList *tview.Table, prDetails *tview.TextView, activityView, diffDetails, diffStatView, pRStatusFilter *tview.Flex,
@@ -70,6 +71,10 @@ func SetFilteredPRs(prs *[]types.PR) {
 
 func SetIsSearchMode(mode bool) {
 	IsSearchMode = mode
+}
+
+func SetSearchTerm(term string) {
+	SearchTerm = term
 }
 
 type PRStatusFilterType struct {

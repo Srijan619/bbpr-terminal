@@ -4,10 +4,12 @@ import (
 	"fmt"
 	"github.com/go-resty/resty/v2"
 	"log"
+	"net/url"
 	"os"
 	"simple-git-terminal/state"
 	"simple-git-terminal/types"
 	"simple-git-terminal/util"
+	"strings"
 )
 
 // Bitbucket API details
@@ -66,6 +68,38 @@ func FetchPR(id int) *types.PR {
 	return pr
 }
 
+// Make query using BuildQuery method....
+func FetchPRsByQuery(query string) []types.PR {
+	client := createClient()
+	encodedQuery := url.QueryEscape(query) // This will properly encode the query string
+	fields := url.QueryEscape("+values.participants,-values.description,-values.summary")
+	url := fmt.Sprintf("%s/repositories/%s/%s/pullrequests?pagelen=25&fields=%s&q=%s&page=1",
+		BitbucketBaseURL, state.Workspace, state.Repo, fields, encodedQuery)
+	url = strings.ReplaceAll(url, "+", "%20") // TODO: Some weird encoding issue..
+
+	log.Printf("Fetching quer...%v", url)
+	resp, err := client.R().
+		SetResult(&types.BitbucketPRResponse{}).
+		Get(url)
+
+	if err != nil {
+		log.Fatalf("Error fetching PRs: %v", err)
+		return nil
+	}
+	if resp.StatusCode() != 200 {
+		log.Fatalf("Unexpected status code: %d. Response body: %s", resp.StatusCode(), string(resp.Body()))
+		return nil
+	}
+
+	prs := resp.Result().(*types.BitbucketPRResponse).Values
+	for i := range prs {
+		prs[i] = util.SanitizePR(prs[i])
+	}
+
+	return prs
+}
+
+// TODO: This can be done better as there is an internal filter system that bitbucket provides...check search method
 func FetchPRsByState(prState string) []types.PR {
 	client := createClient()
 	url := fmt.Sprintf("%s/repositories/%s/%s/pullrequests?state=%s", BitbucketBaseURL, state.Workspace, state.Repo, prState)
@@ -211,4 +245,46 @@ func UpdateFilteredPRs() {
 		filteredPRs = append(filteredPRs, FetchPRsByState("DECLINED")...)
 	}
 	state.SetFilteredPRs(&filteredPRs)
+}
+
+func BuildQuery(searchTerm string) string {
+	// Add state filters (Open, Merged, Declined)
+	stateFilters := []string{}
+	filters := state.PRStatusFilter
+	if filters.Merged {
+		stateFilters = append(stateFilters, "state=\"MERGED\"")
+	}
+	if filters.Declined {
+		stateFilters = append(stateFilters, "state=\"DECLINED\"")
+	}
+	if filters.Open {
+		stateFilters = append(stateFilters, "state=\"OPEN\"")
+	}
+
+	// Combine state filters with OR if any exist
+	var stateQuery string
+	if len(stateFilters) > 0 {
+		stateQuery = strings.Join(stateFilters, " OR ")
+	}
+
+	// Add search term conditions (title or description contains search term)
+	var searchQuery string
+	if searchTerm != "" {
+		searchQuery = "(description~\"" + searchTerm + "\" OR title~\"" + searchTerm + "\")"
+	}
+
+	// Combine the state and search queries with AND
+	var finalQuery string
+	if stateQuery != "" && searchQuery != "" {
+		// Combine state query and search query with AND
+		finalQuery = stateQuery + " AND " + searchQuery
+	} else if stateQuery != "" {
+		// If only the state query exists
+		finalQuery = stateQuery
+	} else if searchQuery != "" {
+		// If only the search query exists
+		finalQuery = searchQuery
+	}
+
+	return finalQuery
 }
