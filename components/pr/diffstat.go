@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"github.com/gdamore/tcell/v2"
 	"github.com/rivo/tview"
-	"log"
 	"simple-git-terminal/apis/bitbucket"
 	"simple-git-terminal/state"
 	"simple-git-terminal/types"
@@ -157,7 +156,6 @@ func OpenFileSpecificDiff(node *tview.TreeNode, fullScreen bool) {
 	if ref != nil {
 		nodeRef, ok := ref.(*NodeReference)
 		if ok && !nodeRef.IsDir {
-			log.Printf("Fetching content for path: %s", nodeRef.Path)
 
 			// Use the spinner utility for asynchronous fetch
 			util.ShowLoadingSpinner(state.GlobalState.DiffDetails, func() (interface{}, error) {
@@ -174,7 +172,6 @@ func OpenFileSpecificDiff(node *tview.TreeNode, fullScreen bool) {
 					// Retrieve inline comments for the file and add comment markers to lines
 					comments := getInlineComments(*state.GlobalState.SelectedPR, nodeRef.Path)
 
-					log.Printf("Geetting inline comment for a file %s  %v", nodeRef.Path, comments)
 					util.UpdateDiffDetailsView(util.GenerateColorizedDiffView(result, comments))
 				}
 			})

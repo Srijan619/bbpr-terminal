@@ -75,7 +75,6 @@ func handleNormalPRSelect(prs []types.PR, row int) {
 		go func() {
 			state.SetSelectedPR(&prs[row])
 
-			log.Printf("Trying to select a pr %v", state.GlobalState.SelectedPR)
 			//	 Update right panel and set header
 			state.GlobalState.RightPanelHeader.SetTitle(formatPRHeaderBranch(*state.GlobalState.SelectedPR))
 			state.GlobalState.RightPanelHeader.SetText(state.GlobalState.SelectedPR.Title)
