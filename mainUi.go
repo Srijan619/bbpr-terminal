@@ -34,7 +34,7 @@ func CreateMainApp() *tview.Application {
 	prStatusFilterFlex.AddItem(pr.CreatePRStatusFilterView(), 0, 1, false)
 
 	// PR LIST UI
-	prListFlex := util.CreateFlexComponent("Pull Requests  [green]p").
+	prListFlex := util.CreateFlexComponent("Pull Requests   [green]p|P").
 		SetDirection(tview.FlexRow)
 
 	prList := tview.NewTable().
@@ -43,7 +43,7 @@ func CreateMainApp() *tview.Application {
 
 	prList.SetBackgroundColor(tcell.ColorDefault)
 
-	prListSearchBar := util.CreateTextAreaComponent("🔎 Search PR (s)", "search filter.....")
+	prListSearchBar := util.CreateTextAreaComponent("  Search PR [green]s|S", "search filter.....")
 
 	prListFlex.
 		AddItem(prList, 0, 1, true)
@@ -101,11 +101,11 @@ func CreateMainApp() *tview.Application {
 }
 
 func setupKeyBindings() {
-	// Define focus order
 	focusOrder := []tview.Primitive{
 		state.GlobalState.PrListFlex, state.GlobalState.PrDetails, state.GlobalState.ActivityView,
 		state.GlobalState.DiffStatView, state.GlobalState.DiffDetails, state.GlobalState.PrListSearchBar,
 	}
+	// Define focus order
 	currentFocusIndex := 0
 	util.UpdateFocusBorders(focusOrder, currentFocusIndex, VIEW_ACTIVE_BORDER_COLOR)
 
@@ -114,25 +114,26 @@ func setupKeyBindings() {
 		if state.IsSearchMode {
 			switch event.Key() {
 			case tcell.KeyEsc:
+				currentFocusIndex = 0
+				log.Printf("[SAUSAGE ESC]...%d", currentFocusIndex)
 				state.SetIsSearchMode(false)
 				state.GlobalState.App.SetFocus(state.GlobalState.PrList) // Focus back to PrList or another view
 			case tcell.KeyEnter:
+				currentFocusIndex = 0
 				state.SetSearchTerm(state.GlobalState.PrListSearchBar.GetText())
-				// Perform search or exit search mode
-				queryFetchedPRs := bitbucket.FetchPRsByQuery(bitbucket.BuildQuery(state.SearchTerm))
-				log.Printf("QUery updated pr... %d", len(queryFetchedPRs))
-				state.SetFilteredPRs(&queryFetchedPRs)
-
+				state.SetIsSearchMode(false)
+				state.GlobalState.PrList.Clear()
 				go func() {
-					state.SetIsSearchMode(false)
-					state.GlobalState.PrList.Clear()
+					// Perform search or exit search mode
+					queryFetchedPRs := bitbucket.FetchPRsByQuery(bitbucket.BuildQuery(state.SearchTerm))
+					state.SetFilteredPRs(&queryFetchedPRs)
 					util.UpdatePRListView()
 					state.GlobalState.App.SetFocus(state.GlobalState.PrList) // Focus back to PrList or another view
 				}()
 			default:
 				return event // Ignore other keys in search mode
 			}
-			util.UpdateFocusBorders(focusOrder, 0, VIEW_ACTIVE_BORDER_COLOR)
+			util.UpdateFocusBorders(focusOrder, currentFocusIndex, VIEW_ACTIVE_BORDER_COLOR)
 
 		} else {
 			// Handle keybindings when not in search mode
@@ -140,6 +141,10 @@ func setupKeyBindings() {
 			case tcell.KeyTAB:
 				// Cycle focus between views
 				currentFocusIndex = (currentFocusIndex + 1) % len(focusOrder)
+				if currentFocusIndex >= len(focusOrder) {
+					currentFocusIndex = 0 // If we go out of bounds, set to the first element
+				}
+				log.Printf("[SAUSAGE TAB]...%d", currentFocusIndex)
 				state.GlobalState.App.SetFocus(focusOrder[currentFocusIndex])
 
 			case tcell.KeyCtrlC:
@@ -150,22 +155,26 @@ func setupKeyBindings() {
 				case 's':
 					// Search mode
 					state.SetIsSearchMode(true)
-					currentFocusIndex = 5
-					state.GlobalState.App.SetFocus(state.GlobalState.PrListSearchBar)
+					currentFocusIndex = len(focusOrder) - 1
+					log.Printf("[SAUSAGE S]...%d", currentFocusIndex)
 
+					state.GlobalState.App.SetFocus(state.GlobalState.PrListSearchBar)
+					go func() {
+						state.GlobalState.PrListSearchBar.SetText("", true)
+					}()
 				case 't', 'T':
 					// Focus on DiffStatView (T or t)
-					currentFocusIndex = 3
+					currentFocusIndex = len(focusOrder) - 3
 					state.GlobalState.App.SetFocus(state.GlobalState.DiffStatView)
 
 				case 'c', 'C':
 					// Focus on DiffDetails (C or c)
-					currentFocusIndex = 4
+					currentFocusIndex = len(focusOrder) - 2
 					state.GlobalState.App.SetFocus(state.GlobalState.DiffDetails)
 
 				case 'a', 'A':
 					// Focus on ActivityView (A or a)
-					currentFocusIndex = 2
+					currentFocusIndex = len(focusOrder) - 4
 					state.GlobalState.App.SetFocus(state.GlobalState.ActivityView)
 
 				case 'p':
@@ -175,7 +184,7 @@ func setupKeyBindings() {
 
 				case 'd', 'D':
 					// Focus on PR Details (D or d)
-					currentFocusIndex = 1
+					currentFocusIndex = len(focusOrder) - 5
 					state.GlobalState.App.SetFocus(state.GlobalState.PrDetails)
 
 				case 'q':
