@@ -6,7 +6,7 @@ import (
 
 	"github.com/gdamore/tcell/v2"
 	"github.com/rivo/tview"
-
+	"simple-git-terminal/apis/bitbucket"
 	"simple-git-terminal/state"
 	"simple-git-terminal/types"
 )
@@ -83,6 +83,15 @@ func EllipsizeText(text string, max int) string {
 }
 
 func PopulatePRList(prList *tview.Table, prs []types.PR) {
+	// If there are no PRs, display a "No PRs" message
+	if len(prs) == 0 {
+		// Display a message in the first row
+		noPRsCell := cellFormat("  No PRs available, try changing filters/search term", tcell.ColorWhite)
+		prList.SetCell(0, 0, noPRsCell)
+		prList.SetSelectable(false, false)
+		return
+	}
+
 	for i, pr := range prs {
 		titleCell := cellFormat(EllipsizeText(pr.Title, 18), tcell.ColorWhite)
 		stateCell := CreateStateCell(pr.State)
@@ -191,6 +200,7 @@ func UpdateDiffStatView(statContent interface{}) {
 
 func UpdatePRListView() {
 	if state.GlobalState != nil && state.GlobalState.PrList != nil && state.GlobalState.FilteredPRs != nil {
+		state.GlobalState.PrList.Clear()
 		PopulatePRList(state.GlobalState.PrList, *state.GlobalState.FilteredPRs)
 		state.GlobalState.App.Draw()
 	}
@@ -204,4 +214,31 @@ func UpdatePRStatusFilterView(content interface{}) {
 	if state.GlobalState != nil && state.GlobalState.PRStatusFilter != nil {
 		UpdateView(state.GlobalState.PRStatusFilter, content)
 	}
+}
+
+func UpdatePRListWithFilter(filter string, checked bool) {
+	state.SetPRStatusFilter(filter, checked)
+	go func() {
+		if state.GlobalState != nil {
+			queryFetchAndUpdatePrList()
+		}
+	}()
+}
+
+func UpdatePRList() {
+	go func() {
+		if state.GlobalState != nil {
+			queryFetchAndUpdatePrList()
+		}
+	}()
+}
+
+func queryFetchAndUpdatePrList() {
+	UpdateFilteredPRs()
+	UpdatePRListView()
+}
+
+func UpdateFilteredPRs() {
+	prs := bitbucket.FetchPRsByQuery(bitbucket.BuildQuery(""))
+	state.SetFilteredPRs(&prs)
 }

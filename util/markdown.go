@@ -29,7 +29,6 @@ func RenderMarkdown(raw string) string {
 		InitMdRenderer()
 	}
 	out, err := renderer.Render(trimmed)
-	log.Printf("Render markdown output: %s ", out)
 
 	if err != nil {
 		log.Fatalf("Error rendering markdown: %v", err)

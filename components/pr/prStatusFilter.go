@@ -4,7 +4,6 @@ import (
 	"github.com/gdamore/tcell/v2"
 	"github.com/rivo/tview"
 
-	"simple-git-terminal/apis/bitbucket"
 	"simple-git-terminal/state"
 	"simple-git-terminal/util"
 )
@@ -16,18 +15,15 @@ func CreatePRStatusFilterView() *tview.Flex {
 	}
 
 	openPr := util.CreateCheckBoxComponent("Open (o) ", func(checked bool) {
-		state.SetPRStatusFilter("open", checked)
-		UpdatePRList()
+		util.UpdatePRListWithFilter("open", checked)
 	}).SetChecked(state.PRStatusFilter.Open)
 
 	mergedPr := util.CreateCheckBoxComponent("Merged (m) ", func(checked bool) {
-		state.SetPRStatusFilter("merged", checked)
-		UpdatePRList()
+		util.UpdatePRListWithFilter("merged", checked)
 	}).SetChecked(state.PRStatusFilter.Merged)
 
 	declinedPr := util.CreateCheckBoxComponent("Declined (r) ", func(checked bool) {
-		state.SetPRStatusFilter("declined", checked)
-		UpdatePRList()
+		util.UpdatePRListWithFilter("declined", checked)
 	}).SetChecked(state.PRStatusFilter.Declined)
 	wrapperFlex.SetBackgroundColor(tcell.ColorDefault)
 	wrapperFlex.AddItem(openPr, 0, 1, false).
@@ -37,14 +33,4 @@ func CreatePRStatusFilterView() *tview.Flex {
 		SetBorderPadding(0, 0, 1, 0)
 
 	return wrapperFlex
-}
-
-func UpdatePRList() {
-	go func() {
-		if state.GlobalState != nil {
-			bitbucket.UpdateFilteredPRs()
-			state.GlobalState.PrList.Clear()
-			util.UpdatePRListView()
-		}
-	}()
 }

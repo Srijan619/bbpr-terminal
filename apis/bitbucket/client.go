@@ -72,6 +72,7 @@ func FetchPRsByQuery(query string) []types.PR {
 	client := createClient()
 	encodedQuery := url.QueryEscape(query) // This will properly encode the query string
 	fields := url.QueryEscape("+values.participants,-values.description,-values.summary")
+
 	url := fmt.Sprintf("%s/repositories/%s/%s/pullrequests?pagelen=25&fields=%s&q=%s&page=1",
 		BitbucketBaseURL, state.Workspace, state.Repo, fields, encodedQuery)
 	url = strings.ReplaceAll(url, "+", "%20") // TODO: Some weird encoding issue..
@@ -96,47 +97,6 @@ func FetchPRsByQuery(query string) []types.PR {
 	// }
 
 	return prs
-}
-
-// TODO: This can be done better as there is an internal filter system that bitbucket provides...check search method
-func FetchPRsByState(prState string) []types.PR {
-	client := createClient()
-	url := fmt.Sprintf("%s/repositories/%s/%s/pullrequests?state=%s", BitbucketBaseURL, state.Workspace, state.Repo, prState)
-	log.Printf("Fetching PRs with state: %s", prState)
-
-	resp, err := client.R().
-		SetResult(&types.BitbucketPRResponse{}).
-		Get(url)
-
-	if err != nil {
-		log.Fatalf("Error fetching PRs: %v", err)
-	}
-	if resp.StatusCode() != 200 {
-		log.Fatalf("Unexpected status code: %d. Response body: %s", resp.StatusCode(), string(resp.Body()))
-	}
-
-	prs := resp.Result().(*types.BitbucketPRResponse).Values
-	// for i := range prs {
-	// 	prs[i] = util.SanitizePR(prs[i])
-	// }
-
-	return prs
-}
-
-func FetchBitbucketPRs() []types.PR {
-	return FetchPRsByState("ALL")
-}
-
-func FetchBitbucketOpenPRs() []types.PR {
-	return FetchPRsByState("OPEN")
-}
-
-func FetchBitbucketMergedPRs() []types.PR {
-	return FetchPRsByState("MERGED")
-}
-
-func FetchBitbucketDeclinedPRs() []types.PR {
-	return FetchPRsByState("DECLINED")
 }
 
 func FetchBitbucketDiffContent(id int, filePath string) (string, error) {
@@ -227,23 +187,6 @@ func FetchBitbucketComments(id int) []types.Comment {
 	}
 	response := resp.Result().(*types.BitbucketCommentsResponse)
 	return response.Values
-}
-
-func UpdateFilteredPRs() {
-	var filteredPRs []types.PR
-	// Fetch or use cached PRs based on active filters
-	if state.PRStatusFilter.Open {
-		log.Printf("[sausage] Appending open ones...")
-		filteredPRs = append(filteredPRs, FetchPRsByState("OPEN")...)
-	}
-	if state.PRStatusFilter.Merged {
-		log.Printf("[sausage] Appending merged ones...")
-		filteredPRs = append(filteredPRs, FetchPRsByState("MERGED")...)
-	}
-	if state.PRStatusFilter.Declined {
-		filteredPRs = append(filteredPRs, FetchPRsByState("DECLINED")...)
-	}
-	state.SetFilteredPRs(&filteredPRs)
 }
 
 func BuildQuery(searchTerm string) string {

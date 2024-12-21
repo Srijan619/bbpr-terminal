@@ -63,9 +63,9 @@ func CreateMainApp() *tview.Application {
 		SetDirection(tview.FlexRow)
 	middleFullFlex.SetBackgroundColor(tcell.ColorDefault)
 
-	middleFullFlex.AddItem(rightPanelHeader, 0, 1, false).
-		AddItem(prDetails, 0, 2, false).
-		AddItem(activityDetails, 0, 10, false)
+	middleFullFlex.AddItem(rightPanelHeader, 0, 2, false).
+		AddItem(prDetails, 0, 4, false).
+		AddItem(activityDetails, 0, 14, false)
 
 		//RIGHT
 

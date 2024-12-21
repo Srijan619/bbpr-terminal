@@ -18,7 +18,7 @@ const (
 )
 
 func PopulatePRList(prList *tview.Table) *tview.Table {
-	bitbucket.UpdateFilteredPRs()
+	util.UpdateFilteredPRs()
 	prs := *state.GlobalState.FilteredPRs
 	if len(prs) > 0 {
 		prList.Select(0, 0)
@@ -32,7 +32,7 @@ func PopulatePRList(prList *tview.Table) *tview.Table {
 		go func() {
 			prs := *state.GlobalState.FilteredPRs // use updated prs inside routine
 			HandleOnPrSelect(prs, row)
-			UpdatePRList()
+			util.UpdatePRList()
 		}()
 	})
 

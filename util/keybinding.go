@@ -1,9 +1,11 @@
 package util
 
 import (
+	"log"
+
 	"github.com/gdamore/tcell/v2"
 	"github.com/rivo/tview"
-	"log"
+
 	"simple-git-terminal/apis/bitbucket"
 
 	"simple-git-terminal/state"
@@ -108,11 +110,11 @@ func SetupKeyBindings(callback func()) {
 					// Toggle PR filters
 					switch event.Rune() {
 					case 'm':
-						state.SetPRStatusFilter("merged", !state.PRStatusFilter.Merged)
+						UpdatePRListWithFilter("merged", !state.PRStatusFilter.Merged)
 					case 'o':
-						state.SetPRStatusFilter("open", !state.PRStatusFilter.Open)
+						UpdatePRListWithFilter("open", !state.PRStatusFilter.Open)
 					case 'r':
-						state.SetPRStatusFilter("declined", !state.PRStatusFilter.Declined)
+						UpdatePRListWithFilter("declined", !state.PRStatusFilter.Declined)
 					}
 					callback()
 				}
