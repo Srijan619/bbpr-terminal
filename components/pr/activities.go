@@ -2,7 +2,6 @@ package pr
 
 import (
 	"fmt"
-	"log"
 	"sort"
 	"strings"
 	"time"
@@ -54,7 +53,6 @@ func GenerateActivityLogs(activities []types.Activity) string {
 	commentLogs := []string{ICON_COMMENT + "[red]Comments\n"}
 
 	itemsCount := 0
-	log.Printf("Total activities..%d", len(activities))
 	var previousCommitHash string // Track the previous commit hash
 	var openPRFound bool
 
@@ -63,7 +61,7 @@ func GenerateActivityLogs(activities []types.Activity) string {
 		timeI, errI := time.Parse(time.RFC3339, activities[i].Update.Date)
 		timeJ, errJ := time.Parse(time.RFC3339, activities[j].Update.Date)
 		if errI != nil || errJ != nil {
-			log.Println("Error parsing dates:", errI, errJ)
+			//log.Println("Error parsing dates:", errI, errJ)
 			return false
 		}
 		return timeI.Before(timeJ)

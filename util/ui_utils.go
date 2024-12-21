@@ -83,9 +83,6 @@ func EllipsizeText(text string, max int) string {
 }
 
 func PopulatePRList(prList *tview.Table, prs []types.PR) {
-	if len(prs) > 0 {
-		prList.Select(0, 0)
-	}
 	// If there are no PRs, display a "No PRs" message
 	if len(prs) == 0 {
 		// Display a message in the first row

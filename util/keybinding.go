@@ -1,8 +1,6 @@
 package util
 
 import (
-	"log"
-
 	"github.com/gdamore/tcell/v2"
 	"github.com/rivo/tview"
 
@@ -30,7 +28,6 @@ func SetupKeyBindings(callback func()) {
 			switch event.Key() {
 			case tcell.KeyEsc:
 				currentFocusIndex = 0
-				log.Printf("[SAUSAGE ESC]...%d", currentFocusIndex)
 				state.SetIsSearchMode(false)
 				state.GlobalState.App.SetFocus(state.GlobalState.PrList) // Focus back to PrList or another view
 			case tcell.KeyEnter:
@@ -43,7 +40,8 @@ func SetupKeyBindings(callback func()) {
 					queryFetchedPRs := bitbucket.FetchPRsByQuery(bitbucket.BuildQuery(state.SearchTerm))
 					state.SetFilteredPRs(&queryFetchedPRs)
 					UpdatePRListView()
-					state.GlobalState.App.SetFocus(state.GlobalState.PrList) // Focus back to PrList or another view
+					state.GlobalState.App.SetFocus(state.GlobalState.PrList)
+					state.GlobalState.PrList.Select(0, 0)
 				}()
 			default:
 				return event // Ignore other keys in search mode
@@ -59,7 +57,6 @@ func SetupKeyBindings(callback func()) {
 				if currentFocusIndex >= len(focusOrder) {
 					currentFocusIndex = 0 // If we go out of bounds, set to the first element
 				}
-				log.Printf("[SAUSAGE TAB]...%d", currentFocusIndex)
 				state.GlobalState.App.SetFocus(focusOrder[currentFocusIndex])
 
 			case tcell.KeyCtrlC:
@@ -71,7 +68,6 @@ func SetupKeyBindings(callback func()) {
 					// Search mode
 					state.SetIsSearchMode(true)
 					currentFocusIndex = len(focusOrder) - 1
-					log.Printf("[SAUSAGE S]...%d", currentFocusIndex)
 
 					state.GlobalState.App.SetFocus(state.GlobalState.PrListSearchBar)
 					go func() {

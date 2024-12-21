@@ -2,9 +2,8 @@ package pr
 
 import (
 	"fmt"
-	"log"
-
 	"github.com/rivo/tview"
+	"log"
 
 	"simple-git-terminal/apis/bitbucket"
 	"simple-git-terminal/state"
@@ -47,10 +46,8 @@ func HandleOnPrSelect(prs []types.PR, row int) {
 	if state.GlobalState != nil {
 		fetchMore := row == len(prs)
 		if fetchMore {
-			log.Println("Fetch more selected")
+			log.Printf("Fetch more...")
 		} else {
-			// Handle normal cell selection
-			log.Printf("Selected cell at row %d", row)
 			handleNormalPRSelect(prs, row)
 		}
 
@@ -78,6 +75,7 @@ func handleNormalPRSelect(prs []types.PR, row int) {
 		go func() {
 			state.SetSelectedPR(&prs[row])
 
+			log.Printf("Trying to select a pr %v", state.GlobalState.SelectedPR)
 			//	 Update right panel and set header
 			state.GlobalState.RightPanelHeader.SetTitle(formatPRHeaderBranch(*state.GlobalState.SelectedPR))
 			state.GlobalState.RightPanelHeader.SetText(state.GlobalState.SelectedPR.Title)

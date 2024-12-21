@@ -19,17 +19,23 @@ const (
 	BitbucketEnvAppPasswordUsername = "BITBUCKET_APP_USERNAME"
 )
 
+var client *resty.Client
+
 func getAuthToken(tokenString string) string {
 	token := os.Getenv(tokenString)
 	if token == "" {
-		log.Printf("Environment variable %s is not set will try using basic authentication with app password", tokenString)
+		log.Printf("[CLIENT] Environment variable %s is not set will try using basic authentication with app password", tokenString)
 	}
 	return token
 }
 
 // Helper function to create a Resty client with authentication
 func createClient() *resty.Client {
-	client := resty.New()
+	if client != nil {
+		return client
+	}
+
+	client = resty.New()
 
 	authToken := getAuthToken(BitbucketEnvTokenName)
 	if authToken != "" {
@@ -77,7 +83,7 @@ func FetchPRsByQuery(query string) []types.PR {
 		BitbucketBaseURL, state.Workspace, state.Repo, fields, encodedQuery)
 	url = strings.ReplaceAll(url, "+", "%20") // TODO: Some weird encoding issue..
 
-	log.Printf("Fetching quer...%v", url)
+	log.Printf("[CLIENT] Fetching PRs with query...%v", url)
 	resp, err := client.R().
 		SetResult(&types.BitbucketPRResponse{}).
 		Get(url)
