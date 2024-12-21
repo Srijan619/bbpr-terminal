@@ -83,6 +83,9 @@ func EllipsizeText(text string, max int) string {
 }
 
 func PopulatePRList(prList *tview.Table, prs []types.PR) {
+	if len(prs) > 0 {
+		prList.Select(0, 0)
+	}
 	// If there are no PRs, display a "No PRs" message
 	if len(prs) == 0 {
 		// Display a message in the first row
@@ -120,7 +123,7 @@ func PopulatePRList(prList *tview.Table, prs []types.PR) {
 
 	fetchMoreCell := cellFormat(ICON_DOWN_ARROW, tcell.ColorOrange)
 	prList.SetCell(len(prs), 1, fetchMoreCell)
-	prList.SetSelectedStyle(tcell.StyleDefault.Foreground(tcell.ColorLightGrey))
+	prList.SetSelectedStyle(tcell.StyleDefault.Foreground(tcell.ColorDarkOrange))
 }
 
 // Helper method to update borders of views
@@ -201,6 +204,7 @@ func UpdateDiffStatView(statContent interface{}) {
 func UpdatePRListView() {
 	if state.GlobalState != nil && state.GlobalState.PrList != nil && state.GlobalState.FilteredPRs != nil {
 		state.GlobalState.PrList.Clear()
+		log.Printf("Updating pr list view now.....%v", len(*state.GlobalState.FilteredPRs))
 		PopulatePRList(state.GlobalState.PrList, *state.GlobalState.FilteredPRs)
 		state.GlobalState.App.Draw()
 	}
