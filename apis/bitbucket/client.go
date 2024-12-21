@@ -8,7 +8,6 @@ import (
 	"os"
 	"simple-git-terminal/state"
 	"simple-git-terminal/types"
-	"simple-git-terminal/util"
 	"strings"
 )
 
@@ -92,9 +91,9 @@ func FetchPRsByQuery(query string) []types.PR {
 	}
 
 	prs := resp.Result().(*types.BitbucketPRResponse).Values
-	for i := range prs {
-		prs[i] = util.SanitizePR(prs[i])
-	}
+	// for i := range prs {
+	// 	prs[i] = util.SanitizePR(prs[i])
+	// }
 
 	return prs
 }
@@ -117,9 +116,9 @@ func FetchPRsByState(prState string) []types.PR {
 	}
 
 	prs := resp.Result().(*types.BitbucketPRResponse).Values
-	for i := range prs {
-		prs[i] = util.SanitizePR(prs[i])
-	}
+	// for i := range prs {
+	// 	prs[i] = util.SanitizePR(prs[i])
+	// }
 
 	return prs
 }
