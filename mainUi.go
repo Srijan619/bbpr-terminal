@@ -42,7 +42,7 @@ func CreateMainApp() *tview.Application {
 
 	prList.SetBackgroundColor(tcell.ColorDefault)
 
-	prListSearchBar := util.CreateInputFieldComponent("  Search PR [green]s|S", " type something....")
+	prListSearchBar := util.CreateInputFieldComponent("  Search PR [green]s", " type something....")
 
 	prListFlex.
 		AddItem(prList, 0, 1, true)

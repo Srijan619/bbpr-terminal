@@ -3,9 +3,10 @@ package pr
 import (
 	"fmt"
 	"github.com/gdamore/tcell/v2"
+	"strings"
+
 	"simple-git-terminal/types"
 	"simple-git-terminal/util"
-	"strings"
 )
 
 func GeneratePRDetail(pr *types.PR) string {

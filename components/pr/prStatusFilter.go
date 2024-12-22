@@ -55,6 +55,8 @@ func CreatePRStatusFilterView() *tview.Flex {
 
 	}
 
+	// targetBranch := util.CreateDropDownComponent("Target Branch(t) => ", []string{"any", "First", "second"})
+	// wrapperFlex.AddItem(targetBranch, 0, 1, false)
 	wrapperFlex.SetBackgroundColor(tcell.ColorDefault).
 		SetBorderPadding(0, 0, 1, 0).
 		SetTitleAlign(tview.AlignLeft)

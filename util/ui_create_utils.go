@@ -112,3 +112,19 @@ func CreateTableCell(text string, color tcell.Color) *tview.TableCell {
 		SetAlign(tview.AlignLeft).
 		SetSelectable(true)
 }
+
+func CreateDropDownComponent(label string, options []string) *tview.DropDown {
+	dropdown := tview.NewDropDown().
+		SetLabel(label).
+		SetOptions(options, nil)
+
+	dropdown.SetBackgroundColor(tcell.ColorDefault)
+
+	unselectedStyle := tcell.StyleDefault.Background(tcell.ColorDefault).Foreground(tcell.ColorDefault)
+	selectedStyle := tcell.StyleDefault.Background(tcell.ColorDefault).Foreground(tcell.ColorOrange)
+
+	dropdown.SetFieldBackgroundColor(tcell.ColorGrey)
+	dropdown.SetListStyles(unselectedStyle, selectedStyle)
+
+	return dropdown
+}

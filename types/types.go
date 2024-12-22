@@ -225,3 +225,8 @@ type DiffFile struct {
 		Self Self `json:"self"`
 	} `json:"links"`
 }
+
+type BranchSyncInfo struct {
+	Behind          string `json:"behind"`
+	BehindTruncated string `json:"behind_truncated"`
+}
