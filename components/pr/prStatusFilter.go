@@ -25,10 +25,16 @@ func CreatePRStatusFilterView() *tview.Flex {
 	declinedPr := util.CreateCheckBoxComponent("Declined (r) ", func(checked bool) {
 		util.UpdatePRListWithFilter("declined", checked)
 	}).SetChecked(state.PRStatusFilter.Declined)
+
+	iAmReviewingPr := util.CreateCheckBoxComponent("IaR (i) ", func(checked bool) {
+		util.UpdatePRListWithFilter("iamreviewing", checked)
+	}).SetChecked(state.PRStatusFilter.IAmReviewing)
+
 	wrapperFlex.SetBackgroundColor(tcell.ColorDefault)
 	wrapperFlex.AddItem(openPr, 0, 1, false).
 		AddItem(mergedPr, 0, 1, false).
 		AddItem(declinedPr, 0, 1, false).
+		AddItem(iAmReviewingPr, 0, 1, false).
 		SetTitleAlign(tview.AlignLeft).
 		SetBorderPadding(0, 0, 1, 0)
 

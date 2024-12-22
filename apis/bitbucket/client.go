@@ -195,44 +195,65 @@ func FetchBitbucketComments(id int) []types.Comment {
 	return response.Values
 }
 
+func FetchCurrentUser() *types.User {
+	client := createClient()
+
+	resp, err := client.R().
+		SetResult(&types.User{}).
+		Get(fmt.Sprintf("%s/user", BitbucketBaseURL))
+	if err != nil {
+		log.Fatalf("Error fetching user: %v", err)
+	}
+	userResponse := resp.Result().(*types.User)
+	return userResponse
+}
+
 func BuildQuery(searchTerm string) string {
-	// Add state filters (Open, Merged, Declined)
-	stateFilters := []string{}
-	filters := state.PRStatusFilter
-	if filters.Merged {
+	var filters []string
+
+	stateFilter := buildStateFilter()
+	if stateFilter != "" {
+		filters = append(filters, stateFilter)
+	}
+
+	// Add author filter if IAmReviewing is true
+	if state.PRStatusFilter.IAmReviewing {
+		authorFilter := fmt.Sprintf("author.uuid=\"%s\"", state.CurrentUser.UUID)
+		filters = append(filters, authorFilter)
+	}
+
+	// Add search term filter
+	if searchTerm != "" {
+		searchFilter := fmt.Sprintf("(description~\"%s\" OR title~\"%s\")", searchTerm, searchTerm)
+		filters = append(filters, searchFilter)
+	}
+
+	// Combine all filters with AND
+	finalQuery := strings.Join(filters, " AND ")
+
+	log.Printf("Final built query => %s", finalQuery)
+	return finalQuery
+}
+
+func buildStateFilter() string {
+	// Initialize state filters array
+	var stateFilters []string
+
+	// Add individual state filters (Open, Merged, Declined)
+	if state.PRStatusFilter.Merged {
 		stateFilters = append(stateFilters, "state=\"MERGED\"")
 	}
-	if filters.Declined {
+	if state.PRStatusFilter.Declined {
 		stateFilters = append(stateFilters, "state=\"DECLINED\"")
 	}
-	if filters.Open {
+	if state.PRStatusFilter.Open {
 		stateFilters = append(stateFilters, "state=\"OPEN\"")
 	}
 
-	// Combine state filters with OR if any exist
-	var stateQuery string
+	// Combine the state filters into a single string with OR
 	if len(stateFilters) > 0 {
-		stateQuery = strings.Join(stateFilters, " OR ")
+		return strings.Join(stateFilters, " OR ")
 	}
 
-	// Add search term conditions (title or description contains search term)
-	var searchQuery string
-	if searchTerm != "" {
-		searchQuery = "(description~\"" + searchTerm + "\" OR title~\"" + searchTerm + "\")"
-	}
-
-	// Combine the state and search queries with AND
-	var finalQuery string
-	if stateQuery != "" && searchQuery != "" {
-		// Combine state query and search query with AND
-		finalQuery = stateQuery + " AND " + searchQuery
-	} else if stateQuery != "" {
-		// If only the state query exists
-		finalQuery = stateQuery
-	} else if searchQuery != "" {
-		// If only the search query exists
-		finalQuery = searchQuery
-	}
-
-	return finalQuery
+	return ""
 }

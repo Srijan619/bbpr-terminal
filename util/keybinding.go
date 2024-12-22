@@ -102,7 +102,7 @@ func SetupKeyBindings(callback func()) {
 					// Quit application
 					state.GlobalState.App.SetRoot(state.GlobalState.MainFlexWrapper, true)
 
-				case 'm', 'o', 'r':
+				case 'm', 'o', 'r', 'i':
 					// Toggle PR filters
 					switch event.Rune() {
 					case 'm':
@@ -111,6 +111,8 @@ func SetupKeyBindings(callback func()) {
 						UpdatePRListWithFilter("open", !state.PRStatusFilter.Open)
 					case 'r':
 						UpdatePRListWithFilter("declined", !state.PRStatusFilter.Declined)
+					case 'i':
+						UpdatePRListWithFilter("iamreviewing", !state.PRStatusFilter.IAmReviewing)
 					}
 					callback()
 				}

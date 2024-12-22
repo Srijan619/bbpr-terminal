@@ -30,6 +30,7 @@ var GlobalState *State
 var Workspace, Repo string
 var IsSearchMode bool
 var SearchTerm string
+var CurrentUser *types.User
 
 // InitializeViews initializes all view components except workspace and repo.
 func InitializeViews(app *tview.Application, mainFlexWrapper, prListFlex *tview.Flex, prList *tview.Table, prDetails *tview.TextView, activityView, diffDetails, diffStatView, pRStatusFilter *tview.Flex,
@@ -69,6 +70,10 @@ func SetFilteredPRs(prs *[]types.PR) {
 	GlobalState.FilteredPRs = prs
 }
 
+func SetCurrentUser(user *types.User) {
+	CurrentUser = user
+}
+
 func SetIsSearchMode(mode bool) {
 	IsSearchMode = mode
 }
@@ -78,16 +83,17 @@ func SetSearchTerm(term string) {
 }
 
 type PRStatusFilterType struct {
-	Open     bool
-	Merged   bool
-	Declined bool
+	Open         bool
+	Merged       bool
+	Declined     bool
+	IAmReviewing bool
 }
 
 var PRStatusFilter *PRStatusFilterType
 
 func InitializePRStatusFilter(filter *PRStatusFilterType) {
 	if filter == nil {
-		filter = &PRStatusFilterType{Open: true, Merged: false, Declined: false}
+		filter = &PRStatusFilterType{Open: true, Merged: false, Declined: false, IAmReviewing: true}
 	}
 	PRStatusFilter = filter
 }
@@ -102,10 +108,14 @@ func SetPRStatusFilter(filterKey string, isChecked bool) {
 		PRStatusFilter.Merged = isChecked
 	case "declined":
 		PRStatusFilter.Declined = isChecked
+	case "iamreviewing":
+		PRStatusFilter.IAmReviewing = isChecked
 	case "all":
 		PRStatusFilter.Open = isChecked
 		PRStatusFilter.Merged = isChecked
 		PRStatusFilter.Declined = isChecked
+		PRStatusFilter.IAmReviewing = isChecked
+
 	}
 	log.Printf("Filter updated: %+v\n", PRStatusFilter)
 }

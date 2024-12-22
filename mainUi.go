@@ -6,6 +6,7 @@ import (
 	"github.com/gdamore/tcell/v2"
 	"github.com/rivo/tview"
 
+	"simple-git-terminal/apis/bitbucket"
 	"simple-git-terminal/components/pr"
 	"simple-git-terminal/state"
 	"simple-git-terminal/util"
@@ -19,6 +20,9 @@ func CreateMainApp() *tview.Application {
 	if (workspace == "") || (repoSlug == "") {
 		log.Fatalf("Not a bitbucket Workspace")
 	}
+	currentUser := bitbucket.FetchCurrentUser()
+	state.SetCurrentUser(currentUser)
+
 	state.SetWorkspaceRepo(workspace, repoSlug)
 	util.InitMdRenderer() // Markdown renderer takes time, so init it beforehand
 
