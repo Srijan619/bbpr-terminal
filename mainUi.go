@@ -52,7 +52,7 @@ func CreateMainApp() *tview.Application {
 
 	leftFullFlex.
 		AddItem(prStatusFilterFlex, 0, 2, false).
-		AddItem(prListSearchBar, 0, 1, false).
+		AddItem(prListSearchBar, 4, 1, false).
 		AddItem(prListFlex, 0, 18, true)
 
 		// Description and Activity
