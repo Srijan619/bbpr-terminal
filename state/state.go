@@ -20,7 +20,7 @@ type State struct {
 	RightPanelHeader *tview.TextView
 	CurrentView      tview.Primitive
 	PRStatusFilter   *tview.Flex
-	PrListSearchBar  *tview.TextArea
+	PrListSearchBar  *tview.InputField
 
 	SelectedPR  *types.PR
 	FilteredPRs *[]types.PR
@@ -34,7 +34,7 @@ var CurrentUser *types.User
 
 // InitializeViews initializes all view components except workspace and repo.
 func InitializeViews(app *tview.Application, mainFlexWrapper, prListFlex *tview.Flex, prList *tview.Table, prDetails *tview.TextView, activityView, diffDetails, diffStatView, pRStatusFilter *tview.Flex,
-	rightPanelHeader *tview.TextView, prListSearchBar *tview.TextArea) {
+	rightPanelHeader *tview.TextView, prListSearchBar *tview.InputField) {
 	GlobalState = &State{
 		App:              app,
 		MainFlexWrapper:  mainFlexWrapper,

@@ -3,9 +3,7 @@ package util
 import (
 	"github.com/gdamore/tcell/v2"
 	"github.com/rivo/tview"
-
-	"simple-git-terminal/apis/bitbucket"
-
+	"log"
 	"simple-git-terminal/state"
 )
 
@@ -30,24 +28,15 @@ func SetupKeyBindings(callback func()) {
 				currentFocusIndex = 0
 				state.SetIsSearchMode(false)
 				state.GlobalState.App.SetFocus(state.GlobalState.PrList) // Focus back to PrList or another view
+				log.Printf("Esc pressed escaping now......")
+				UpdateFocusBorders(focusOrder, currentFocusIndex, VIEW_ACTIVE_BORDER_COLOR)
 			case tcell.KeyEnter:
 				currentFocusIndex = 0
 				state.SetSearchTerm(state.GlobalState.PrListSearchBar.GetText())
-				state.SetIsSearchMode(false)
-				state.GlobalState.PrList.Clear()
-				go func() {
-					// Perform search or exit search mode
-					queryFetchedPRs := bitbucket.FetchPRsByQuery(bitbucket.BuildQuery(state.SearchTerm))
-					state.SetFilteredPRs(&queryFetchedPRs)
-					UpdatePRListView()
-					state.GlobalState.App.SetFocus(state.GlobalState.PrList)
-					state.GlobalState.PrList.Select(0, 0)
-				}()
+				ShowSpinnerFetchPRsByQueryAndUpdatePrList()
 			default:
 				return event // Ignore other keys in search mode
 			}
-			UpdateFocusBorders(focusOrder, currentFocusIndex, VIEW_ACTIVE_BORDER_COLOR)
-
 		} else {
 			// Handle keybindings when not in search mode
 			switch event.Key() {
@@ -70,9 +59,9 @@ func SetupKeyBindings(callback func()) {
 					currentFocusIndex = len(focusOrder) - 1
 
 					state.GlobalState.App.SetFocus(state.GlobalState.PrListSearchBar)
-					go func() {
-						state.GlobalState.PrListSearchBar.SetText("", true)
-					}()
+					//state.GlobalState.PrListSearchBar.SetText("")
+					UpdateFocusBorders(focusOrder, currentFocusIndex, VIEW_ACTIVE_BORDER_COLOR) // TODO: This is repeated here as we need to return nil from event rune otherwise it adds pressed key rune to textarea
+					return nil
 				case 't', 'T':
 					// Focus on DiffStatView (T or t)
 					currentFocusIndex = len(focusOrder) - 3

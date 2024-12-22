@@ -69,10 +69,7 @@ func cellFormat(text string, color tcell.Color) *tview.TableCell {
 // CreateStateCell creates a table cell with the appropriate color and alignment
 func CreateStateCell(state string) *tview.TableCell {
 	stateColor := GetPRStateColor(state)
-	return tview.NewTableCell(state).
-		SetTextColor(stateColor).
-		SetAlign(tview.AlignLeft).
-		SetSelectable(true)
+	return CreateTableCell(state, stateColor)
 }
 
 func EllipsizeText(text string, max int) string {
@@ -88,7 +85,6 @@ func PopulatePRList(prList *tview.Table, prs []types.PR) {
 		// Display a message in the first row
 		noPRsCell := cellFormat("  No PRs available, try changing filters/search term", tcell.ColorWhite)
 		prList.SetCell(0, 0, noPRsCell)
-		prList.SetSelectable(false, false)
 		return
 	}
 
@@ -179,6 +175,18 @@ func UpdateView(targetView interface{}, content interface{}) {
 				v.SetText("[red]Unsupported content type[-]")
 			}
 
+		case *tview.Table:
+			switch c := content.(type) {
+			case string:
+				tcell := CreateTableCell(c, tcell.ColorDefault)
+				v.SetCell(0, 0, tcell)
+			case tview.Primitive:
+				// Handle case if content is another Primitive (optional)
+				log.Println("Unsupported Primitive content for TextView")
+			default:
+				tcell := CreateTableCell("[red]Unsupported content type[-]", tcell.ColorDefault)
+				v.SetCell(0, 0, tcell)
+			}
 		default:
 			// If it's neither Flex nor TextView, print an error
 			log.Println("[red]Unsupported target view type[-]")
@@ -202,6 +210,14 @@ func UpdatePRListView() {
 	if state.GlobalState != nil && state.GlobalState.PrList != nil && state.GlobalState.FilteredPRs != nil {
 		state.GlobalState.PrList.Clear()
 		PopulatePRList(state.GlobalState.PrList, *state.GlobalState.FilteredPRs)
+		//	state.GlobalState.App.Draw()
+	}
+}
+
+func UpdatePRListErrorView() {
+	if state.GlobalState != nil && state.GlobalState.PrList != nil && state.GlobalState.FilteredPRs != nil {
+		state.GlobalState.PrList.Clear()
+		UpdateView(state.GlobalState.PrList, "[red] Error rendering PR list")
 		state.GlobalState.App.Draw()
 	}
 }
@@ -218,27 +234,27 @@ func UpdatePRStatusFilterView(content interface{}) {
 
 func UpdatePRListWithFilter(filter string, checked bool) {
 	state.SetPRStatusFilter(filter, checked)
-	go func() {
-		if state.GlobalState != nil {
-			queryFetchAndUpdatePrList()
-		}
-	}()
-}
-
-func UpdatePRList() {
-	go func() {
-		if state.GlobalState != nil {
-			queryFetchAndUpdatePrList()
-		}
-	}()
-}
-
-func queryFetchAndUpdatePrList() {
-	UpdateFilteredPRs()
-	UpdatePRListView()
+	ShowSpinnerFetchPRsByQueryAndUpdatePrList()
 }
 
 func UpdateFilteredPRs() {
 	prs := bitbucket.FetchPRsByQuery(bitbucket.BuildQuery(""))
 	state.SetFilteredPRs(&prs)
+}
+
+func ShowSpinnerFetchPRsByQueryAndUpdatePrList() {
+	if state.GlobalState != nil {
+		state.GlobalState.PrList.Clear()
+		ShowLoadingSpinner(state.GlobalState.PrList, func() (interface{}, error) {
+			return bitbucket.FetchPRsByQuery(bitbucket.BuildQuery(state.SearchTerm)), nil
+		}, func(result interface{}, err error) {
+			if err != nil {
+				UpdatePRListErrorView()
+			} else {
+				result, _ := result.([]types.PR)
+				state.SetFilteredPRs(&result)
+				UpdatePRListView()
+			}
+		})
+	}
 }

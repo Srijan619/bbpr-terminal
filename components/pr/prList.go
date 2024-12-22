@@ -31,7 +31,7 @@ func PopulatePRList(prList *tview.Table) *tview.Table {
 		go func() {
 			prs := *state.GlobalState.FilteredPRs // use updated prs inside routine
 			HandleOnPrSelect(prs, row)
-			util.UpdatePRList()
+			util.ShowSpinnerFetchPRsByQueryAndUpdatePrList()
 		}()
 	})
 

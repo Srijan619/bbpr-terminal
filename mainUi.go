@@ -42,7 +42,7 @@ func CreateMainApp() *tview.Application {
 
 	prList.SetBackgroundColor(tcell.ColorDefault)
 
-	prListSearchBar := util.CreateTextAreaComponent("  Search PR [green]s|S", "search filter.....")
+	prListSearchBar := util.CreateInputFieldComponent("  Search PR [green]s|S", " type something....")
 
 	prListFlex.
 		AddItem(prList, 0, 1, true)
@@ -52,7 +52,7 @@ func CreateMainApp() *tview.Application {
 
 	leftFullFlex.
 		AddItem(prStatusFilterFlex, 0, 1, false).
-		AddItem(prListSearchBar, 0, 2, false).
+		AddItem(prListSearchBar, 0, 1, false).
 		AddItem(prListFlex, 0, 18, true)
 
 		// Description and Activity
