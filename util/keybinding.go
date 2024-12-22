@@ -112,7 +112,7 @@ func SetupKeyBindings(callback func()) {
 					currentFocusIndex = 0
 					state.GlobalState.App.SetRoot(state.GlobalState.MainFlexWrapper, true)
 
-				case 'm', 'o', 'r', 'i':
+				case 'm', 'o', 'r', 'i', 'I':
 					// Toggle PR filters
 					switch event.Rune() {
 					case 'm':
@@ -122,7 +122,9 @@ func SetupKeyBindings(callback func()) {
 					case 'r':
 						UpdatePRListWithFilter("declined", !state.PRStatusFilter.Declined)
 					case 'i':
-						UpdatePRListWithFilter("iamreviewing", !state.PRStatusFilter.IAmReviewing)
+						UpdatePRListWithFilter("iamreviewer", !state.PRStatusFilter.IAmReviewer)
+					case 'I':
+						UpdatePRListWithFilter("iamauthor", !state.PRStatusFilter.IAmAuthor)
 					}
 					callback()
 				}

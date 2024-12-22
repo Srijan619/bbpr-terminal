@@ -217,11 +217,15 @@ func BuildQuery(searchTerm string) string {
 	}
 
 	// Add author filter if IAmReviewing is true
-	if state.PRStatusFilter.IAmReviewing {
+	if state.PRStatusFilter.IAmAuthor {
 		authorFilter := fmt.Sprintf("author.uuid=\"%s\"", state.CurrentUser.UUID)
 		filters = append(filters, authorFilter)
 	}
 
+	if state.PRStatusFilter.IAmReviewer {
+		reviewersFilter := fmt.Sprintf("reviewers.uuid=\"%s\"", state.CurrentUser.UUID)
+		filters = append(filters, reviewersFilter)
+	}
 	// Add search term filter
 	if searchTerm != "" {
 		searchFilter := fmt.Sprintf("(description~\"%s\" OR title~\"%s\")", searchTerm, searchTerm)

@@ -20,7 +20,8 @@ func CreateCheckBoxComponent(label string, onChange func(bool)) *tview.Checkbox 
 	checkbox := tview.NewCheckbox().
 		SetLabel(label).
 		SetLabelColor(tcell.ColorDefault).
-		SetCheckedString("✓").
+		SetCheckedString("✓[orange] /[-] ").
+		SetUncheckedString("[orange] /[-] ").
 		SetCheckedStyle(checkedStyle).
 		SetUncheckedStyle(uncheckedStyle).
 		SetActivatedStyle(activatedStyle)

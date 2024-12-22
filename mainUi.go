@@ -51,7 +51,7 @@ func CreateMainApp() *tview.Application {
 		SetDirection(tview.FlexRow)
 
 	leftFullFlex.
-		AddItem(prStatusFilterFlex, 0, 1, false).
+		AddItem(prStatusFilterFlex, 0, 2, false).
 		AddItem(prListSearchBar, 0, 1, false).
 		AddItem(prListFlex, 0, 18, true)
 

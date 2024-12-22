@@ -83,17 +83,18 @@ func SetSearchTerm(term string) {
 }
 
 type PRStatusFilterType struct {
-	Open         bool
-	Merged       bool
-	Declined     bool
-	IAmReviewing bool
+	Open        bool
+	Merged      bool
+	Declined    bool
+	IAmAuthor   bool
+	IAmReviewer bool
 }
 
 var PRStatusFilter *PRStatusFilterType
 
 func InitializePRStatusFilter(filter *PRStatusFilterType) {
 	if filter == nil {
-		filter = &PRStatusFilterType{Open: true, Merged: false, Declined: false, IAmReviewing: true}
+		filter = &PRStatusFilterType{Open: true, Merged: false, Declined: false, IAmAuthor: false, IAmReviewer: true}
 	}
 	PRStatusFilter = filter
 }
@@ -108,13 +109,16 @@ func SetPRStatusFilter(filterKey string, isChecked bool) {
 		PRStatusFilter.Merged = isChecked
 	case "declined":
 		PRStatusFilter.Declined = isChecked
-	case "iamreviewing":
-		PRStatusFilter.IAmReviewing = isChecked
+	case "iamauthor":
+		PRStatusFilter.IAmAuthor = isChecked
+	case "iamreviewer":
+		PRStatusFilter.IAmReviewer = isChecked
 	case "all":
 		PRStatusFilter.Open = isChecked
 		PRStatusFilter.Merged = isChecked
 		PRStatusFilter.Declined = isChecked
-		PRStatusFilter.IAmReviewing = isChecked
+		PRStatusFilter.IAmAuthor = isChecked
+		PRStatusFilter.IAmReviewer = isChecked
 
 	}
 	log.Printf("Filter updated: %+v\n", PRStatusFilter)

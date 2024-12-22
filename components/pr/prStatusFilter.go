@@ -9,34 +9,55 @@ import (
 )
 
 func CreatePRStatusFilterView() *tview.Flex {
-	wrapperFlex := tview.NewFlex().SetDirection(tview.FlexColumn)
+	wrapperFlex := tview.NewFlex().SetDirection(tview.FlexRow)
 	if state.PRStatusFilter == nil {
 		state.InitializePRStatusFilter(nil)
 	}
 
-	openPr := util.CreateCheckBoxComponent("Open (o) ", func(checked bool) {
-		util.UpdatePRListWithFilter("open", checked)
-	}).SetChecked(state.PRStatusFilter.Open)
+	checkboxes := []*tview.Checkbox{
+		util.CreateCheckBoxComponent("Open (o) ", func(checked bool) {
+			util.UpdatePRListWithFilter("open", checked)
+		}).SetChecked(state.PRStatusFilter.Open),
 
-	mergedPr := util.CreateCheckBoxComponent("Merged (m) ", func(checked bool) {
-		util.UpdatePRListWithFilter("merged", checked)
-	}).SetChecked(state.PRStatusFilter.Merged)
+		util.CreateCheckBoxComponent("Merged (m) ", func(checked bool) {
+			util.UpdatePRListWithFilter("merged", checked)
+		}).SetChecked(state.PRStatusFilter.Merged),
 
-	declinedPr := util.CreateCheckBoxComponent("Declined (r) ", func(checked bool) {
-		util.UpdatePRListWithFilter("declined", checked)
-	}).SetChecked(state.PRStatusFilter.Declined)
+		util.CreateCheckBoxComponent("Declined (r) ", func(checked bool) {
+			util.UpdatePRListWithFilter("declined", checked)
+		}).SetChecked(state.PRStatusFilter.Declined),
 
-	iAmReviewingPr := util.CreateCheckBoxComponent("IaR (i) ", func(checked bool) {
-		util.UpdatePRListWithFilter("iamreviewing", checked)
-	}).SetChecked(state.PRStatusFilter.IAmReviewing)
+		util.CreateCheckBoxComponent("I'm Author (I) ", func(checked bool) {
+			util.UpdatePRListWithFilter("iamauthor", checked)
+		}).SetChecked(state.PRStatusFilter.IAmAuthor),
 
-	wrapperFlex.SetBackgroundColor(tcell.ColorDefault)
-	wrapperFlex.AddItem(openPr, 0, 1, false).
-		AddItem(mergedPr, 0, 1, false).
-		AddItem(declinedPr, 0, 1, false).
-		AddItem(iAmReviewingPr, 0, 1, false).
-		SetTitleAlign(tview.AlignLeft).
-		SetBorderPadding(0, 0, 1, 0)
+		util.CreateCheckBoxComponent("I'm Reviewer (i) ", func(checked bool) {
+			util.UpdatePRListWithFilter("iamreviewer", checked)
+		}).SetChecked(state.PRStatusFilter.IAmReviewer),
+	}
+
+	rowFlex := tview.NewFlex().SetDirection(tview.FlexColumn)
+	wrapperFlex.AddItem(rowFlex, 0, 1, false)
+
+	maxWidth := 50
+	currentWidth := 0
+
+	for _, checkbox := range checkboxes {
+		itemWidth := len(checkbox.GetLabel()) + 4
+		if currentWidth+itemWidth > maxWidth {
+			rowFlex = tview.NewFlex().SetDirection(tview.FlexColumn)
+			wrapperFlex.AddItem(rowFlex, 0, 1, false)
+			currentWidth = 0
+		}
+
+		rowFlex.AddItem(checkbox, itemWidth, 1, false)
+		currentWidth += itemWidth
+
+	}
+
+	wrapperFlex.SetBackgroundColor(tcell.ColorDefault).
+		SetBorderPadding(0, 0, 1, 0).
+		SetTitleAlign(tview.AlignLeft)
 
 	return wrapperFlex
 }
