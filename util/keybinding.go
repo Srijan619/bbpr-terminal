@@ -62,33 +62,54 @@ func SetupKeyBindings(callback func()) {
 					//state.GlobalState.PrListSearchBar.SetText("")
 					UpdateFocusBorders(focusOrder, currentFocusIndex, VIEW_ACTIVE_BORDER_COLOR) // TODO: This is repeated here as we need to return nil from event rune otherwise it adds pressed key rune to textarea
 					return nil
+
 				case 't', 'T':
-					// Focus on DiffStatView (T or t)
 					currentFocusIndex = len(focusOrder) - 3
-					state.GlobalState.App.SetFocus(state.GlobalState.DiffStatView)
+					switch event.Rune() {
+					case 't':
+						state.GlobalState.App.SetFocus(state.GlobalState.DiffStatView)
+					case 'T':
+						state.GlobalState.App.SetRoot(state.GlobalState.DiffStatView, true)
+					}
 
 				case 'c', 'C':
-					// Focus on DiffDetails (C or c)
 					currentFocusIndex = len(focusOrder) - 2
-					state.GlobalState.App.SetFocus(state.GlobalState.DiffDetails)
+					switch event.Rune() {
+					case 'c':
+						state.GlobalState.App.SetFocus(state.GlobalState.DiffDetails)
+					case 'C':
+						state.GlobalState.App.SetRoot(state.GlobalState.DiffDetails, true)
+					}
 
 				case 'a', 'A':
-					// Focus on ActivityView (A or a)
 					currentFocusIndex = len(focusOrder) - 4
-					state.GlobalState.App.SetFocus(state.GlobalState.ActivityView)
+					switch event.Rune() {
+					case 'a':
+						state.GlobalState.App.SetFocus(state.GlobalState.ActivityView)
+					case 'A':
+						state.GlobalState.App.SetRoot(state.GlobalState.ActivityView, true)
+					}
 
-				case 'p':
-					// Focus on PR List
+				case 'p', 'P':
 					currentFocusIndex = 0
-					state.GlobalState.App.SetFocus(state.GlobalState.PrList)
+					switch event.Rune() {
+					case 'p':
+						state.GlobalState.App.SetFocus(state.GlobalState.PrList)
+					case 'P':
+						state.GlobalState.App.SetRoot(state.GlobalState.PrList, true)
+					}
 
 				case 'd', 'D':
-					// Focus on PR Details (D or d)
 					currentFocusIndex = len(focusOrder) - 5
-					state.GlobalState.App.SetFocus(state.GlobalState.PrDetails)
+					switch event.Rune() {
+					case 'd':
+						state.GlobalState.App.SetFocus(state.GlobalState.PrDetails)
+					case 'D':
+						state.GlobalState.App.SetRoot(state.GlobalState.PrDetails, true)
+					}
 
 				case 'q':
-					// Quit application
+					currentFocusIndex = 0
 					state.GlobalState.App.SetRoot(state.GlobalState.MainFlexWrapper, true)
 
 				case 'm', 'o', 'r', 'i':
