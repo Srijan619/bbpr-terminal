@@ -74,14 +74,14 @@ func FetchPR(id int) *types.PR {
 }
 
 // Make query using BuildQuery method....
-func FetchPRsByQuery(query string) []types.PR {
+func FetchPRsByQuery(query string) ([]types.PR, types.Pagination) {
 	client := createClient()
-	encodedQuery := url.QueryEscape(query) // This will properly encode the query string
+	encodedQuery := url.QueryEscape(query) // Properly encode the query string
 	fields := url.QueryEscape("+values.participants,-values.description,-values.summary")
 
-	url := fmt.Sprintf("%s/repositories/%s/%s/pullrequests?pagelen=25&fields=%s&q=%s&page=1",
-		BitbucketBaseURL, state.Workspace, state.Repo, fields, encodedQuery)
-	url = strings.ReplaceAll(url, "+", "%20") // TODO: Some weird encoding issue..
+	url := fmt.Sprintf("%s/repositories/%s/%s/pullrequests?fields=%s&q=%s&page=%d",
+		BitbucketBaseURL, state.Workspace, state.Repo, fields, encodedQuery, state.Pagination.Page)
+	url = strings.ReplaceAll(url, "+", "%20") // TODO: Fix encoding issue
 
 	log.Printf("[CLIENT] Fetching PRs with query...%v", url)
 	resp, err := client.R().
@@ -90,19 +90,15 @@ func FetchPRsByQuery(query string) []types.PR {
 
 	if err != nil {
 		log.Fatalf("Error fetching PRs: %v", err)
-		return nil
+		return nil, types.Pagination{}
 	}
 	if resp.StatusCode() != 200 {
 		log.Fatalf("Unexpected status code: %d. Response body: %s", resp.StatusCode(), string(resp.Body()))
-		return nil
+		return nil, types.Pagination{}
 	}
 
-	prs := resp.Result().(*types.BitbucketPRResponse).Values
-	// for i := range prs {
-	// 	prs[i] = util.SanitizePR(prs[i])
-	// }
-
-	return prs
+	response := resp.Result().(*types.BitbucketPRResponse)
+	return response.Values, response.Pagination
 }
 
 func FetchBitbucketDiffContent(id int, filePath string) (string, error) {

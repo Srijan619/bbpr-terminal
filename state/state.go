@@ -21,6 +21,7 @@ type State struct {
 	CurrentView      tview.Primitive
 	PRStatusFilter   *tview.Flex
 	PrListSearchBar  *tview.InputField
+	PaginationFlex   *tview.Flex
 
 	SelectedPR  *types.PR
 	FilteredPRs *[]types.PR
@@ -31,10 +32,16 @@ var Workspace, Repo string
 var IsSearchMode bool
 var SearchTerm string
 var CurrentUser *types.User
+var Pagination *types.Pagination = &types.Pagination{
+	Next:    "",
+	Page:    1,
+	Size:    25,
+	PageLen: 0,
+}
 
 // InitializeViews initializes all view components except workspace and repo.
 func InitializeViews(app *tview.Application, mainFlexWrapper, prListFlex *tview.Flex, prList *tview.Table, prDetails *tview.TextView, activityView, diffDetails, diffStatView, pRStatusFilter *tview.Flex,
-	rightPanelHeader *tview.TextView, prListSearchBar *tview.InputField) {
+	rightPanelHeader *tview.TextView, prListSearchBar *tview.InputField, paginationFlex *tview.Flex) {
 	GlobalState = &State{
 		App:              app,
 		MainFlexWrapper:  mainFlexWrapper,
@@ -46,6 +53,7 @@ func InitializeViews(app *tview.Application, mainFlexWrapper, prListFlex *tview.
 		DiffStatView:     diffStatView,
 		PRStatusFilter:   pRStatusFilter,
 		RightPanelHeader: rightPanelHeader,
+		PaginationFlex:   paginationFlex,
 
 		PrListSearchBar: prListSearchBar,
 	}
@@ -82,6 +90,10 @@ func SetSearchTerm(term string) {
 	SearchTerm = term
 }
 
+func SetPagination(pagination *types.Pagination) {
+	Pagination = pagination
+}
+
 type PRStatusFilterType struct {
 	Open        bool
 	Merged      bool
@@ -94,7 +106,7 @@ var PRStatusFilter *PRStatusFilterType
 
 func InitializePRStatusFilter(filter *PRStatusFilterType) {
 	if filter == nil {
-		filter = &PRStatusFilterType{Open: true, Merged: false, Declined: false, IAmAuthor: false, IAmReviewer: true}
+		filter = &PRStatusFilterType{Open: true, Merged: false, Declined: false, IAmAuthor: false, IAmReviewer: false} // FIXME: Do nt commit this
 	}
 	PRStatusFilter = filter
 }

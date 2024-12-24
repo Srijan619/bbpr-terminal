@@ -2,10 +2,9 @@
 package util
 
 import (
-	"log"
-
 	"github.com/gdamore/tcell/v2"
 	"github.com/rivo/tview"
+	"log"
 	"simple-git-terminal/apis/bitbucket"
 	"simple-git-terminal/state"
 	"simple-git-terminal/types"
@@ -113,7 +112,6 @@ func PopulatePRList(prList *tview.Table, prs []types.PR) {
 		prList.SetCell(i, 6, titleCell)
 
 	}
-
 	fetchMoreCell := cellFormat(ICON_DOWN_ARROW, tcell.ColorOrange)
 	prList.SetCell(len(prs), 1, fetchMoreCell)
 	prList.SetSelectedStyle(tcell.StyleDefault.Foreground(tcell.ColorDarkOrange))
@@ -238,21 +236,31 @@ func UpdatePRListWithFilter(filter string, checked bool) {
 }
 
 func UpdateFilteredPRs() {
-	prs := bitbucket.FetchPRsByQuery(bitbucket.BuildQuery(""))
+	prs, pagination := bitbucket.FetchPRsByQuery(bitbucket.BuildQuery(""))
 	state.SetFilteredPRs(&prs)
+	state.SetPagination(&pagination)
 }
 
 func ShowSpinnerFetchPRsByQueryAndUpdatePrList() {
 	if state.GlobalState != nil {
 		state.GlobalState.PrList.Clear()
 		ShowLoadingSpinner(state.GlobalState.PrList, func() (interface{}, error) {
-			return bitbucket.FetchPRsByQuery(bitbucket.BuildQuery(state.SearchTerm)), nil
+			prs, pagination := bitbucket.FetchPRsByQuery(bitbucket.BuildQuery(state.SearchTerm))
+			return struct {
+				PRs        []types.PR
+				Pagination types.Pagination
+			}{prs, pagination}, nil
 		}, func(result interface{}, err error) {
 			if err != nil {
 				UpdatePRListErrorView()
 			} else {
-				result, _ := result.([]types.PR)
-				state.SetFilteredPRs(&result)
+				data := result.(struct {
+					PRs        []types.PR
+					Pagination types.Pagination
+				})
+
+				state.SetFilteredPRs(&data.PRs)
+				state.SetPagination(&data.Pagination)
 				UpdatePRListView()
 			}
 		})

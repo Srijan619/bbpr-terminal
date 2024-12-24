@@ -40,6 +40,8 @@ func CreateMainApp() *tview.Application {
 		SetSelectable(true, false).
 		SetFixed(1, 0)
 
+	paginationFlex := util.CreateFlexComponent("")
+
 	prList.SetBackgroundColor(tcell.ColorDefault)
 
 	prListSearchBar := util.CreateInputFieldComponent("  Search PR [green]s", " type something....")
@@ -53,7 +55,8 @@ func CreateMainApp() *tview.Application {
 	leftFullFlex.
 		AddItem(prStatusFilterFlex, 0, 2, false).
 		AddItem(prListSearchBar, 4, 1, false).
-		AddItem(prListFlex, 0, 18, true)
+		AddItem(prListFlex, 0, 15, true).
+		AddItem(paginationFlex, 0, 1, false)
 
 		// Description and Activity
 
@@ -88,7 +91,7 @@ func CreateMainApp() *tview.Application {
 		AddItem(middleFullFlex, 0, 1, false).
 		AddItem(rightFullFlex, 0, 2, false)
 
-	state.InitializeViews(app, mainFlexWrapper, prListFlex, prList, prDetails, activityDetails, diffDetails, diffStatDetails, prStatusFilterFlex, rightPanelHeader, prListSearchBar)
+	state.InitializeViews(app, mainFlexWrapper, prListFlex, prList, prDetails, activityDetails, diffDetails, diffStatDetails, prStatusFilterFlex, rightPanelHeader, prListSearchBar, paginationFlex)
 	pr.PopulatePRList(prList)
 
 	// Key Bindings
