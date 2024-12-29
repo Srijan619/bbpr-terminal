@@ -1,24 +1,28 @@
 package main
 
 import (
-	"log"
-
+	"fmt"
 	"github.com/gdamore/tcell/v2"
 	"github.com/rivo/tview"
+	"log"
 
 	"simple-git-terminal/apis/bitbucket"
 	"simple-git-terminal/components/pr"
+	"simple-git-terminal/custom/borders"
 	"simple-git-terminal/state"
 	"simple-git-terminal/util"
 )
 
 func CreateMainApp() *tview.Application {
+	borders.CustomizeBorders()
 	app := tview.NewApplication()
 	workspace, repoSlug, _ = util.GetRepoAndWorkspace()
 	log.Printf("Loading workspace - %s and repo - %s ....", workspace, repoSlug)
+	fmt.Printf("Loading workspace - %s and repo - %s ....", workspace, repoSlug)
 
 	if (workspace == "") || (repoSlug == "") {
 		log.Fatalf("Not a bitbucket Workspace")
+		fmt.Printf("Not a bitbucket Workspace")
 	}
 	currentUser := bitbucket.FetchCurrentUser()
 	state.SetCurrentUser(currentUser)
