@@ -6,7 +6,6 @@ import (
 
 	"github.com/rivo/tview"
 	"simple-git-terminal/apis/bitbucket"
-	"simple-git-terminal/components"
 	"simple-git-terminal/state"
 	"simple-git-terminal/types"
 	"simple-git-terminal/util"
@@ -32,12 +31,7 @@ func PopulatePRList(prList *tview.Table) *tview.Table {
 	// Add pagination below the PR list
 	log.Printf("Current pagination state..%+v", state.Pagination)
 
-	pagination := components.NewPaginationComponent(
-		state.GlobalState.App,
-		state.Pagination.Size,
-		state.Pagination.PageLen,
-		state.Pagination.Page, 5,
-	)
+	pagination := util.NewPaginationComponent(state.Pagination.Page)
 	// Initial render (first-time view)
 	util.UpdateView(state.GlobalState.PaginationFlex, pagination)
 

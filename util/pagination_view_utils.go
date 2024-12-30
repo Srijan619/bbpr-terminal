@@ -1,14 +1,18 @@
-package components
+package util
 
 import (
 	"fmt"
 	"github.com/gdamore/tcell/v2"
 	"github.com/rivo/tview"
+	"log"
 	"simple-git-terminal/state"
-	"simple-git-terminal/util"
 )
 
-func NewPaginationComponent(app *tview.Application, totalItems, itemsPerPage, currentPage, maxButtons int) *tview.Flex {
+func NewPaginationComponent(currentPage int) *tview.Flex {
+	totalItems := state.Pagination.Size
+	itemsPerPage := state.Pagination.PageLen
+	maxButtons := 5
+
 	// Calculate total pages automatically
 	totalPages := (totalItems + itemsPerPage - 1) / itemsPerPage // Ceil(totalItems / itemsPerPage)
 
@@ -39,7 +43,7 @@ func NewPaginationComponent(app *tview.Application, totalItems, itemsPerPage, cu
 				// Update the page in the global state
 				currentPage = 1
 				// Fetch data or refresh view if needed
-				updatePaginationView(app, totalItems, itemsPerPage, currentPage, maxButtons)
+				UpdatePaginationView(currentPage)
 			})
 		buttonFlex.AddItem(firstButton, 0, 1, false)
 	}
@@ -52,7 +56,7 @@ func NewPaginationComponent(app *tview.Application, totalItems, itemsPerPage, cu
 				// Update the page in the global state
 				currentPage -= 1
 				// Fetch data or refresh view if needed
-				updatePaginationView(app, totalItems, itemsPerPage, currentPage, maxButtons)
+				UpdatePaginationView(currentPage)
 			})
 		buttonFlex.AddItem(prevButton, 0, 1, false)
 	}
@@ -63,7 +67,7 @@ func NewPaginationComponent(app *tview.Application, totalItems, itemsPerPage, cu
 		displayPage := page + 1 // 1-indexed for display
 		button := tview.NewButton(fmt.Sprintf("%d", displayPage)).
 			SetSelectedFunc(func() {
-				updatePaginationView(app, totalItems, itemsPerPage, displayPage, maxButtons)
+				UpdatePaginationView(displayPage)
 			})
 
 		// Highlight the current page
@@ -87,7 +91,7 @@ func NewPaginationComponent(app *tview.Application, totalItems, itemsPerPage, cu
 				// Update the page in the global state
 				currentPage += 1
 				// Fetch data or refresh view if needed
-				updatePaginationView(app, totalItems, itemsPerPage, currentPage, maxButtons)
+				UpdatePaginationView(currentPage)
 			})
 		buttonFlex.AddItem(nextButton, 0, 1, false)
 	}
@@ -101,7 +105,7 @@ func NewPaginationComponent(app *tview.Application, totalItems, itemsPerPage, cu
 				// Update the page in the global state
 				currentPage = totalPages
 				// Fetch data or refresh view if needed
-				updatePaginationView(app, totalItems, itemsPerPage, currentPage, maxButtons)
+				UpdatePaginationView(currentPage)
 			})
 		buttonFlex.AddItem(lastButton, 0, 1, false)
 	}
@@ -139,9 +143,11 @@ func max(a, b int) int {
 }
 
 // Function to update the pagination view after page changes
-func updatePaginationView(app *tview.Application, totalItems, itemsPerPage, currentPage, maxButtons int) {
-	pagination := NewPaginationComponent(app, totalItems, itemsPerPage, currentPage, maxButtons)
-	util.UpdateView(state.GlobalState.PaginationFlex, pagination)
+func UpdatePaginationView(currentPage int) {
+	log.Printf("Updating pagination vew...%d", currentPage)
+	pagination := NewPaginationComponent(currentPage)
+	UpdateView(state.GlobalState.PaginationFlex, pagination)
 	state.Pagination.Page = currentPage
-	util.ShowSpinnerFetchPRsByQueryAndUpdatePrList()
+	ShowSpinnerFetchPRsByQueryAndUpdatePrList()
 }
+

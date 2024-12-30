@@ -239,6 +239,7 @@ func UpdateFilteredPRs() {
 	prs, pagination := bitbucket.FetchPRsByQuery(bitbucket.BuildQuery(""))
 	state.SetFilteredPRs(&prs)
 	state.SetPagination(&pagination)
+	UpdatePaginationView(state.Pagination.Page)
 }
 
 func ShowSpinnerFetchPRsByQueryAndUpdatePrList() {
