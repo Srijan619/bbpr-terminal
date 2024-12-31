@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"github.com/gdamore/tcell/v2"
 	"github.com/rivo/tview"
-	"log"
 	"simple-git-terminal/state"
 )
 
@@ -52,7 +51,7 @@ func NewPaginationComponent(currentPage int) *tview.Flex {
 				// Update the page in the global state
 				currentPage = 1
 				// Fetch data or refresh view if needed
-				UpdatePaginationView(currentPage)
+				updatePaginationView(currentPage)
 			})
 		buttonFlex.AddItem(firstButton, 0, 1, false)
 	}
@@ -65,7 +64,7 @@ func NewPaginationComponent(currentPage int) *tview.Flex {
 				// Update the page in the global state
 				currentPage -= 1
 				// Fetch data or refresh view if needed
-				UpdatePaginationView(currentPage)
+				updatePaginationView(currentPage)
 			})
 		buttonFlex.AddItem(prevButton, 0, 1, false)
 	}
@@ -76,7 +75,7 @@ func NewPaginationComponent(currentPage int) *tview.Flex {
 		displayPage := page + 1 // 1-indexed for display
 		button := tview.NewButton(fmt.Sprintf("%d", displayPage)).
 			SetSelectedFunc(func() {
-				UpdatePaginationView(displayPage)
+				updatePaginationView(displayPage)
 			})
 
 		// Highlight the current page
@@ -100,7 +99,7 @@ func NewPaginationComponent(currentPage int) *tview.Flex {
 				// Update the page in the global state
 				currentPage += 1
 				// Fetch data or refresh view if needed
-				UpdatePaginationView(currentPage)
+				updatePaginationView(currentPage)
 			})
 		buttonFlex.AddItem(nextButton, 0, 1, false)
 	}
@@ -114,7 +113,7 @@ func NewPaginationComponent(currentPage int) *tview.Flex {
 				// Update the page in the global state
 				currentPage = totalPages
 				// Fetch data or refresh view if needed
-				UpdatePaginationView(currentPage)
+				updatePaginationView(currentPage)
 			})
 		buttonFlex.AddItem(lastButton, 0, 1, false)
 	}
@@ -151,12 +150,22 @@ func max(a, b int) int {
 	return b
 }
 
-// Function to update the pagination view after page changes
-func UpdatePaginationView(currentPage int) {
-	if state.Pagination != nil && state.GlobalState != nil {
-		log.Printf("Updating pagination vew...%d", currentPage)
+func UpdatePaginationViewUI(currentPage int) {
+	if state.GlobalState != nil {
 		pagination := NewPaginationComponent(currentPage)
 		UpdateView(state.GlobalState.PaginationFlex, pagination)
+	}
+}
+
+func UpdatePaginationState(currentPage int) {
+	if state.Pagination != nil {
 		state.Pagination.Page = currentPage
 	}
+}
+
+func updatePaginationView(currentPage int) {
+	UpdatePaginationState(currentPage)
+	UpdatePaginationViewUI(currentPage)
+	ShowSpinnerFetchPRsByQueryAndUpdatePrList()
+
 }

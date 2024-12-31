@@ -261,7 +261,7 @@ func ShowSpinnerFetchPRsByQueryAndUpdatePrList() {
 				state.SetFilteredPRs(&data.PRs)
 				state.SetPagination(&data.Pagination)
 				UpdatePRListView()
-				UpdatePaginationView(state.Pagination.Page)
+				UpdatePaginationViewUI(state.Pagination.Page)
 			}
 		})
 	}
