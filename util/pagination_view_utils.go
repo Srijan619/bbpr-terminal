@@ -9,9 +9,18 @@ import (
 )
 
 func NewPaginationComponent(currentPage int) *tview.Flex {
+	if state.Pagination == nil {
+		return nil
+	}
+
 	totalItems := state.Pagination.Size
 	itemsPerPage := state.Pagination.PageLen
 	maxButtons := 5
+
+	// Ensure itemsPerPage is not zero to prevent division by zero
+	if itemsPerPage <= 0 {
+		itemsPerPage = 1 // Default to 1 to ensure safe calculation
+	}
 
 	// Calculate total pages automatically
 	totalPages := (totalItems + itemsPerPage - 1) / itemsPerPage // Ceil(totalItems / itemsPerPage)
@@ -144,10 +153,11 @@ func max(a, b int) int {
 
 // Function to update the pagination view after page changes
 func UpdatePaginationView(currentPage int) {
-	log.Printf("Updating pagination vew...%d", currentPage)
-	pagination := NewPaginationComponent(currentPage)
-	UpdateView(state.GlobalState.PaginationFlex, pagination)
-	state.Pagination.Page = currentPage
-	ShowSpinnerFetchPRsByQueryAndUpdatePrList()
+	if state.Pagination != nil && state.GlobalState != nil {
+		log.Printf("Updating pagination vew...%d", currentPage)
+		pagination := NewPaginationComponent(currentPage)
+		UpdateView(state.GlobalState.PaginationFlex, pagination)
+		state.Pagination.Page = currentPage
+		ShowSpinnerFetchPRsByQueryAndUpdatePrList()
+	}
 }
-

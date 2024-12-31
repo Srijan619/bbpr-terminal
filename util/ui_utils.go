@@ -112,8 +112,7 @@ func PopulatePRList(prList *tview.Table, prs []types.PR) {
 		prList.SetCell(i, 6, titleCell)
 
 	}
-	fetchMoreCell := cellFormat(ICON_DOWN_ARROW, tcell.ColorOrange)
-	prList.SetCell(len(prs), 1, fetchMoreCell)
+
 	prList.SetSelectedStyle(tcell.StyleDefault.Foreground(tcell.ColorDarkOrange))
 }
 
@@ -233,6 +232,7 @@ func UpdatePRStatusFilterView(content interface{}) {
 func UpdatePRListWithFilter(filter string, checked bool) {
 	state.SetPRStatusFilter(filter, checked)
 	ShowSpinnerFetchPRsByQueryAndUpdatePrList()
+	UpdatePaginationView(state.Pagination.Page)
 }
 
 func UpdateFilteredPRs() {

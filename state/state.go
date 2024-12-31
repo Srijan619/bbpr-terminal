@@ -106,7 +106,7 @@ var PRStatusFilter *PRStatusFilterType
 
 func InitializePRStatusFilter(filter *PRStatusFilterType) {
 	if filter == nil {
-		filter = &PRStatusFilterType{Open: true, Merged: false, Declined: false, IAmAuthor: false, IAmReviewer: false}
+		filter = &PRStatusFilterType{Open: true, Merged: false, Declined: false, IAmAuthor: false, IAmReviewer: true}
 	}
 	PRStatusFilter = filter
 }
