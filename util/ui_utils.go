@@ -232,14 +232,12 @@ func UpdatePRStatusFilterView(content interface{}) {
 func UpdatePRListWithFilter(filter string, checked bool) {
 	state.SetPRStatusFilter(filter, checked)
 	ShowSpinnerFetchPRsByQueryAndUpdatePrList()
-	UpdatePaginationView(state.Pagination.Page)
 }
 
 func UpdateFilteredPRs() {
 	prs, pagination := bitbucket.FetchPRsByQuery(bitbucket.BuildQuery(""))
 	state.SetFilteredPRs(&prs)
 	state.SetPagination(&pagination)
-	UpdatePaginationView(state.Pagination.Page)
 }
 
 func ShowSpinnerFetchPRsByQueryAndUpdatePrList() {
@@ -263,6 +261,7 @@ func ShowSpinnerFetchPRsByQueryAndUpdatePrList() {
 				state.SetFilteredPRs(&data.PRs)
 				state.SetPagination(&data.Pagination)
 				UpdatePRListView()
+				UpdatePaginationView(state.Pagination.Page)
 			}
 		})
 	}

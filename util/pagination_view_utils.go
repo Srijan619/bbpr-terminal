@@ -158,6 +158,5 @@ func UpdatePaginationView(currentPage int) {
 		pagination := NewPaginationComponent(currentPage)
 		UpdateView(state.GlobalState.PaginationFlex, pagination)
 		state.Pagination.Page = currentPage
-		ShowSpinnerFetchPRsByQueryAndUpdatePrList()
 	}
 }
