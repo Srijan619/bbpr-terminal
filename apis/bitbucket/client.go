@@ -2,13 +2,14 @@ package bitbucket
 
 import (
 	"fmt"
-	"github.com/go-resty/resty/v2"
 	"log"
 	"net/url"
 	"os"
 	"simple-git-terminal/state"
 	"simple-git-terminal/types"
 	"strings"
+
+	"github.com/go-resty/resty/v2"
 )
 
 // Bitbucket API details
@@ -61,7 +62,6 @@ func FetchPR(id int) *types.PR {
 	resp, err := client.R().
 		SetResult(&types.PR{}).
 		Get(url)
-
 	if err != nil {
 		log.Fatalf("Error fetching PRs: %v", err)
 	}
@@ -87,7 +87,6 @@ func FetchPRsByQuery(query string) ([]types.PR, types.Pagination) {
 	resp, err := client.R().
 		SetResult(&types.BitbucketPRResponse{}).
 		Get(url)
-
 	if err != nil {
 		log.Fatalf("Error fetching PRs: %v", err)
 		return nil, types.Pagination{}
@@ -201,6 +200,12 @@ func FetchCurrentUser() *types.User {
 		log.Fatalf("Error fetching user: %v", err)
 	}
 	userResponse := resp.Result().(*types.User)
+	if userResponse == nil {
+		log.Printf("No active user, probably using API token which does not give access to current active user..")
+	} else {
+		log.Printf("Current active user => %v", userResponse)
+	}
+
 	return userResponse
 }
 
@@ -213,12 +218,12 @@ func BuildQuery(searchTerm string) string {
 	}
 
 	// Add author filter if IAmReviewing is true
-	if state.PRStatusFilter.IAmAuthor {
+	if state.CurrentUser.UUID != "" && state.PRStatusFilter.IAmAuthor {
 		authorFilter := fmt.Sprintf("author.uuid=\"%s\"", state.CurrentUser.UUID)
 		filters = append(filters, authorFilter)
 	}
 
-	if state.PRStatusFilter.IAmReviewer {
+	if state.CurrentUser.UUID != "" && state.PRStatusFilter.IAmReviewer {
 		reviewersFilter := fmt.Sprintf("reviewers.uuid=\"%s\"", state.CurrentUser.UUID)
 		filters = append(filters, reviewersFilter)
 	}

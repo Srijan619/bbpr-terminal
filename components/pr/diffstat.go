@@ -18,6 +18,7 @@ const (
 	FILE_COLOR     = tcell.ColorGrey
 	ICON_DIRECTORY = "\uf07b " // Folder icon
 	ICON_FILE      = "\uf15b " // File icon
+	ICON_CONFLICT  = "\u26A0"
 )
 
 // NodeReference structure
