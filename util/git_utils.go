@@ -2,17 +2,16 @@ package util
 
 import (
 	"fmt"
-	"github.com/rivo/tview"
 	"os"
 	"os/exec"
 	"regexp"
 	"simple-git-terminal/types"
 	"strings"
+
+	"github.com/rivo/tview"
 )
 
-var (
-	ICON_COMMENT = "\uf27b "
-)
+var ICON_COMMENT = "\uf27b "
 
 // Get the name of the current Git repository
 // Fetches the Bitbucket workspace and repo slug based on the current git repo.
@@ -41,31 +40,35 @@ func GetRepoAndWorkspace() (string, string, error) {
 	return workspace, repoSlug, nil
 }
 
-func GenerateColorizedDiffView(diffText string, comments []types.Comment) *tview.TextView {
-	// Initialize the TextView to display the diff
-	textView := CreateTextviewComponent("", false)
+func GenerateColorizedDiffView(diffText string, comments []types.Comment) *tview.Flex {
+	// Create the main diff text view
+	diffView := CreateTextviewComponent("", false)
 
-	// Split the diff text by lines and color them based on the prefix (+ or -)
+	// Split and colorize diff lines
 	var coloredDiff []string
 	lines := strings.Split(diffText, "\n")
 	for _, line := range lines {
 		if strings.HasPrefix(line, "+") {
-			// Green for added lines
 			coloredDiff = append(coloredDiff, fmt.Sprintf("[green]%s[-]", line))
 		} else if strings.HasPrefix(line, "-") {
-			// Red for removed lines
-			coloredDiff = append(coloredDiff, fmt.Sprintf("[red]%si[-]", line))
+			coloredDiff = append(coloredDiff, fmt.Sprintf("[red]%s[-]", line)) // Fixed typo (extra "i")
 		} else {
-			// Normal lines without changes
 			coloredDiff = append(coloredDiff, line)
 		}
 	}
-	// Add comments above the diff lines
-	diffTextWithComments := addCommentsAboveLines(strings.Join(coloredDiff, "\n"), comments)
-	//diffTextWithComments := addCommentsAboveLines(diffText, comments)
-	// Join the lines back together and set the text in the TextView
-	textView.SetText(diffTextWithComments)
-	return textView
+
+	// Set colorized diff text
+	diffView.SetText(strings.Join(coloredDiff, "\n"))
+
+	// Create a flex container for structuring the layout
+	layout := tview.NewFlex().SetDirection(tview.FlexRow)
+	layout.AddItem(diffView, 0, 3, false) // Diff view takes majority of space
+
+	// Add reply input field at the bottom
+	reply := CreateInputFieldComponent("🗜️Reply", "type something....")
+	layout.AddItem(reply, 1, 1, true)
+
+	return layout
 }
 
 func getCurrentDir() string {
