@@ -191,6 +191,7 @@ type Approval struct {
 
 type BitbucketPRResponse struct {
 	Values []PR `json:"values"`
+	Pagination
 }
 
 type BitbucketActivityResponse struct {
@@ -202,10 +203,8 @@ type BitbucketCommentsResponse struct {
 }
 
 type DiffstatResponse struct {
-	Values  []DiffstatEntry `json:"values"`
-	PageLen int             `json:"pagelen"`
-	Size    int             `json:"size"`
-	Page    int             `json:"page"`
+	Values []DiffstatEntry `json:"values"`
+	Pagination
 }
 
 type DiffstatEntry struct {
@@ -229,4 +228,11 @@ type DiffFile struct {
 type BranchSyncInfo struct {
 	Behind          string `json:"behind"`
 	BehindTruncated string `json:"behind_truncated"`
+}
+
+type Pagination struct {
+	PageLen int    `json:"pagelen"`
+	Size    int    `json:"size"`
+	Page    int    `json:"page"`
+	Next    string `json:"next"`
 }

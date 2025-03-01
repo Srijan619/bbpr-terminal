@@ -2,13 +2,14 @@ package bitbucket
 
 import (
 	"fmt"
-	"github.com/go-resty/resty/v2"
 	"log"
 	"net/url"
 	"os"
 	"simple-git-terminal/state"
 	"simple-git-terminal/types"
 	"strings"
+
+	"github.com/go-resty/resty/v2"
 )
 
 // Bitbucket API details
@@ -61,7 +62,6 @@ func FetchPR(id int) *types.PR {
 	resp, err := client.R().
 		SetResult(&types.PR{}).
 		Get(url)
-
 	if err != nil {
 		log.Fatalf("Error fetching PRs: %v", err)
 	}
@@ -74,35 +74,30 @@ func FetchPR(id int) *types.PR {
 }
 
 // Make query using BuildQuery method....
-func FetchPRsByQuery(query string) []types.PR {
+func FetchPRsByQuery(query string) ([]types.PR, types.Pagination) {
 	client := createClient()
-	encodedQuery := url.QueryEscape(query) // This will properly encode the query string
+	encodedQuery := url.QueryEscape(query) // Properly encode the query string
 	fields := url.QueryEscape("+values.participants,-values.description,-values.summary")
 
-	url := fmt.Sprintf("%s/repositories/%s/%s/pullrequests?pagelen=25&fields=%s&q=%s&page=1",
-		BitbucketBaseURL, state.Workspace, state.Repo, fields, encodedQuery)
-	url = strings.ReplaceAll(url, "+", "%20") // TODO: Some weird encoding issue..
+	url := fmt.Sprintf("%s/repositories/%s/%s/pullrequests?fields=%s&q=%s&page=%d",
+		BitbucketBaseURL, state.Workspace, state.Repo, fields, encodedQuery, state.Pagination.Page)
+	url = strings.ReplaceAll(url, "+", "%20") // TODO: Fix encoding issue
 
 	log.Printf("[CLIENT] Fetching PRs with query...%v", url)
 	resp, err := client.R().
 		SetResult(&types.BitbucketPRResponse{}).
 		Get(url)
-
 	if err != nil {
 		log.Fatalf("Error fetching PRs: %v", err)
-		return nil
+		return nil, types.Pagination{}
 	}
 	if resp.StatusCode() != 200 {
 		log.Fatalf("Unexpected status code: %d. Response body: %s", resp.StatusCode(), string(resp.Body()))
-		return nil
+		return nil, types.Pagination{}
 	}
 
-	prs := resp.Result().(*types.BitbucketPRResponse).Values
-	// for i := range prs {
-	// 	prs[i] = util.SanitizePR(prs[i])
-	// }
-
-	return prs
+	response := resp.Result().(*types.BitbucketPRResponse)
+	return response.Values, response.Pagination
 }
 
 func FetchBitbucketDiffContent(id int, filePath string) (string, error) {
@@ -205,6 +200,12 @@ func FetchCurrentUser() *types.User {
 		log.Fatalf("Error fetching user: %v", err)
 	}
 	userResponse := resp.Result().(*types.User)
+	if userResponse == nil {
+		log.Printf("No active user, probably using API token which does not give access to current active user..")
+	} else {
+		log.Printf("Current active user => %v", userResponse)
+	}
+
 	return userResponse
 }
 
@@ -217,12 +218,12 @@ func BuildQuery(searchTerm string) string {
 	}
 
 	// Add author filter if IAmReviewing is true
-	if state.PRStatusFilter.IAmAuthor {
+	if state.CurrentUser.UUID != "" && state.PRStatusFilter.IAmAuthor {
 		authorFilter := fmt.Sprintf("author.uuid=\"%s\"", state.CurrentUser.UUID)
 		filters = append(filters, authorFilter)
 	}
 
-	if state.PRStatusFilter.IAmReviewer {
+	if state.CurrentUser.UUID != "" && state.PRStatusFilter.IAmReviewer {
 		reviewersFilter := fmt.Sprintf("reviewers.uuid=\"%s\"", state.CurrentUser.UUID)
 		filters = append(filters, reviewersFilter)
 	}

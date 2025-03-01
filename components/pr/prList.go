@@ -2,9 +2,9 @@ package pr
 
 import (
 	"fmt"
-	"github.com/rivo/tview"
 	"log"
 
+	"github.com/rivo/tview"
 	"simple-git-terminal/apis/bitbucket"
 	"simple-git-terminal/state"
 	"simple-git-terminal/types"
@@ -25,6 +25,15 @@ func PopulatePRList(prList *tview.Table) *tview.Table {
 	}
 	// Populate PR list
 	util.PopulatePRList(prList, prs)
+
+	// Populate pagination
+	//
+	// Add pagination below the PR list
+	log.Printf("Current pagination state..%+v", state.Pagination)
+
+	pagination := util.NewPaginationComponent(state.Pagination.Page)
+	// Initial render (first-time view)
+	util.UpdateView(state.GlobalState.PaginationFlex, pagination)
 
 	// Add a selection function that updates PR details when a PR is selected
 	prList.SetSelectedFunc(func(row, column int) {
