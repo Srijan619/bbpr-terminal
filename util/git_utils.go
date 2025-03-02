@@ -8,6 +8,7 @@ import (
 	"simple-git-terminal/types"
 	"strings"
 
+	"github.com/gdamore/tcell/v2"
 	"github.com/rivo/tview"
 )
 
@@ -67,24 +68,39 @@ func removeBeforeAndIncludingHunk(diffText string) string {
 }
 
 func formatCommentWithBox(comment types.Comment) string {
-	const maxCommentWidth = 40 // 50% of 80-char screen
-	content := ""
+	markdownContent := RenderMarkdown(comment.Content.Raw)
+	contentLen := len(tview.Escape(comment.Content.Raw + comment.User.DisplayName))
+
+	borderLen := contentLen + 10
+
+	commentLine := "╭" + strings.Repeat("-", borderLen) + "╮\n"
 
 	if comment.Parent.ID > 0 {
-		content = fmt.Sprintf("[steelblue] %s %s %s %s[-]", ICON_SIDE_ARROW, ICON_COMMENT, comment.User.DisplayName, RenderMarkdown(comment.Content.Raw))
-	} else if comment.Resolution != nil {
-		content = fmt.Sprintf("[aquamarine]✔ %s %s (Resolved) %s[-]", ICON_COMMENT, comment.User.DisplayName, RenderMarkdown(comment.Content.Raw))
+		commentLine = commentLine + fmt.Sprintf("[steelblue] %s %s %s %s[-]", ICON_SIDE_ARROW, ICON_COMMENT, comment.User.DisplayName, markdownContent)
 	} else {
-		content = fmt.Sprintf("[steelblue]%s %s → %s[-]", ICON_COMMENT, comment.User.DisplayName, RenderMarkdown(comment.Content.Raw))
+		// Need to check if the comment was resolved
+		if comment.Resolution != nil {
+			// Comment is resolved, show a "resolved" marker
+			commentLine = commentLine + fmt.Sprintf("[aquamarine]✔ %s %s (Resolved) %s[-]", ICON_COMMENT, comment.User.DisplayName, markdownContent)
+		} else {
+			// If not resolved, display it as normal
+			commentLine = commentLine + fmt.Sprintf("[steelblue]%s %s → %s[-]", ICON_COMMENT, comment.User.DisplayName, markdownContent)
+		}
 	}
-	return content
+	// Add the comment line to the result
+	commentLine += "\n╰" + strings.Repeat("-", borderLen) + "╯"
+
+	return commentLine
 }
 
 // GenerateColorizedDiffView (unchanged from last working structure but using new formatCommentWithBox)
 func GenerateColorizedDiffView(diffText string, comments []types.Comment) *tview.Table {
 	table := tview.NewTable().
 		SetBorders(false).
-		SetSelectable(true, false)
+		SetSelectable(true, false).
+		SetFixed(1, 0)
+
+	table.SetBackgroundColor(tcell.ColorDefault)
 
 	diffText = removeBeforeAndIncludingHunk(diffText)
 	lines := strings.Split(diffText, "\n")
@@ -129,17 +145,19 @@ func GenerateColorizedDiffView(diffText string, comments []types.Comment) *tview
 			SetReference(relativeLineNumber))
 		row++
 
-		// Comments beneath
+		// Comments beneath, each as a separate row
 		if commentLines, exists := commentMap[relativeLineNumber]; exists {
-			fullCommentText := ""
 			for _, comment := range commentLines {
-				fullCommentText += formatCommentWithBox(comment) + "\n"
+				commentText := formatCommentWithBox(comment)
+				// Split the comment box into separate lines for separate rows
+				commentLines := strings.Split(commentText, "\n")
+				for _, commentLine := range commentLines {
+					table.SetCell(row, 0, tview.NewTableCell(commentLine).
+						SetExpansion(1).
+						SetReference(comment))
+					row++
+				}
 			}
-			fullCommentText = strings.TrimSpace(fullCommentText)
-			table.SetCell(row, 0, tview.NewTableCell(fullCommentText).
-				SetExpansion(1).
-				SetReference(commentLines[0]))
-			row++
 		}
 	}
 
