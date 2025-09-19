@@ -30,6 +30,11 @@ func SetupKeyBindings() {
 				currentFocusIndex = 0 // If we go out of bounds, set to the first element
 			}
 			state.PipelineUIState.App.SetFocus(focusOrder[currentFocusIndex])
+
+		case tcell.KeyRune:
+			switch event.Rune() {
+			case 'r':
+			}
 		}
 		// Update focus borders after focus change
 		util.UpdateFocusBorders(focusOrder, currentFocusIndex, VIEW_ACTIVE_BORDER_COLOR)

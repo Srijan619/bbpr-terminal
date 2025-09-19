@@ -22,6 +22,7 @@ const (
 	ICON_DECLINED       = "\u274C"
 	ICON_COMMIT         = ""
 	ICON_BRANCH         = ""
+	ICON_BUILD          = "\uf085"
 )
 
 func GetPRStateColor(state string) tcell.Color {

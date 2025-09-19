@@ -58,6 +58,7 @@ type State struct {
 
 type Result struct {
 	Name PipelineStatus `json:"name"`
+	Type string         `json:"type"`
 }
 
 // Pipeline Status

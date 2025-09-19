@@ -1,10 +1,11 @@
 package util
 
 import (
-	"github.com/gdamore/tcell/v2"
-	"github.com/rivo/tview"
 	"log"
 	"simple-git-terminal/state"
+
+	"github.com/gdamore/tcell/v2"
+	"github.com/rivo/tview"
 )
 
 const (
@@ -59,7 +60,7 @@ func SetupKeyBindings(callback func()) {
 					currentFocusIndex = len(focusOrder) - 1
 
 					state.GlobalState.App.SetFocus(state.GlobalState.PrListSearchBar)
-					//state.GlobalState.PrListSearchBar.SetText("")
+					// state.GlobalState.PrListSearchBar.SetText("")
 					UpdateFocusBorders(focusOrder, currentFocusIndex, VIEW_ACTIVE_BORDER_COLOR) // TODO: This is repeated here as we need to return nil from event rune otherwise it adds pressed key rune to textarea
 					return nil
 

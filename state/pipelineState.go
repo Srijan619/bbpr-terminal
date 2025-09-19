@@ -76,6 +76,9 @@ func InitializePipelineStatusFilter(filter *PipelineStatusFilterType) {
 	PipelineStatusFilter = filter
 }
 
+func updatePipelineListViewWithFreshFetch() {
+}
+
 // SetPipelineStatusFilter updates the pipeline status filter based on the provided key and value.
 func SetPipelineStatusFilter(filterKey string, isChecked bool) {
 	trimmedFilterKey := strings.ToLower(strings.TrimSpace(filterKey))

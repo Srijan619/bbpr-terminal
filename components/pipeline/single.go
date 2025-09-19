@@ -3,6 +3,7 @@ package pipeline
 import (
 	"fmt"
 	"simple-git-terminal/types"
+	"simple-git-terminal/util"
 	"strings"
 
 	"github.com/gdamore/tcell/v2"
@@ -24,47 +25,37 @@ func GeneratePPDetail(steps []types.StepDetail) string {
 	return sb.String()
 }
 
-// GenerateStepDetailTable returns a tview.Table showing pipeline step details.
-
 func GenerateStepTreeView(steps []types.StepDetail, selectedPipeline types.PipelineResponse) *tview.TreeView {
-	createNode := func(text string, color tcell.Color) *tview.TreeNode {
+	createNode := func(text string, fg tcell.Color) *tview.TreeNode {
+		style := tcell.StyleDefault.Foreground(fg).Background(tcell.ColorDefault)
+		selectedStyle := tcell.StyleDefault.Foreground(tcell.ColorDarkCyan).Background(tcell.ColorDefault)
+
 		return tview.NewTreeNode(text).
-			SetColor(color)
+			SetTextStyle(style).
+			SetSelectedTextStyle(selectedStyle)
 	}
 
-	rootNode := createNode(fmt.Sprintf("Build %d", selectedPipeline.BuildNumber), tcell.ColorDarkGray)
+	rootNode := createNode(fmt.Sprintf("%s Build %d", util.ICON_BUILD, selectedPipeline.BuildNumber), tcell.ColorDefault)
 
 	for _, step := range steps {
-		var statusIcon string
-		switch step.State.Name {
-		case "COMPLETED":
-			statusIcon = "[green]✔[-]"
-		case "FAILED":
-			statusIcon = "[red]✖[-]"
-		case "IN_PROGRESS":
-			statusIcon = "[yellow]…[-]"
-		default:
-			statusIcon = "[gray]?[-]"
-		}
+		iconWithColor := util.GetIconForStatusWithColor(step.State.Result.Name)
 
-		title := fmt.Sprintf("%s [::b]%s[-] %s", statusIcon, step.Name, step.State.Name)
-		stepNode := createNode(title, tcell.ColorWhite).
+		title := fmt.Sprintf(" %s [::b]%s[-]", iconWithColor, step.Name)
+		stepNode := createNode(title, tcell.ColorDefault).
 			SetReference(step).
 			SetExpanded(false)
 
-		// Add step info as child nodes
-		stepNode.AddChild(createNode(fmt.Sprintf("UUID: %s", step.UUID), tcell.ColorLightGrey))
-		stepNode.AddChild(createNode(fmt.Sprintf("Duration: %ds", step.DurationInSeconds), tcell.ColorLightGrey))
-		stepNode.AddChild(createNode(fmt.Sprintf("Started: %s", step.StartedOn), tcell.ColorLightGrey))
-		stepNode.AddChild(createNode(fmt.Sprintf("Completed: %s", step.CompletedOn), tcell.ColorLightGrey))
+		stepNode.AddChild(createNode(fmt.Sprintf("UUID: %s", step.UUID), tcell.ColorDefault))
+		stepNode.AddChild(createNode(fmt.Sprintf("Duration: %ds", step.DurationInSeconds), tcell.ColorDefault))
+		stepNode.AddChild(createNode(fmt.Sprintf("Started: %s", step.StartedOn), tcell.ColorDefault))
+		stepNode.AddChild(createNode(fmt.Sprintf("Completed: %s", step.CompletedOn), tcell.ColorDefault))
 
-		// Commands as child group
 		if len(step.ScriptCommands) > 0 {
-			commandsNode := createNode("Commands:", tcell.ColorLightBlue)
+			cmds := createNode("Commands:", tcell.ColorLightBlue)
 			for _, cmd := range step.ScriptCommands {
-				commandsNode.AddChild(createNode(fmt.Sprintf("- %s", cmd.Command), tcell.ColorGrey))
+				cmds.AddChild(createNode(fmt.Sprintf("- %s", cmd.Command), tcell.ColorDefault))
 			}
-			stepNode.AddChild(commandsNode)
+			stepNode.AddChild(cmds)
 		}
 
 		rootNode.AddChild(stepNode)

@@ -39,13 +39,13 @@ func PopulatePPList(ppList *tview.Table, pps []types.PipelineResponse) {
 			startStr = " Unknown"
 		}
 
-		ppList.SetCell(i, 0, util.CellFormat(util.FormatInitials(pp.Creator.DisplayName), util.HIGH_CONTRAST_COLOR)) // Initial
-		ppList.SetCell(i, 1, util.CellFormat(fmt.Sprintf("\uf085 %d", pp.BuildNumber), tcell.ColorDarkGray))         // Build #
-		ppList.SetCell(i, 3, util.CellFormat(fmt.Sprintf(" %s", shortHash), tcell.ColorDarkGray))                   // Commit
-		ppList.SetCell(i, 4, util.CellFormat(fmt.Sprintf(" %s", pp.Target.RefName), tcell.ColorDarkGray))           // Branch
-		ppList.SetCell(i, 7, util.CellFormat(fmt.Sprintf("%s %s", statusIcon, status), statusColor))                 // Status
-		ppList.SetCell(i, 10, util.CellFormat(durationStr, tcell.ColorDarkGray))                                     // Duration
-		ppList.SetCell(i, 12, util.CellFormat(startStr, tcell.ColorDarkGray))                                        // Started
+		ppList.SetCell(i, 0, util.CellFormat(util.FormatInitials(pp.Creator.DisplayName), util.HIGH_CONTRAST_COLOR))      // Initial
+		ppList.SetCell(i, 1, util.CellFormat(fmt.Sprintf("%s %d", util.ICON_BUILD, pp.BuildNumber), tcell.ColorDarkGray)) // Build #
+		ppList.SetCell(i, 3, util.CellFormat(fmt.Sprintf(" %s", shortHash), tcell.ColorDarkGray))                        // Commit
+		ppList.SetCell(i, 4, util.CellFormat(fmt.Sprintf(" %s", pp.Target.RefName), tcell.ColorDarkGray))                // Branch
+		ppList.SetCell(i, 7, util.CellFormat(fmt.Sprintf("%s %s", statusIcon, status), statusColor))                      // Status
+		ppList.SetCell(i, 10, util.CellFormat(durationStr, tcell.ColorDarkGray))                                          // Duration
+		ppList.SetCell(i, 12, util.CellFormat(startStr, tcell.ColorDarkGray))                                             // Started
 
 	}
 

@@ -1,6 +1,7 @@
 package util
 
 import (
+	"fmt"
 	"simple-git-terminal/types"
 
 	"github.com/gdamore/tcell/v2"
@@ -47,4 +48,32 @@ func GetIconForStatus(status types.PipelineStatus) string {
 	default:
 		return "\u2753" // ❓ Question mark
 	}
+}
+
+func tcellColorToDynamicColor(c tcell.Color) string {
+	switch c {
+	case tcell.ColorGreen:
+		return "green"
+	case tcell.ColorRed:
+		return "red"
+	case tcell.ColorYellow:
+		return "yellow"
+	case tcell.ColorGray:
+		return "gray"
+	case tcell.ColorDarkRed:
+		return "maroon"
+	case tcell.ColorOrange:
+		return "orange"
+	case tcell.ColorBlue:
+		return "blue"
+	default:
+		return "white"
+	}
+}
+
+func GetIconForStatusWithColor(status types.PipelineStatus) string {
+	icon := GetIconForStatus(status)
+	color := GetColorForStatus(status)
+
+	return fmt.Sprintf("[%s]%s[-]", tcellColorToDynamicColor(color), icon)
 }
