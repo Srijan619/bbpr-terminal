@@ -2,12 +2,13 @@
 package util
 
 import (
-	"github.com/gdamore/tcell/v2"
-	"github.com/rivo/tview"
 	"log"
 	"simple-git-terminal/apis/bitbucket"
 	"simple-git-terminal/state"
 	"simple-git-terminal/types"
+
+	"github.com/gdamore/tcell/v2"
+	"github.com/rivo/tview"
 )
 
 const (
@@ -19,6 +20,8 @@ const (
 	ICON_SIDE_ARROW     = "\u21AA"
 	ICON_WARNING        = "\u2260"
 	ICON_DECLINED       = "\u274C"
+	ICON_COMMIT         = ""
+	ICON_BRANCH         = ""
 )
 
 func GetPRStateColor(state string) tcell.Color {
@@ -34,7 +37,7 @@ func GetPRStateColor(state string) tcell.Color {
 	}
 }
 
-func GetPRReviewStateIcon(state types.State) string {
+func GetPRReviewStateIcon(state types.ApprovedState) string {
 	switch state {
 	case types.StateApproved:
 		return "[green]" + ICON_ACTIVE + "[-]"
@@ -58,7 +61,7 @@ func GetFieldBasedColor(field string) tcell.Color {
 	}
 }
 
-func cellFormat(text string, color tcell.Color) *tview.TableCell {
+func CellFormat(text string, color tcell.Color) *tview.TableCell {
 	return tview.NewTableCell(text).
 		SetTextColor(color).
 		SetAlign(tview.AlignLeft).
@@ -82,22 +85,22 @@ func PopulatePRList(prList *tview.Table, prs []types.PR) {
 	// If there are no PRs, display a "No PRs" message
 	if len(prs) == 0 {
 		// Display a message in the first row
-		noPRsCell := cellFormat("  No PRs available, try changing filters/search term", tcell.ColorWhite)
+		noPRsCell := CellFormat("  No PRs available, try changing filters/search term", tcell.ColorWhite)
 		prList.SetCell(0, 0, noPRsCell)
 		return
 	}
 
 	for i, pr := range prs {
-		titleCell := cellFormat(EllipsizeText(pr.Title, 18), tcell.ColorWhite)
+		titleCell := CellFormat(EllipsizeText(pr.Title, 18), tcell.ColorWhite)
 		stateCell := CreateStateCell(pr.State)
 
-		initialsCell := cellFormat(FormatInitials(pr.Author.DisplayName), HIGH_CONTRAST_COLOR)
+		initialsCell := CellFormat(FormatInitials(pr.Author.DisplayName), HIGH_CONTRAST_COLOR)
 
-		sourceBranch := cellFormat(EllipsizeText(pr.Source.Branch.Name, 18), tcell.ColorGrey)
-		arrow := cellFormat(ICON_SIDE_ARROW, tcell.ColorDefault)
-		destinationBranch := cellFormat(EllipsizeText(pr.Destination.Branch.Name, 18), tcell.ColorGrey)
+		sourceBranch := CellFormat(EllipsizeText(pr.Source.Branch.Name, 18), tcell.ColorGrey)
+		arrow := CellFormat(ICON_SIDE_ARROW, tcell.ColorDefault)
+		destinationBranch := CellFormat(EllipsizeText(pr.Destination.Branch.Name, 18), tcell.ColorGrey)
 
-		selectedCell := cellFormat(ICON_SELECTED, tcell.ColorOrange)
+		selectedCell := CellFormat(ICON_SELECTED, tcell.ColorOrange)
 		if state.GlobalState != nil && state.GlobalState.SelectedPR != nil && state.GlobalState.SelectedPR.ID == pr.ID {
 			prList.SetCell(i, 0, selectedCell)
 		} else if i == 0 && (state.GlobalState == nil || state.GlobalState.SelectedPR == nil) {

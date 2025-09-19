@@ -262,3 +262,56 @@ func buildStateFilter() string {
 
 	return ""
 }
+
+// Pipelines
+func FetchPipelinesByQuery(query string) ([]types.PipelineResponse, types.Pagination) {
+	client := createClient()
+
+	url := fmt.Sprintf("%s/repositories/%s/%s/pipelines",
+		BitbucketBaseURL, state.Workspace, state.Repo)
+
+	//	url = strings.ReplaceAll(url, "+", "%20") // Handle encoding quirk if needed
+
+	log.Printf("[CLIENT] Fetching Pipelines with query... %v", url)
+
+	resp, err := client.R().
+		SetResult(&types.BitbucketPipelineResponse{}).
+		Get(url)
+	if err != nil {
+		log.Fatalf("Error fetching pipelines: %v", err)
+		return nil, types.Pagination{}
+	}
+
+	if resp.StatusCode() != 200 {
+		log.Fatalf("Unexpected status code: %d. Response body: %s", resp.StatusCode(), string(resp.Body()))
+		return nil, types.Pagination{}
+	}
+
+	response := resp.Result().(*types.BitbucketPipelineResponse)
+	return response.Values, response.Pagination
+}
+
+func FetchPipelineSteps(pipelineUUID string) []types.StepDetail {
+	client := createClient()
+
+	url := fmt.Sprintf("%s/repositories/%s/%s/pipelines/%s/steps",
+		BitbucketBaseURL, state.Workspace, state.Repo, strings.Trim(pipelineUUID, "{}"))
+
+	log.Printf("[CLIENT] Fetching steps for pipeline UUID: %s", pipelineUUID)
+
+	resp, err := client.R().
+		SetResult(&types.BitbucketStepsResponse{}). // You need this type (see below)
+		Get(url)
+	if err != nil {
+		log.Printf("[ERROR] Failed to fetch pipeline steps: %v", err)
+		return nil
+	}
+
+	if resp.StatusCode() != 200 {
+		log.Printf("[ERROR] Unexpected status code: %d\nBody: %s", resp.StatusCode(), string(resp.Body()))
+		return nil
+	}
+
+	result := resp.Result().(*types.BitbucketStepsResponse)
+	return result.Values
+}
