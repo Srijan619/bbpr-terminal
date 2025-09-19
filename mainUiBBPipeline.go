@@ -58,8 +58,8 @@ func CreateMainAppForBBPipeline() *tview.Application {
 		AddItem(ppListFlex, 0, 15, true)
 
 		// MIDDLE
-	steps := util.CreateFlexComponent("Steps")
-	step := util.CreateFlexComponent("Step")
+	steps := util.CreateFlexComponent("Pipeline Steps")
+	step := util.CreateFlexComponent("Individual Step")
 
 	middleFullFlex := tview.NewFlex().
 		SetDirection(tview.FlexColumn)
@@ -76,6 +76,7 @@ func CreateMainAppForBBPipeline() *tview.Application {
 	state.InitializePipelineViews(app, mainFlexWrapper, ppListFlex, ppList, steps, step, nil, nil, nil)
 	pipeline.PopulatePipelineList(ppList)
 
+	pipeline.SetupKeyBindings()
 	app.SetRoot(mainFlexWrapper, true).EnableMouse(true)
 
 	return app

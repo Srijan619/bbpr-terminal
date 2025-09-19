@@ -26,43 +26,57 @@ func GeneratePPDetail(steps []types.StepDetail) string {
 
 // GenerateStepDetailTable returns a tview.Table showing pipeline step details.
 
-func GenerateStepCards(steps []types.StepDetail) *tview.Flex {
-	mainFlexWrapper := tview.NewFlex()
-
-	for _, step := range steps {
-		var statusColor string
-		switch step.State.Name {
-		case "COMPLETED":
-			statusColor = "[green]"
-		case "FAILED":
-			statusColor = "[red]"
-		case "IN_PROGRESS":
-			statusColor = "[yellow]"
-		default:
-			statusColor = "[gray]"
-		}
-
-		stepContent := fmt.Sprintf(
-			"[::b]Step:[-:-] %s\n[::b]Status:[-:-] %s%s[-]\n[::b]Started:[-:-] %s\n[::b]Duration:[-:-] %ds\n",
-			step.Name,
-			statusColor, step.State.Name,
-			step.StartedOn,
-			step.DurationInSeconds,
-		)
-
-		stepView := tview.NewTextView().
-			SetText(stepContent).
-			SetDynamicColors(true).
-			SetWrap(true).
-			SetTextAlign(tview.AlignLeft).
-			SetBorder(true).
-			SetBackgroundColor(tcell.ColorDefault).
-			SetTitle(fmt.Sprintf(" UUID: %s ", step.UUID))
-
-		mainFlexWrapper.AddItem(stepView, 0, 1, false)
+func GenerateStepTreeView(steps []types.StepDetail, selectedPipeline types.PipelineResponse) *tview.TreeView {
+	createNode := func(text string, color tcell.Color) *tview.TreeNode {
+		return tview.NewTreeNode(text).
+			SetColor(color)
 	}
 
-	mainFlexWrapper.SetDirection(tview.FlexRow).
+	rootNode := createNode(fmt.Sprintf("Build %d", selectedPipeline.BuildNumber), tcell.ColorDarkGray)
+
+	for _, step := range steps {
+		var statusIcon string
+		switch step.State.Name {
+		case "COMPLETED":
+			statusIcon = "[green]✔[-]"
+		case "FAILED":
+			statusIcon = "[red]✖[-]"
+		case "IN_PROGRESS":
+			statusIcon = "[yellow]…[-]"
+		default:
+			statusIcon = "[gray]?[-]"
+		}
+
+		title := fmt.Sprintf("%s [::b]%s[-] %s", statusIcon, step.Name, step.State.Name)
+		stepNode := createNode(title, tcell.ColorWhite).
+			SetReference(step).
+			SetExpanded(false)
+
+		// Add step info as child nodes
+		stepNode.AddChild(createNode(fmt.Sprintf("UUID: %s", step.UUID), tcell.ColorLightGrey))
+		stepNode.AddChild(createNode(fmt.Sprintf("Duration: %ds", step.DurationInSeconds), tcell.ColorLightGrey))
+		stepNode.AddChild(createNode(fmt.Sprintf("Started: %s", step.StartedOn), tcell.ColorLightGrey))
+		stepNode.AddChild(createNode(fmt.Sprintf("Completed: %s", step.CompletedOn), tcell.ColorLightGrey))
+
+		// Commands as child group
+		if len(step.ScriptCommands) > 0 {
+			commandsNode := createNode("Commands:", tcell.ColorLightBlue)
+			for _, cmd := range step.ScriptCommands {
+				commandsNode.AddChild(createNode(fmt.Sprintf("- %s", cmd.Command), tcell.ColorGrey))
+			}
+			stepNode.AddChild(commandsNode)
+		}
+
+		rootNode.AddChild(stepNode)
+	}
+
+	tree := tview.NewTreeView().
+		SetRoot(rootNode).
+		SetCurrentNode(rootNode).
+		SetGraphics(true)
+
+	tree.
 		SetBackgroundColor(tcell.ColorDefault)
-	return mainFlexWrapper
+
+	return tree
 }

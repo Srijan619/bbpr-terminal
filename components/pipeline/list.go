@@ -65,14 +65,13 @@ func HandleOnPipelineSelect(pipelines []types.PipelineResponse, row int) {
 		}
 		return steps, nil
 	}, func(result interface{}, err error) {
-		log.Println("Stps...", result)
 		steps, ok := result.([]types.StepDetail)
 		if !ok {
 			util.UpdateView(state.PipelineUIState.PipelineSteps, fmt.Sprintf("[red]Error: %v[-]", err))
 			return
 		}
 
-		view := GenerateStepCards(steps)
+		view := GenerateStepTreeView(steps, selectedPipeline)
 		util.UpdateView(state.PipelineUIState.PipelineSteps, view)
 	})
 }
