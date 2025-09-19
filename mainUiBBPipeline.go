@@ -72,7 +72,6 @@ func CreateMainAppForBBPipeline() *tview.Application {
 		AddItem(middleFullFlex, 0, 3, false)
 
 	state.InitializePipelineViews(app, mainFlexWrapper, ppListFlex, ppList, ppDetails, nil, nil, nil, nil)
-
 	pipeline.PopulatePipelineList(ppList)
 
 	app.SetRoot(mainFlexWrapper, true).EnableMouse(true)

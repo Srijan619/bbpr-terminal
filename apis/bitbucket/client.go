@@ -295,7 +295,7 @@ func FetchPipelineSteps(pipelineUUID string) []types.StepDetail {
 	client := createClient()
 
 	url := fmt.Sprintf("%s/repositories/%s/%s/pipelines/%s/steps",
-		BitbucketBaseURL, state.Workspace, state.Repo, strings.Trim(pipelineUUID, "{}"))
+		BitbucketBaseURL, state.Workspace, state.Repo, pipelineUUID)
 
 	log.Printf("[CLIENT] Fetching steps for pipeline UUID: %s", pipelineUUID)
 
@@ -313,5 +313,6 @@ func FetchPipelineSteps(pipelineUUID string) []types.StepDetail {
 	}
 
 	result := resp.Result().(*types.BitbucketStepsResponse)
+	log.Printf("[INFO] Successfully fetched %d steps", len(result.Values))
 	return result.Values
 }

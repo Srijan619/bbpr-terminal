@@ -39,45 +39,41 @@ func PopulatePipelineList(ppList *tview.Table) *tview.Table {
 }
 
 func HandleOnPipelineSelect(pipelines []types.PipelineResponse, row int) {
-	// Ensure row index is valid
+	// Validate row index
 	if row < 0 || row >= len(pipelines) {
-		log.Printf("Invalid row index: %d, pipeline count: %d", row, len(pipelines))
+		log.Printf("Invalid row index: %d, pipelines count: %d", row, len(pipelines))
 		return
 	}
 
 	if state.PipelineUIState == nil {
-		log.Println("PipelineUIState is nil")
+		log.Println("PipelineUIState is nil, cannot update UI")
+		return
+	}
+	if state.PipelineUIState.PipelineDetails == nil {
+		log.Println("PipelineDetails view is nil, cannot update UI")
 		return
 	}
 
 	selectedPipeline := pipelines[row]
+	log.Printf("Selected pipeline UUID: %s, Name: %s", selectedPipeline.UUID, selectedPipeline.Creator.DisplayName)
 
-	// Set header
-	state.PipelineUIState.RightPanelHeader.SetTitle(fmt.Sprintf("Pipeline #%d - %s", selectedPipeline.BuildNumber, selectedPipeline.State.Result.Name))
-	state.PipelineUIState.RightPanelHeader.SetText(fmt.Sprintf("[::b]Branch:[-:-] %s", selectedPipeline.Target.RefName))
-
-	// Show loading spinner while fetching steps
-	util.ShowLoadingSpinner(state.PipelineUIState.PipelineDetails, func() (interface{}, error) {
-		// Fetch pipeline steps from bitbucket API
+	util.ShowPipelineLoadingSpinner(state.PipelineUIState.PipelineDetails, func() (interface{}, error) {
+		log.Println("Fetching pipeline steps...")
 		steps := bitbucket.FetchPipelineSteps(selectedPipeline.UUID)
 		if steps == nil {
-			return nil, fmt.Errorf("Failed to fetch pipeline steps")
+			log.Println("Failed to fetch pipeline steps, nil returned")
+			return nil, fmt.Errorf("failed to fetch pipeline steps")
 		}
-		return &selectedPipeline, nil
+		log.Printf("Fetched %d steps", len(steps))
+		return steps, nil
 	}, func(result interface{}, err error) {
-		if err != nil {
+		log.Println("Stps...", result)
+		steps, ok := result.([]types.StepDetail)
+		if !ok {
 			util.UpdateView(state.PipelineUIState.PipelineDetails, fmt.Sprintf("[red]Error: %v[-]", err))
 			return
 		}
 
-		// Type assert result
-		pipeline, ok := result.(*types.PipelineResponse)
-		if !ok {
-			util.UpdateView(state.PipelineUIState.PipelineDetails, "[red]Failed to cast pipeline details[-]")
-			return
-		}
-
-		// Update view with generated pipeline detail
-		util.UpdateView(state.PipelineUIState.PipelineDetails, GeneratePPDetail(pipeline))
+		util.UpdateView(state.PipelineUIState.PipelineDetails, GeneratePPDetail(steps))
 	})
 }

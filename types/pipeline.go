@@ -29,7 +29,7 @@ type PipelineRefTarget struct {
 }
 
 type Trigger struct {
-	Name string `json:"name"`
+	Name string `json:"name,omitempty"`
 	Type string `json:"type"`
 }
 

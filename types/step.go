@@ -17,16 +17,25 @@ type StepDetail struct {
 	DurationInSeconds       int                  `json:"duration_in_seconds"`
 	RunNumber               int                  `json:"run_number"`
 	BuildSecondsUsed        int                  `json:"build_seconds_used"`
-	Services                []Service            `json:"services"`
-	Caches                  []Cache              `json:"caches"`
-	ResourceLimits          ResourceLimits       `json:"resource_limits"`
-	TestReport              TestReport           `json:"test_report"`
 	TestReportDefinition    TestReportDefinition `json:"testReportDefinition"`
 	Tasks                   Tasks                `json:"tasks"`
-	FeatureFlags            []FeatureFlag        `json:"feature_flags"`
 	Arch                    string               `json:"arch"`
 	MaxTime                 int                  `json:"maxTime"`
 	IsArtifactsDownloadable bool                 `json:"is_artifacts_download_enabled"`
+	Type                    string               `json:"type"`
+
+	// Optional fields you might encounter, include only if needed
+	// Services             []Service      `json:"services"`
+	// Caches               []Cache        `json:"caches"`
+	// ResourceLimits       ResourceLimits `json:"resource_limits"`
+	// TestReport           TestReport     `json:"test_report"`
+	// FeatureFlags         []FeatureFlag  `json:"feature_flags"`
+	//
+	// 👇 Add these missing fields (they exist in JSON)
+	SetupCommands    []CommandDetail `json:"setup_commands"`
+	ScriptCommands   []CommandDetail `json:"script_commands"`
+	TeardownCommands []CommandDetail `json:"teardown_commands"`
+	Pipeline         PipelineInfo    `json:"pipeline"` // nested pipeline object
 }
 
 type Cache struct {
@@ -82,4 +91,20 @@ type Phase struct {
 
 type Command struct {
 	CommandString string `json:"command_string"`
+}
+
+type Image struct {
+	Name string `json:"name"`
+}
+
+type PipelineInfo struct {
+	Type string `json:"type"`
+	UUID string `json:"uuid"`
+}
+
+type CommandDetail struct {
+	CommandType string `json:"commandType"`
+	Name        string `json:"name"`
+	Command     string `json:"command"`
+	Action      string `json:"action,omitempty"`
 }
