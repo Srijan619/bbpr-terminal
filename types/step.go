@@ -23,6 +23,7 @@ type StepDetail struct {
 	MaxTime                 int                  `json:"maxTime"`
 	IsArtifactsDownloadable bool                 `json:"is_artifacts_download_enabled"`
 	Type                    string               `json:"type"`
+	ParallelGroup           ParallelGroup        `json:"parallel_group"`
 
 	// Optional fields you might encounter, include only if needed
 	// Services             []Service      `json:"services"`
@@ -36,6 +37,11 @@ type StepDetail struct {
 	ScriptCommands   []CommandDetail `json:"script_commands"`
 	TeardownCommands []CommandDetail `json:"teardown_commands"`
 	Pipeline         PipelineInfo    `json:"pipeline"` // nested pipeline object
+}
+
+type ParallelGroup struct {
+	GroupName string `json:"group_name"`
+	StepIndex int    `json:"step_index"`
 }
 
 type Cache struct {

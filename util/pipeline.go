@@ -24,6 +24,8 @@ func GetColorForStatus(status types.PipelineStatus) tcell.Color {
 		return tcell.ColorDarkRed
 	case status.InProgress():
 		return tcell.ColorOrange
+	case status.NotRun():
+		return tcell.ColorGray
 	default:
 		return tcell.ColorGray
 	}
@@ -45,6 +47,8 @@ func GetIconForStatus(status types.PipelineStatus) string {
 		return "\u26A0" // ⚠ Warning sign
 	case status.InProgress():
 		return "\u23F3" // ⏳ Hourglass (same as pending, but you can pick another)
+	case status.NotRun():
+		return "\u25CB" // ○ (empty circle)
 	default:
 		return "\u2753" // ❓ Question mark
 	}

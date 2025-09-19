@@ -80,6 +80,7 @@ const (
 	StatusUnknown  PipelineStatus = "UNKNOWN"
 	InProgress     PipelineStatus = "IN_PROGRESS"
 	Successful     PipelineStatus = "SUCCESSFUL"
+	NotRun         PipelineStatus = "NOT_RUN"
 )
 
 // Attach methods to this type (must be in same package!)
@@ -91,4 +92,5 @@ func (s PipelineStatus) Running() bool    { return s == StatusBuilding }
 func (s PipelineStatus) Stopped() bool    { return s == StatusStopped }
 func (s PipelineStatus) InProgress() bool { return s == InProgress }
 func (s PipelineStatus) Successful() bool { return s == Successful }
+func (s PipelineStatus) NotRun() bool     { return s == NotRun }
 func (s PipelineStatus) Unknown() bool    { return s == StatusUnknown }

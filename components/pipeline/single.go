@@ -37,27 +37,34 @@ func GenerateStepTreeView(steps []types.StepDetail, selectedPipeline types.Pipel
 
 	rootNode := createNode(fmt.Sprintf("%s Build %d", util.ICON_BUILD, selectedPipeline.BuildNumber), tcell.ColorDefault)
 
+	// Group steps by parallel group name
+	grouped := make(map[string][]types.StepDetail)
+	ungrouped := []types.StepDetail{}
+
 	for _, step := range steps {
-		iconWithColor := util.GetIconForStatusWithColor(step.State.Result.Name)
+		// This is not yet supported by open API but internal API has this
+		if step.ParallelGroup.GroupName != "" {
+			grouped[step.ParallelGroup.GroupName] = append(grouped[step.ParallelGroup.GroupName], step)
+		} else {
+			ungrouped = append(ungrouped, step)
+		}
+	}
 
-		title := fmt.Sprintf(" %s [::b]%s[-]", iconWithColor, step.Name)
-		stepNode := createNode(title, tcell.ColorDefault).
-			SetReference(step).
-			SetExpanded(false)
+	// Add grouped steps
+	for groupName, groupSteps := range grouped {
+		groupNode := createNode(fmt.Sprintf(" Parallel Group: %s", groupName), tcell.ColorLightBlue).SetExpanded(true)
 
-		stepNode.AddChild(createNode(fmt.Sprintf("UUID: %s", step.UUID), tcell.ColorDefault))
-		stepNode.AddChild(createNode(fmt.Sprintf("Duration: %ds", step.DurationInSeconds), tcell.ColorDefault))
-		stepNode.AddChild(createNode(fmt.Sprintf("Started: %s", step.StartedOn), tcell.ColorDefault))
-		stepNode.AddChild(createNode(fmt.Sprintf("Completed: %s", step.CompletedOn), tcell.ColorDefault))
-
-		if len(step.ScriptCommands) > 0 {
-			cmds := createNode("Commands:", tcell.ColorLightBlue)
-			for _, cmd := range step.ScriptCommands {
-				cmds.AddChild(createNode(fmt.Sprintf("- %s", cmd.Command), tcell.ColorDefault))
-			}
-			stepNode.AddChild(cmds)
+		for _, step := range groupSteps {
+			stepNode := buildStepNode(step, createNode)
+			groupNode.AddChild(stepNode)
 		}
 
+		rootNode.AddChild(groupNode)
+	}
+
+	// Add ungrouped steps
+	for _, step := range ungrouped {
+		stepNode := buildStepNode(step, createNode)
 		rootNode.AddChild(stepNode)
 	}
 
@@ -66,8 +73,34 @@ func GenerateStepTreeView(steps []types.StepDetail, selectedPipeline types.Pipel
 		SetCurrentNode(rootNode).
 		SetGraphics(true)
 
-	tree.
-		SetBackgroundColor(tcell.ColorDefault)
+	tree.SetBackgroundColor(tcell.ColorDefault)
 
 	return tree
+}
+
+func buildStepNode(step types.StepDetail, createNode func(string, tcell.Color) *tview.TreeNode) *tview.TreeNode {
+	icon := util.GetIconForStatus(step.State.Result.Name)
+	color := util.GetColorForStatus(step.State.Result.Name)
+
+	status := fmt.Sprintf("[#%s]%s[-]", util.HexColor(color), icon)
+
+	title := fmt.Sprintf(" %s [::b]%s[-]", status, step.Name)
+	stepNode := createNode(title, tcell.ColorDefault).
+		SetReference(step).
+		SetExpanded(false)
+
+	stepNode.AddChild(createNode(fmt.Sprintf("UUID: %s", step.UUID), tcell.ColorDefault))
+	stepNode.AddChild(createNode(fmt.Sprintf("Duration: %ds", step.DurationInSeconds), tcell.ColorDefault))
+	stepNode.AddChild(createNode(fmt.Sprintf("Started: %s", step.StartedOn), tcell.ColorDefault))
+	stepNode.AddChild(createNode(fmt.Sprintf("Completed: %s", step.CompletedOn), tcell.ColorDefault))
+
+	if len(step.ScriptCommands) > 0 {
+		cmds := createNode("Commands:", tcell.ColorLightBlue)
+		for _, cmd := range step.ScriptCommands {
+			cmds.AddChild(createNode(fmt.Sprintf("- %s", cmd.Command), tcell.ColorDefault))
+		}
+		stepNode.AddChild(cmds)
+	}
+
+	return stepNode
 }
