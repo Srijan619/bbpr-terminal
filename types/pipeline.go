@@ -51,9 +51,11 @@ type Link struct {
 }
 
 type State struct {
-	Name   string `json:"name"`
-	Type   string `json:"type"`
-	Result Result `json:"result"`
+	Name   PipelineStatus `json:"name"`
+	Type   string         `json:"type"`
+	Result Result         `json:"result,omitempty"`
+	State  Result         `json:"state,omitempty`
+	// it is either result or state
 }
 
 type Result struct {

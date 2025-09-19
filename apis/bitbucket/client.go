@@ -267,10 +267,21 @@ func buildStateFilter() string {
 func FetchPipelinesByQuery(query string) ([]types.PipelineResponse, types.Pagination) {
 	client := createClient()
 
-	url := fmt.Sprintf("%s/repositories/%s/%s/pipelines",
+	baseURL := fmt.Sprintf("%s/repositories/%s/%s/pipelines",
 		BitbucketBaseURL, state.Workspace, state.Repo)
 
-	//	url = strings.ReplaceAll(url, "+", "%20") // Handle encoding quirk if needed
+	// Add default sort if not already in query
+	if !strings.Contains(query, "sort=") {
+		if len(query) > 0 && !strings.HasPrefix(query, "&") {
+			query = "&" + query
+		}
+		query += "&sort=-created_on"
+	}
+
+	url := baseURL
+	if query != "" {
+		url += "?" + strings.TrimPrefix(query, "&")
+	}
 
 	log.Printf("[CLIENT] Fetching Pipelines with query... %v", url)
 
@@ -288,6 +299,8 @@ func FetchPipelinesByQuery(query string) ([]types.PipelineResponse, types.Pagina
 	}
 
 	response := resp.Result().(*types.BitbucketPipelineResponse)
+	log.Printf("[INFO] Total pipelines: %d", len(response.Values))
+
 	return response.Values, response.Pagination
 }
 

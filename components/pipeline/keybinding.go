@@ -34,6 +34,7 @@ func SetupKeyBindings() {
 		case tcell.KeyRune:
 			switch event.Rune() {
 			case 'r':
+				PopulatePipelineList(state.PipelineUIState.PipelineList)
 			}
 		}
 		// Update focus borders after focus change

@@ -23,7 +23,12 @@ func PopulatePPList(ppList *tview.Table, pps []types.PipelineResponse) {
 			shortHash = shortHash[:7]
 		}
 
+		// If status result is not ready yet then it is ongoing...
 		status := pp.State.Result.Name
+		if status == "" {
+			status = pp.State.Name
+		}
+
 		statusColor := util.GetColorForStatus(status)
 		statusIcon := util.GetIconForStatus(status)
 

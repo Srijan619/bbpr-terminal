@@ -19,22 +19,31 @@ const (
 )
 
 func PopulatePipelineList(ppList *tview.Table) *tview.Table {
-	pps, _ := bitbucket.FetchPipelinesByQuery(bitbucket.BuildQuery(""))
-	// Populate PR list
-	ui.PopulatePPList(ppList, pps)
-
 	ppList.SetBackgroundColor(tcell.ColorDefault)
 
-	// Populate pagination
-	//
-	// Add pagination below the PR list
-	log.Printf("Current pagination state..%+v", state.Pagination)
+	util.ShowPipelineLoadingSpinner(state.PipelineUIState.PipelineList, func() (interface{}, error) {
+		pps, _ := bitbucket.FetchPipelinesByQuery(bitbucket.BuildQuery(""))
+		if pps == nil {
+			log.Println("Failed to fetch pipelines, nil returned")
+			return nil, fmt.Errorf("failed to fetch pipelines")
+		}
+		return pps, nil
+	}, func(result interface{}, err error) {
+		pps, ok := result.([]types.PipelineResponse)
+		if !ok {
+			util.UpdateView(state.PipelineUIState.PipelineList, fmt.Sprintf("[red]Error: %v[-]", err))
+			return
+		}
+		// Populate PR list
+		ui.PopulatePPList(ppList, pps)
 
-	ppList.SetSelectedFunc(func(row, column int) {
-		go func() {
-			HandleOnPipelineSelect(pps, row)
-		}()
+		ppList.SetSelectedFunc(func(row, column int) {
+			go func() {
+				HandleOnPipelineSelect(pps, row)
+			}()
+		})
 	})
+
 	return ppList
 }
 
