@@ -16,7 +16,8 @@ type PipelineState struct {
 	MainFlexWrapper      *tview.Flex
 	PipelineListFlex     *tview.Flex
 	PipelineList         *tview.Table
-	PipelineDetails      *tview.TextView
+	PipelineSteps        *tview.Flex
+	PipelineStep         *tview.Flex
 	RightPanelHeader     *tview.TextView
 	CurrentView          tview.Primitive
 	PipelineStatusFilter *tview.Flex
@@ -34,7 +35,8 @@ func InitializePipelineViews(
 	app *tview.Application,
 	mainFlexWrapper, pipelineListFlex *tview.Flex,
 	pipelineList *tview.Table,
-	pipelineDetails, rightPanelHeader *tview.TextView,
+	pipelineSteps *tview.Flex,
+	pipelineStep *tview.Flex,
 	pipelineStatusFilter, paginationFlex *tview.Flex,
 	pipelineSearchBar *tview.InputField,
 ) {
@@ -43,8 +45,8 @@ func InitializePipelineViews(
 		MainFlexWrapper:      mainFlexWrapper,
 		PipelineListFlex:     pipelineListFlex,
 		PipelineList:         pipelineList,
-		PipelineDetails:      pipelineDetails,
-		RightPanelHeader:     rightPanelHeader,
+		PipelineSteps:        pipelineSteps,
+		PipelineStep:         pipelineStep,
 		PipelineStatusFilter: pipelineStatusFilter,
 		PaginationFlex:       paginationFlex,
 		PipelineSearchBar:    pipelineSearchBar,

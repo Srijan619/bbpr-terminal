@@ -58,20 +58,22 @@ func CreateMainAppForBBPipeline() *tview.Application {
 		AddItem(ppListFlex, 0, 15, true)
 
 		// MIDDLE
-	ppDetails := util.CreateTextviewComponent("Details [green]d|D", true)
+	steps := util.CreateFlexComponent("Steps")
+	step := util.CreateFlexComponent("Step")
 
 	middleFullFlex := tview.NewFlex().
-		SetDirection(tview.FlexRow)
+		SetDirection(tview.FlexColumn)
 	middleFullFlex.SetBackgroundColor(tcell.ColorDefault)
 
-	middleFullFlex.AddItem(ppDetails, 0, 4, false)
+	middleFullFlex.AddItem(steps, 0, 2, false)
+	middleFullFlex.AddItem(step, 0, 4, false)
 
 	mainFlexWrapper := tview.NewFlex()
 	mainFlexWrapper.SetBackgroundColor(tcell.ColorDefault)
 	mainFlexWrapper.AddItem(leftFullFlex, 0, 1, true).
 		AddItem(middleFullFlex, 0, 3, false)
 
-	state.InitializePipelineViews(app, mainFlexWrapper, ppListFlex, ppList, ppDetails, nil, nil, nil, nil)
+	state.InitializePipelineViews(app, mainFlexWrapper, ppListFlex, ppList, steps, step, nil, nil, nil)
 	pipeline.PopulatePipelineList(ppList)
 
 	app.SetRoot(mainFlexWrapper, true).EnableMouse(true)
