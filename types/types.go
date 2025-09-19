@@ -25,7 +25,7 @@ const (
 	StateDeclined         = "declined"
 )
 
-type State string
+type ApprovedState string
 
 type PR struct {
 	ID          int         `json:"id"`
@@ -52,9 +52,10 @@ type PR struct {
 }
 
 type Commit struct {
-	Hash  string `json:"hash"`
-	Links Links  `json:"links"`
-	Type  string `json:"type"`
+	Type    string      `json:"type"`
+	Hash    string      `json:"hash"`
+	Message string      `json:"message"`
+	Links   CommitLinks `json:"links"`
 }
 
 type Reviewer struct {
@@ -67,12 +68,12 @@ type Reviewer struct {
 }
 
 type Participant struct {
-	Type           string      `json:"type"`
-	User           *User       `json:"user"`
-	Role           string      `json:"role"`
-	Approved       bool        `json:"approved"`
-	State          State       `json:"state"`
-	ParticipatedOn interface{} `json:"participated_on"`
+	Type           string        `json:"type"`
+	User           *User         `json:"user"`
+	Role           string        `json:"role"`
+	Approved       bool          `json:"approved"`
+	State          ApprovedState `json:"state"`
+	ParticipatedOn interface{}   `json:"participated_on"`
 }
 
 type Activity struct {

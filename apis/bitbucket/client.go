@@ -262,3 +262,70 @@ func buildStateFilter() string {
 
 	return ""
 }
+
+// Pipelines
+func FetchPipelinesByQuery(query string) ([]types.PipelineResponse, types.Pagination) {
+	client := createClient()
+
+	baseURL := fmt.Sprintf("%s/repositories/%s/%s/pipelines",
+		BitbucketBaseURL, state.Workspace, state.Repo)
+
+	// Add default sort if not already in query
+	if !strings.Contains(query, "sort=") {
+		if len(query) > 0 && !strings.HasPrefix(query, "&") {
+			query = "&" + query
+		}
+		query += "&sort=-created_on"
+	}
+
+	url := baseURL
+	if query != "" {
+		url += "?" + strings.TrimPrefix(query, "&")
+	}
+
+	log.Printf("[CLIENT] Fetching Pipelines with query... %v", url)
+
+	resp, err := client.R().
+		SetResult(&types.BitbucketPipelineResponse{}).
+		Get(url)
+	if err != nil {
+		log.Fatalf("Error fetching pipelines: %v", err)
+		return nil, types.Pagination{}
+	}
+
+	if resp.StatusCode() != 200 {
+		log.Fatalf("Unexpected status code: %d. Response body: %s", resp.StatusCode(), string(resp.Body()))
+		return nil, types.Pagination{}
+	}
+
+	response := resp.Result().(*types.BitbucketPipelineResponse)
+	log.Printf("[INFO] Total pipelines: %d", len(response.Values))
+
+	return response.Values, response.Pagination
+}
+
+func FetchPipelineSteps(pipelineUUID string) []types.StepDetail {
+	client := createClient()
+
+	url := fmt.Sprintf("%s/repositories/%s/%s/pipelines/%s/steps",
+		BitbucketBaseURL, state.Workspace, state.Repo, pipelineUUID)
+
+	log.Printf("[CLIENT] Fetching steps for pipeline UUID: %s", pipelineUUID)
+
+	resp, err := client.R().
+		SetResult(&types.BitbucketStepsResponse{}). // You need this type (see below)
+		Get(url)
+	if err != nil {
+		log.Printf("[ERROR] Failed to fetch pipeline steps: %v", err)
+		return nil
+	}
+
+	if resp.StatusCode() != 200 {
+		log.Printf("[ERROR] Unexpected status code: %d\nBody: %s", resp.StatusCode(), string(resp.Body()))
+		return nil
+	}
+
+	result := resp.Result().(*types.BitbucketStepsResponse)
+	log.Printf("[INFO] Successfully fetched %d steps", len(result.Values))
+	return result.Values
+}
