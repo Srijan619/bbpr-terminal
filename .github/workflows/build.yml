@@ -36,17 +36,17 @@ jobs:
       # Build for multiple platforms
       - name: Build for multiple platforms
         run: |
-          GOOS=linux GOARCH=amd64 go build -o bbpr-linux-amd64 .
-          GOOS=darwin GOARCH=amd64 go build -o bbpr-darwin-amd64 .
-          GOOS=windows GOARCH=amd64 go build -o bbpr-windows-amd64.exe .
+          GOOS=linux GOARCH=amd64 go build -o bb-linux-amd64 .
+          GOOS=darwin GOARCH=amd64 go build -o bb-darwin-amd64 .
+          GOOS=windows GOARCH=amd64 go build -o bb-windows-amd64.exe .
 
       # Create a release and upload assets
       - name: Create GitHub Release and Upload Assets
         uses: softprops/action-gh-release@v1
         with:
           files: |
-            bbpr-linux-amd64
-            bbpr-darwin-amd64
-            bbpr-windows-amd64.exe
+            bb-linux-amd64
+            bb-darwin-amd64
+            bb-windows-amd64.exe
         env:
           GITHUB_TOKEN: ${{ secrets.BBPR_GITHUB_TOKEN }}
