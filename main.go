@@ -1,17 +1,28 @@
 package main
 
 import (
+	"flag"
 	"fmt"
 	"log"
 	"os"
+
+	"github.com/rivo/tview"
 )
 
 var (
+	mode      string
 	workspace string
 	repoSlug  string
 )
 
+func init() {
+	flag.StringVar(&mode, "mode", "pr", "Mode of the app: 'pipeline' or 'pr'")
+}
+
 func main() {
+	// Parse flags
+	flag.Parse()
+
 	// Open or create the log file
 	file, err := os.OpenFile("debug.log", os.O_CREATE|os.O_WRONLY|os.O_APPEND, 0666)
 	if err != nil {
@@ -20,19 +31,21 @@ func main() {
 	}
 	defer file.Close()
 
-	// Set log output to the file
 	log.SetOutput(file)
-	// Optionally add log flags (e.g., timestamp)
 	log.SetFlags(log.Ldate | log.Ltime | log.Lshortfile)
+	log.Printf("Application started in mode: %s", mode)
 
-	// Log a test message to verify
-	log.Printf("Application started")
-	// app := CreateMainApp()
+	var app *tview.Application
 
-	app := CreateMainAppForBBPipeline()
-	// app.SetRoot(mainUi, true).EnableMouse(true)
-	//	app := CreateApp()
-	// app := tview.NewApplication().SetRoot(pr.GenerateDiffStatTree(pr.STATIC_DATA), true)
+	switch mode {
+	case "pr":
+		app = CreateMainApp()
+	case "pipeline":
+		app = CreateMainAppForBBPipeline()
+	default:
+		log.Fatalf("Unknown mode: %s. Use 'pipeline' or 'pr'", mode)
+	}
+
 	if err := app.Run(); err != nil {
 		log.Fatalf("Error running application: %v", err)
 	}
