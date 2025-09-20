@@ -13,11 +13,6 @@ import (
 	"github.com/rivo/tview"
 )
 
-const (
-	ICON_LOADING    = "\uea75 "
-	ICON_SIDE_ARROW = "\u21AA "
-)
-
 func PopulatePipelineList(ppList *tview.Table) *tview.Table {
 	ppList.SetBackgroundColor(tcell.ColorDefault)
 

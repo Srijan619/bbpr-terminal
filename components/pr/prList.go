@@ -3,17 +3,12 @@ package pr
 import (
 	"fmt"
 	"log"
-
-	"github.com/rivo/tview"
 	"simple-git-terminal/apis/bitbucket"
 	"simple-git-terminal/state"
 	"simple-git-terminal/types"
 	"simple-git-terminal/util"
-)
 
-const (
-	ICON_LOADING    = "\uea75 "
-	ICON_SIDE_ARROW = "\u21AA "
+	"github.com/rivo/tview"
 )
 
 func PopulatePRList(prList *tview.Table) *tview.Table {
@@ -45,7 +40,7 @@ func PopulatePRList(prList *tview.Table) *tview.Table {
 	})
 
 	prList.SetSelectionChangedFunc(func(row, column int) {
-		//HandleOnPrSelect(prs, row) TODO: It will be really laggy to allow selection update PR as user might navigate up and down fast...maybe need some debouncing?
+		// HandleOnPrSelect(prs, row) TODO: It will be really laggy to allow selection update PR as user might navigate up and down fast...maybe need some debouncing?
 	})
 
 	return prList
@@ -69,7 +64,7 @@ func HandleOnPrSelect(prs []types.PR, row int) {
 func formatPRHeaderBranch(pr types.PR) string {
 	// Use fmt.Sprintf to format the header and apply tview's dynamic color syntax
 	headerText := fmt.Sprintf(
-		"[yellow]%s[white] "+ICON_SIDE_ARROW+
+		"[yellow]%s[white] "+util.ICON_SIDE_ARROW+
 			"[green]%s",
 		pr.Source.Branch.Name,
 		pr.Destination.Branch.Name,

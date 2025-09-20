@@ -12,18 +12,19 @@ import (
 
 // PipelineState holds the global state for the pipeline UI.
 type PipelineState struct {
-	App                    *tview.Application
-	MainFlexWrapper        *tview.Flex
-	PipelineListFlex       *tview.Flex
-	PipelineList           *tview.Table
-	PipelineStepsDebugView *tview.Flex
-	PipelineSteps          *tview.Flex
-	PipelineStep           *tview.Flex
-	RightPanelHeader       *tview.TextView
-	CurrentView            tview.Primitive
-	PipelineStatusFilter   *tview.Flex
-	PipelineSearchBar      *tview.InputField
-	PaginationFlex         *tview.Flex
+	App                        *tview.Application
+	MainFlexWrapper            *tview.Flex
+	PipelineListFlex           *tview.Flex
+	PipelineList               *tview.Table
+	PipelineStepsDebugView     *tview.Flex
+	PipelineSteps              *tview.Flex
+	PipelineStep               *tview.Flex
+	PipelineStepCommandLogView *tview.Flex
+	RightPanelHeader           *tview.TextView
+	CurrentView                tview.Primitive
+	PipelineStatusFilter       *tview.Flex
+	PipelineSearchBar          *tview.InputField
+	PaginationFlex             *tview.Flex
 
 	SelectedPipeline  *types.PipelineResponse
 	FilteredPipelines *[]types.PipelineResponse
@@ -39,20 +40,22 @@ func InitializePipelineViews(
 	pipelineStepsDebugView *tview.Flex,
 	pipelineSteps *tview.Flex,
 	pipelineStep *tview.Flex,
+	pipelineStepCommandLogView *tview.Flex,
 	pipelineStatusFilter, paginationFlex *tview.Flex,
 	pipelineSearchBar *tview.InputField,
 ) {
 	PipelineUIState = &PipelineState{
-		App:                    app,
-		MainFlexWrapper:        mainFlexWrapper,
-		PipelineListFlex:       pipelineListFlex,
-		PipelineList:           pipelineList,
-		PipelineStepsDebugView: pipelineStepsDebugView,
-		PipelineSteps:          pipelineSteps,
-		PipelineStep:           pipelineStep,
-		PipelineStatusFilter:   pipelineStatusFilter,
-		PaginationFlex:         paginationFlex,
-		PipelineSearchBar:      pipelineSearchBar,
+		App:                        app,
+		MainFlexWrapper:            mainFlexWrapper,
+		PipelineListFlex:           pipelineListFlex,
+		PipelineList:               pipelineList,
+		PipelineStepsDebugView:     pipelineStepsDebugView,
+		PipelineSteps:              pipelineSteps,
+		PipelineStep:               pipelineStep,
+		PipelineStepCommandLogView: pipelineStepCommandLogView,
+		PipelineStatusFilter:       pipelineStatusFilter,
+		PaginationFlex:             paginationFlex,
+		PipelineSearchBar:          pipelineSearchBar,
 	}
 }
 
