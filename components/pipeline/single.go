@@ -34,7 +34,7 @@ func GenerateStepView(steps []types.StepDetail, selectedPipeline types.PipelineR
 			colorHex := util.HexColor(color)
 
 			barColor = color
-			text := fmt.Sprintf("[#%s:-]%s[-:-] %s", colorHex, icon, step.Name)
+			text := fmt.Sprintf(" [#%s:-]%s[-:-] %s", colorHex, icon, step.Name)
 			cell := util.CellFormat(text, color)
 			stepTable.SetCell(i, 0, cell)
 		}

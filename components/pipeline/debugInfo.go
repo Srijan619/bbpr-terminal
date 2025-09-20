@@ -6,6 +6,7 @@ import (
 	"simple-git-terminal/util"
 	"strings"
 
+	"github.com/gdamore/tcell/v2"
 	"github.com/rivo/tview"
 )
 
@@ -37,7 +38,8 @@ func GeneratePPDebugInfo(pipeline types.PipelineResponse) *tview.TextView {
 	sb.WriteString(fmt.Sprintf("[::b]Name       :[-] %s\n", pipeline.Target.RefName))
 	sb.WriteString(fmt.Sprintf("[::b]Commit     :[-] %s\n", pipeline.Target.Commit.Hash))
 
-	textView.SetText(sb.String())
+	textView.
+		SetText(sb.String()).SetTextColor(tcell.ColorDarkGray)
 
 	return textView
 }
