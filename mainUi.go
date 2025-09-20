@@ -2,15 +2,16 @@ package main
 
 import (
 	"fmt"
-	"github.com/gdamore/tcell/v2"
-	"github.com/rivo/tview"
 	"log"
-
 	"simple-git-terminal/apis/bitbucket"
 	"simple-git-terminal/components/pr"
 	"simple-git-terminal/custom/borders"
 	"simple-git-terminal/state"
+	"simple-git-terminal/support"
 	"simple-git-terminal/util"
+
+	"github.com/gdamore/tcell/v2"
+	"github.com/rivo/tview"
 )
 
 func CreateMainApp() *tview.Application {
@@ -30,25 +31,25 @@ func CreateMainApp() *tview.Application {
 	state.SetWorkspaceRepo(workspace, repoSlug)
 	util.InitMdRenderer() // Markdown renderer takes time, so init it beforehand
 
-	//LEFT
+	// LEFT
 
 	// PR Status Filter UI
-	prStatusFilterFlex := util.CreateFlexComponent("Filters")
+	prStatusFilterFlex := support.CreateFlexComponent("Filters")
 	prStatusFilterFlex.AddItem(pr.CreatePRStatusFilterView(), 0, 1, false)
 
 	// PR LIST UI
-	prListFlex := util.CreateFlexComponent("Pull Requests   [green]p|P").
+	prListFlex := support.CreateFlexComponent("Pull Requests   [green]p|P").
 		SetDirection(tview.FlexRow)
 
 	prList := tview.NewTable().
 		SetSelectable(true, false).
 		SetFixed(1, 0)
 
-	paginationFlex := util.CreateFlexComponent("")
+	paginationFlex := support.CreateFlexComponent("")
 
 	prList.SetBackgroundColor(tcell.ColorDefault)
 
-	prListSearchBar := util.CreateInputFieldComponent("  Search PR [green]s", " type something....")
+	prListSearchBar := support.CreateInputFieldComponent("  Search PR [green]s", " type something....")
 
 	prListFlex.
 		AddItem(prList, 0, 1, true)
@@ -64,11 +65,11 @@ func CreateMainApp() *tview.Application {
 
 		// Description and Activity
 
-	activityDetails := util.CreateFlexComponent("Activities [green]a|A")
+	activityDetails := support.CreateFlexComponent("Activities [green]a|A")
 
 	// MIDDLE
-	rightPanelHeader := util.CreateTextviewComponent("", true)
-	prDetails := util.CreateTextviewComponent("Description [green]d|D", true)
+	rightPanelHeader := support.CreateTextviewComponent("", true)
+	prDetails := support.CreateTextviewComponent("Description [green]d|D", true)
 
 	middleFullFlex := tview.NewFlex().
 		SetDirection(tview.FlexRow)
@@ -78,10 +79,10 @@ func CreateMainApp() *tview.Application {
 		AddItem(prDetails, 0, 4, false).
 		AddItem(activityDetails, 0, 14, false)
 
-		//RIGHT
+		// RIGHT
 
-	diffStatDetails := util.CreateFlexComponent("Diff Tree [green]t|T")
-	diffDetails := util.CreateFlexComponent("Diff Content [green]c|C")
+	diffStatDetails := support.CreateFlexComponent("Diff Tree [green]t|T")
+	diffDetails := support.CreateFlexComponent("Diff Content [green]c|C")
 
 	rightFullFlex := tview.NewFlex()
 
@@ -99,7 +100,7 @@ func CreateMainApp() *tview.Application {
 	pr.PopulatePRList(prList)
 
 	// Key Bindings
-	util.SetupKeyBindings(func() {
+	pr.SetupKeyBindings(func() {
 		updateFilter() // TODO: We can do this better in organizing
 	})
 
@@ -110,5 +111,5 @@ func CreateMainApp() *tview.Application {
 
 func updateFilter() {
 	view := pr.CreatePRStatusFilterView()
-	util.UpdatePRStatusFilterView(view)
+	pr.UpdatePRStatusFilterView(view)
 }

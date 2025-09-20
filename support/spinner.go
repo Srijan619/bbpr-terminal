@@ -1,4 +1,4 @@
-package util
+package support
 
 import (
 	"simple-git-terminal/state"

@@ -2,14 +2,14 @@ package pr
 
 import (
 	"fmt"
+	"simple-git-terminal/support"
+	"simple-git-terminal/types"
+	"simple-git-terminal/util"
 	"sort"
 	"strings"
 	"time"
 
 	"github.com/rivo/tview"
-
-	"simple-git-terminal/types"
-	"simple-git-terminal/util"
 )
 
 const (
@@ -24,7 +24,7 @@ const (
 // CreateActivitiesView generates the UI for displaying PR activities in a TextView.
 func CreateActivitiesView(activities []types.Activity) *tview.Flex {
 	// Create a TextView for displaying activity details
-	activityDetails := util.CreateTextviewComponent("", false).SetText(GenerateActivityLogs(activities))
+	activityDetails := support.CreateTextviewComponent("", false).SetText(GenerateActivityLogs(activities))
 
 	// Layout to return
 	layout := tview.NewFlex().
@@ -61,7 +61,7 @@ func GenerateActivityLogs(activities []types.Activity) string {
 		timeI, errI := time.Parse(time.RFC3339, activities[i].Update.Date)
 		timeJ, errJ := time.Parse(time.RFC3339, activities[j].Update.Date)
 		if errI != nil || errJ != nil {
-			//log.Println("Error parsing dates:", errI, errJ)
+			// log.Println("Error parsing dates:", errI, errJ)
 			return false
 		}
 		return timeI.Before(timeJ)

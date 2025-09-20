@@ -1,5 +1,7 @@
 package types
 
+import "github.com/rivo/tview"
+
 type BitbucketPipelineResponse struct {
 	Values []PipelineResponse `json:"values"`
 	Pagination
@@ -96,4 +98,11 @@ func (s PipelineStatus) NotRun() bool     { return s == NotRun }
 func (s PipelineStatus) Unknown() bool    { return s == StatusUnknown }
 func (s PipelineStatus) NeedsTracking() bool {
 	return s.InProgress() || s.Running() || s.Pending()
+}
+
+// UI
+type PipelineTable struct {
+	*tview.Table
+	pipelines   []PipelineResponse
+	selectedRow int
 }

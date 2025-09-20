@@ -2,14 +2,16 @@ package pr
 
 import (
 	"fmt"
-	"github.com/gdamore/tcell/v2"
-	"github.com/rivo/tview"
 	"simple-git-terminal/apis/bitbucket"
 	"simple-git-terminal/state"
+	"simple-git-terminal/support"
 	"simple-git-terminal/types"
 	"simple-git-terminal/util"
 	"strings"
 	"time"
+
+	"github.com/gdamore/tcell/v2"
+	"github.com/rivo/tview"
 )
 
 const (
@@ -64,7 +66,7 @@ func GenerateDiffStatTree(data []types.DiffstatEntry) *tview.TreeView {
 	createPathTree := func(target *tview.TreeNode, fullPath, diffStatText string) {
 		// Split the path into directories (except the last part which is a file)
 		parts := strings.Split(fullPath, "/")
-		var currentNode = target
+		currentNode := target
 
 		for i, part := range parts {
 			// Check if this is the last part (file)
@@ -159,21 +161,21 @@ func OpenFileSpecificDiff(node *tview.TreeNode, fullScreen bool) {
 		if ok && !nodeRef.IsDir {
 
 			// Use the spinner utility for asynchronous fetch
-			util.ShowLoadingSpinner(state.GlobalState.DiffDetails, func() (interface{}, error) {
+			support.ShowLoadingSpinner(state.GlobalState.DiffDetails, func() (interface{}, error) {
 				return bitbucket.FetchBitbucketDiffContent(state.GlobalState.SelectedPR.ID, nodeRef.Path)
 			}, func(result interface{}, err error) {
 				if err != nil {
-					util.UpdateDiffDetailsView(err.Error())
+					UpdateDiffDetailsView(err.Error())
 				} else {
 					result, ok := result.(string)
 					if !ok {
-						util.UpdateActivityView("[red]Failed to cast diff details[-]")
+						UpdateActivityView("[red]Failed to cast diff details[-]")
 						return
 					}
 					// Retrieve inline comments for the file and add comment markers to lines
 					comments := getInlineComments(*state.GlobalState.SelectedPR, nodeRef.Path)
 
-					util.UpdateDiffDetailsView(util.GenerateColorizedDiffView(result, comments))
+					UpdateDiffDetailsView(util.GenerateColorizedDiffView(result, comments))
 				}
 			})
 

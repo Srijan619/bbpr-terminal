@@ -3,6 +3,7 @@ package state
 import (
 	"log"
 	"simple-git-terminal/types"
+	"simple-git-terminal/widgets"
 	"strings"
 
 	"github.com/rivo/tview"
@@ -15,7 +16,7 @@ type PipelineState struct {
 	App                        *tview.Application
 	MainFlexWrapper            *tview.Flex
 	PipelineListFlex           *tview.Flex
-	PipelineList               *tview.Table
+	PipelineList               *widgets.PipelineTable
 	PipelineStepsDebugView     *tview.Flex
 	PipelineSteps              *tview.Flex
 	PipelineStep               *tview.Flex
@@ -37,7 +38,7 @@ var PipelineUIState *PipelineState
 func InitializePipelineViews(
 	app *tview.Application,
 	mainFlexWrapper, pipelineListFlex *tview.Flex,
-	pipelineList *tview.Table,
+	pipelineList *widgets.PipelineTable,
 	pipelineStepsDebugView *tview.Flex,
 	pipelineSteps *tview.Flex,
 	pipelineStep *tview.Flex,
@@ -83,6 +84,10 @@ func InitializePipelineStatusFilter(filter *PipelineStatusFilterType) {
 		}
 	}
 	PipelineStatusFilter = filter
+}
+
+func SetSelectedPipeline(pipeline *types.PipelineResponse) {
+	PipelineUIState.SelectedPipeline = pipeline
 }
 
 func updatePipelineListViewWithFreshFetch() {

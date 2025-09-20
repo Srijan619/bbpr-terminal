@@ -1,11 +1,11 @@
 package pr
 
 import (
+	"simple-git-terminal/state"
+	"simple-git-terminal/support"
+
 	"github.com/gdamore/tcell/v2"
 	"github.com/rivo/tview"
-
-	"simple-git-terminal/state"
-	"simple-git-terminal/util"
 )
 
 func CreatePRStatusFilterView() *tview.Flex {
@@ -15,24 +15,24 @@ func CreatePRStatusFilterView() *tview.Flex {
 	}
 
 	checkboxes := []*tview.Checkbox{
-		util.CreateCheckBoxComponent("Open (o) ", func(checked bool) {
-			util.UpdatePRListWithFilter("open", checked)
+		support.CreateCheckBoxComponent("Open (o) ", func(checked bool) {
+			UpdatePRListWithFilter("open", checked)
 		}).SetChecked(state.PRStatusFilter.Open),
 
-		util.CreateCheckBoxComponent("Merged (m) ", func(checked bool) {
-			util.UpdatePRListWithFilter("merged", checked)
+		support.CreateCheckBoxComponent("Merged (m) ", func(checked bool) {
+			UpdatePRListWithFilter("merged", checked)
 		}).SetChecked(state.PRStatusFilter.Merged),
 
-		util.CreateCheckBoxComponent("Declined (r) ", func(checked bool) {
-			util.UpdatePRListWithFilter("declined", checked)
+		support.CreateCheckBoxComponent("Declined (r) ", func(checked bool) {
+			UpdatePRListWithFilter("declined", checked)
 		}).SetChecked(state.PRStatusFilter.Declined),
 
-		util.CreateCheckBoxComponent("I'm Author (I) ", func(checked bool) {
-			util.UpdatePRListWithFilter("iamauthor", checked)
+		support.CreateCheckBoxComponent("I'm Author (I) ", func(checked bool) {
+			UpdatePRListWithFilter("iamauthor", checked)
 		}).SetChecked(state.PRStatusFilter.IAmAuthor),
 
-		util.CreateCheckBoxComponent("I'm Reviewer (i) ", func(checked bool) {
-			util.UpdatePRListWithFilter("iamreviewer", checked)
+		support.CreateCheckBoxComponent("I'm Reviewer (i) ", func(checked bool) {
+			UpdatePRListWithFilter("iamreviewer", checked)
 		}).SetChecked(state.PRStatusFilter.IAmReviewer),
 	}
 

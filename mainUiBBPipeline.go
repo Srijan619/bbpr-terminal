@@ -8,7 +8,9 @@ import (
 	"simple-git-terminal/components/pr"
 	"simple-git-terminal/custom/borders"
 	"simple-git-terminal/state"
+	"simple-git-terminal/support"
 	"simple-git-terminal/util"
+	"simple-git-terminal/widgets"
 
 	"github.com/gdamore/tcell/v2"
 	"github.com/rivo/tview"
@@ -34,17 +36,14 @@ func CreateMainAppForBBPipeline() *tview.Application {
 	// LEFT
 
 	// Pipeline Status Filter UI
-	ppStatusFilterFlex := util.CreateFlexComponent("Filters")
+	ppStatusFilterFlex := support.CreateFlexComponent("Filters")
 	ppStatusFilterFlex.AddItem(pr.CreatePRStatusFilterView(), 0, 1, false)
 
 	// Pipelines LIST UI
-	ppListFlex := util.CreateFlexComponent("Pipelines [green]p|P").
+	ppListFlex := support.CreateFlexComponent("Pipelines [green]p|P").
 		SetDirection(tview.FlexRow)
 
-	ppList := tview.NewTable().
-		SetSelectable(true, false).
-		SetFixed(1, 0)
-
+	ppList := widgets.NewPipelineTable()
 	ppListFlex.SetBackgroundColor(tcell.ColorDefault)
 
 	ppListFlex.
@@ -61,22 +60,22 @@ func CreateMainAppForBBPipeline() *tview.Application {
 	stepsWrapper := tview.NewFlex()
 	stepsWrapper.SetDirection(tview.FlexRow).SetBackgroundColor(tcell.ColorDefault)
 
-	debugView := util.CreateFlexComponent("Debug Info")
-	steps := util.CreateFlexComponent("Steps Info")
+	debugView := support.CreateFlexComponent("Debug Info")
+	steps := support.CreateFlexComponent("Steps Info")
 	steps.SetBackgroundColor(tcell.ColorDefault)
 
-	stepCommandsView := util.CreateFlexComponent("Script Commands")
+	stepCommandsView := support.CreateFlexComponent("Script Commands")
 	stepsWrapper.
 		AddItem(debugView, 0, 2, true).
-		AddItem(steps, 0, 1, true).
+		AddItem(steps, 0, 2, true).
 		AddItem(stepCommandsView, 0, 4, true)
 
 		// Right
 	stepWrapper := tview.NewFlex()
 	stepWrapper.SetDirection(tview.FlexRow).SetBackgroundColor(tcell.ColorDefault)
 
-	step := util.CreateFlexComponent("Individual Step")
-	stepCommandLogView := util.CreateFlexComponent("Step Command")
+	step := support.CreateFlexComponent("Individual Step")
+	stepCommandLogView := support.CreateFlexComponent("Step Command")
 
 	stepWrapper.
 		AddItem(step, 0, 1, true).
@@ -95,7 +94,7 @@ func CreateMainAppForBBPipeline() *tview.Application {
 		AddItem(middleFullFlex, 0, 3, false)
 
 	state.InitializePipelineViews(app, mainFlexWrapper, ppListFlex, ppList, debugView, steps, step, stepCommandsView, stepCommandLogView, nil, nil, nil)
-	pipeline.PopulatePipelineList(ppList)
+	pipeline.PopulatePipelineList()
 
 	pipeline.SetupKeyBindings()
 	app.SetRoot(mainFlexWrapper, true).EnableMouse(true)

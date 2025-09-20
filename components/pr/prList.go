@@ -4,38 +4,40 @@ import (
 	"fmt"
 	"log"
 	"simple-git-terminal/apis/bitbucket"
+	"simple-git-terminal/components/shared"
+	"simple-git-terminal/constants"
 	"simple-git-terminal/state"
+	"simple-git-terminal/support"
 	"simple-git-terminal/types"
-	"simple-git-terminal/util"
 
 	"github.com/rivo/tview"
 )
 
 func PopulatePRList(prList *tview.Table) *tview.Table {
-	util.UpdateFilteredPRs()
+	UpdateFilteredPRs()
 	prs := *state.GlobalState.FilteredPRs
 	if len(prs) > 0 {
 		prList.Select(0, 0)
 		HandleOnPrSelect(prs, 0)
 	}
 	// Populate PR list
-	util.PopulatePRList(prList, prs)
+	//	PopulatePRList(prList, prs)
 
 	// Populate pagination
 	//
 	// Add pagination below the PR list
 	log.Printf("Current pagination state..%+v", state.Pagination)
 
-	pagination := util.NewPaginationComponent(state.Pagination.Page)
+	pagination := shared.NewPaginationComponent(state.Pagination.Page)
 	// Initial render (first-time view)
-	util.UpdateView(state.GlobalState.PaginationFlex, pagination)
+	support.UpdateView(state.GlobalState.PaginationFlex, pagination)
 
 	// Add a selection function that updates PR details when a PR is selected
 	prList.SetSelectedFunc(func(row, column int) {
 		go func() {
 			prs := *state.GlobalState.FilteredPRs // use updated prs inside routine
 			HandleOnPrSelect(prs, row)
-			util.ShowSpinnerFetchPRsByQueryAndUpdatePrList()
+			ShowSpinnerFetchPRsByQueryAndUpdatePrList()
 		}()
 	})
 
@@ -64,7 +66,7 @@ func HandleOnPrSelect(prs []types.PR, row int) {
 func formatPRHeaderBranch(pr types.PR) string {
 	// Use fmt.Sprintf to format the header and apply tview's dynamic color syntax
 	headerText := fmt.Sprintf(
-		"[yellow]%s[white] "+util.ICON_SIDE_ARROW+
+		"[yellow]%s[white] "+constants.ICON_SIDE_ARROW+
 			"[green]%s",
 		pr.Source.Branch.Name,
 		pr.Destination.Branch.Name,
@@ -84,7 +86,7 @@ func handleNormalPRSelect(prs []types.PR, row int) {
 			state.GlobalState.RightPanelHeader.SetText(state.GlobalState.SelectedPR.Title)
 
 			// Show loading spinner for PR details
-			util.ShowLoadingSpinner(state.GlobalState.PrDetails, func() (interface{}, error) {
+			support.ShowLoadingSpinner(state.GlobalState.PrDetails, func() (interface{}, error) {
 				singlePR := bitbucket.FetchPR(prs[row].ID)
 				if singlePR == nil {
 					return nil, fmt.Errorf("Failed to fetch PR details")
@@ -92,20 +94,20 @@ func handleNormalPRSelect(prs []types.PR, row int) {
 				return singlePR, nil
 			}, func(result interface{}, err error) {
 				if err != nil {
-					util.UpdatePRDetailView(fmt.Sprintf("[red]Error: %v[-]", err))
+					UpdatePRDetailView(fmt.Sprintf("[red]Error: %v[-]", err))
 				} else {
 					// Assert result as the correct type: *types.PR
 					pr, ok := result.(*types.PR)
 					if !ok {
-						util.UpdatePRDetailView("[red]Failed to cast PR details[-]")
+						UpdatePRDetailView("[red]Failed to cast PR details[-]")
 						return
 					}
-					util.UpdatePRDetailView(GeneratePRDetail(pr))
+					UpdatePRDetailView(GeneratePRDetail(pr))
 				}
 			})
 
 			// Show loading spinner for activities
-			util.ShowLoadingSpinner(state.GlobalState.ActivityView, func() (interface{}, error) {
+			support.ShowLoadingSpinner(state.GlobalState.ActivityView, func() (interface{}, error) {
 				// Fetch activities
 				prActivities := bitbucket.FetchBitbucketActivities(state.GlobalState.SelectedPR.ID)
 				if prActivities == nil {
@@ -114,20 +116,20 @@ func handleNormalPRSelect(prs []types.PR, row int) {
 				return prActivities, nil
 			}, func(result interface{}, err error) {
 				if err != nil {
-					util.UpdateActivityView(err.Error())
+					UpdateActivityView(err.Error())
 				} else {
 					// Assert result as a slice of Activity
 					activities, ok := result.([]types.Activity)
 					if !ok {
-						util.UpdateActivityView("[red]Failed to cast activities[-]")
+						UpdateActivityView("[red]Failed to cast activities[-]")
 						return
 					}
-					util.UpdateActivityView(CreateActivitiesView(activities))
+					UpdateActivityView(CreateActivitiesView(activities))
 				}
 			})
 
 			// Show loading spinner for diff stats
-			util.ShowLoadingSpinner(state.GlobalState.DiffStatView, func() (interface{}, error) {
+			support.ShowLoadingSpinner(state.GlobalState.DiffStatView, func() (interface{}, error) {
 				// Fetch diff stats
 				diffStatData := bitbucket.FetchBitbucketDiffstat(state.GlobalState.SelectedPR.ID)
 				if diffStatData == nil {
@@ -136,20 +138,20 @@ func handleNormalPRSelect(prs []types.PR, row int) {
 				return diffStatData, nil
 			}, func(result interface{}, err error) {
 				if err != nil {
-					util.UpdateDiffStatView(err.Error())
+					UpdateDiffStatView(err.Error())
 				} else {
 					// Assert result as string
 					diffStat, ok := result.([]types.DiffstatEntry)
 					if !ok {
-						util.UpdateDiffStatView("[red]Failed to cast diff stats[-]")
+						UpdateDiffStatView("[red]Failed to cast diff stats[-]")
 						return
 					}
-					util.UpdateDiffStatView(GenerateDiffStatTree(diffStat))
+					UpdateDiffStatView(GenerateDiffStatTree(diffStat))
 				}
 			})
 
 			// Optionally, set a default message in the diff details view while fetching
-			util.UpdateDiffDetailsView("Hover over to a file for quick preview OR Select a file to see diff in full screen")
+			UpdateDiffDetailsView("Hover over to a file for quick preview OR Select a file to see diff in full screen")
 		}()
 	}
 }

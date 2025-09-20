@@ -4,7 +4,9 @@ import (
 	"fmt"
 	"log"
 	"simple-git-terminal/apis/bitbucket"
+	"simple-git-terminal/constants"
 	"simple-git-terminal/state"
+	"simple-git-terminal/support"
 	"simple-git-terminal/types"
 	"simple-git-terminal/util"
 	"strings"
@@ -15,7 +17,7 @@ import (
 
 func GenerateStepView(step types.StepDetail, selectedPipeline types.PipelineResponse) tview.Primitive {
 	// ─── TEXT VIEW: Metadata ─────────────────────────────────────────────
-	textView := util.CreateTextviewComponent("Step Details", false)
+	textView := support.CreateTextviewComponent("Step Details", false)
 
 	var sb strings.Builder
 
@@ -34,7 +36,7 @@ func GenerateStepView(step types.StepDetail, selectedPipeline types.PipelineResp
 	if len(step.SetupCommands) > 0 {
 		sb.WriteString("\n[::b]🔧 Setup Commands:[-]\n")
 		for _, cmd := range step.SetupCommands {
-			sb.WriteString(fmt.Sprintf("  %s [::b]%s\n", util.ICON_SIDE_ARROW, cmd.Name))
+			sb.WriteString(fmt.Sprintf("  %s [::b]%s\n", constants.ICON_SIDE_ARROW, cmd.Name))
 		}
 	}
 
@@ -49,7 +51,7 @@ func GenerateStepView(step types.StepDetail, selectedPipeline types.PipelineResp
 		SetBackgroundColor(tcell.ColorDefault)
 
 	for i, cmd := range step.ScriptCommands {
-		cmdText := fmt.Sprintf("%s [::b]%s", util.ICON_SIDE_ARROW, cmd.Name)
+		cmdText := fmt.Sprintf("%s [::b]%s", constants.ICON_SIDE_ARROW, cmd.Name)
 		scriptTable.SetCell(i, 0, util.CellFormat(cmdText, tcell.ColorWhite))
 	}
 
@@ -72,7 +74,7 @@ func GenerateStepView(step types.StepDetail, selectedPipeline types.PipelineResp
 	scriptTable.SetSelectedStyle(tcell.StyleDefault.Foreground(tcell.ColorDarkOrange))
 
 	// script table goes into its own view
-	util.UpdateView(state.PipelineUIState.PipelineStepCommandsView, scriptTable)
+	support.UpdateView(state.PipelineUIState.PipelineStepCommandsView, scriptTable)
 
 	// Select first step and fetch its command already
 	HandleOnScriptCommandSelected(step.ScriptCommands, step, selectedPipeline, 0)
@@ -93,7 +95,7 @@ func HandleOnScriptCommandSelected(commands []types.CommandDetail, selectedStep 
 
 	selectedCommand := commands[row]
 
-	util.ShowPipelineLoadingSpinner(state.PipelineUIState.PipelineStepCommandLogView, func() (interface{}, error) {
+	support.ShowPipelineLoadingSpinner(state.PipelineUIState.PipelineStepCommandLogView, func() (interface{}, error) {
 		fullLog, err := bitbucket.FetchPipelineStepLog(selectedPipeline.UUID, selectedStep.UUID)
 		if err != nil {
 			return nil, fmt.Errorf("failed to fetch single step command %s", selectedCommand.Name)
@@ -108,10 +110,10 @@ func HandleOnScriptCommandSelected(commands []types.CommandDetail, selectedStep 
 	}, func(result interface{}, err error) {
 		commandLog, ok := result.(string)
 		if !ok {
-			util.UpdateView(state.PipelineUIState.PipelineStepCommandLogView, fmt.Sprintf("[red]Error: %v[-]", err))
+			support.UpdateView(state.PipelineUIState.PipelineStepCommandLogView, fmt.Sprintf("[red]Error: %v[-]", err))
 			return
 		}
 
-		util.UpdateView(state.PipelineUIState.PipelineStepCommandLogView, GenerateStepCommandLogView(commandLog, selectedCommand.Name))
+		support.UpdateView(state.PipelineUIState.PipelineStepCommandLogView, GenerateStepCommandLogView(commandLog, selectedCommand.Name))
 	})
 }

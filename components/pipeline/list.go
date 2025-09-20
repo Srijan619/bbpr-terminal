@@ -5,8 +5,8 @@ import (
 	"log"
 	"simple-git-terminal/apis/bitbucket"
 	"simple-git-terminal/state"
+	"simple-git-terminal/support"
 	"simple-git-terminal/types"
-	"simple-git-terminal/ui"
 	"simple-git-terminal/util"
 	"time"
 
@@ -14,9 +14,7 @@ import (
 	"github.com/rivo/tview"
 )
 
-func PopulatePipelineList(ppTable *tview.Table) *tview.Table {
-	ppTable.SetBackgroundColor(tcell.ColorDefault)
-
+func PopulatePipelineList() {
 	var (
 		pipelineList  []types.PipelineResponse
 		nextPageURL   string
@@ -44,7 +42,7 @@ func PopulatePipelineList(ppTable *tview.Table) *tview.Table {
 		}
 		isLoading = true
 
-		util.ShowPipelineLoadingSpinner(state.PipelineUIState.PipelineList, func() (interface{}, error) {
+		support.ShowPipelineLoadingSpinner(state.PipelineUIState.PipelineList, func() (interface{}, error) {
 			pps, pagination := bitbucket.FetchPipelinesByQuery(query)
 			if pps == nil {
 				log.Println("Failed to fetch pipelines, nil returned")
@@ -65,7 +63,7 @@ func PopulatePipelineList(ppTable *tview.Table) *tview.Table {
 
 			pps, ok := result.([]types.PipelineResponse)
 			if !ok {
-				util.UpdateView(state.PipelineUIState.PipelineList, fmt.Sprintf("[red]Error: %v[-]", err))
+				support.UpdateView(state.PipelineUIState.PipelineList, fmt.Sprintf("[red]Error: %v[-]", err))
 				return
 			}
 
@@ -75,9 +73,9 @@ func PopulatePipelineList(ppTable *tview.Table) *tview.Table {
 				pipelineList = pps
 			}
 
-			ui.PopulatePPList(ppTable, pipelineList, frame)
+			state.PipelineUIState.PipelineList.SetPipelines(pipelineList, frame)
 
-			ppTable.SetSelectedFunc(func(row, column int) {
+			state.PipelineUIState.PipelineList.SetSelectedFunc(func(row, column int) {
 				go func() {
 					HandleOnPipelineSelect(pipelineList, row, frame)
 				}()
@@ -103,13 +101,13 @@ func PopulatePipelineList(ppTable *tview.Table) *tview.Table {
 			frame++
 
 			state.PipelineUIState.App.QueueUpdateDraw(func() {
-				for i, pp := range pipelineList {
+				for _, pp := range pipelineList {
 					status := pp.State.Result.Name
 					if status == "" {
 						status = pp.State.Name
 					}
 
-					if !(status.InProgress() || status.Running() || status.Pending()) {
+					if !status.NeedsTracking() {
 						continue
 					}
 
@@ -121,7 +119,8 @@ func PopulatePipelineList(ppTable *tview.Table) *tview.Table {
 						icon := util.GetIconForStatusWithColorAnimated(updated.State.Name, frame)
 						color := util.GetColorForStatus(updated.State.Name)
 						text := fmt.Sprintf("%s %s", icon, updated.State.Name)
-						ppTable.SetCell(i, 6, util.CellFormat(text, color))
+
+						state.PipelineUIState.PipelineList.UpdateStatus(updated.UUID, util.CellFormat(text, color))
 						continue
 					}
 
@@ -135,17 +134,17 @@ func PopulatePipelineList(ppTable *tview.Table) *tview.Table {
 					icon := util.GetIconForStatusWithColorAnimated(updated.State.Name, frame)
 					color := util.GetColorForStatus(updated.State.Name)
 					text := fmt.Sprintf("%s %s", icon, updated.State.Name)
-					ppTable.SetCell(i, 6, util.CellFormat(text, color))
+					state.PipelineUIState.PipelineList.UpdateStatus(updated.UUID, util.CellFormat(text, color))
 				}
 			})
 		}
 	}()
 
 	// Infinite scroll - load next page if user scrolls to the bottom
-	ppTable.SetInputCapture(func(event *tcell.EventKey) *tcell.EventKey {
+	state.PipelineUIState.PipelineList.SetInputCapture(func(event *tcell.EventKey) *tcell.EventKey {
 		key := event.Key()
-		row, _ := ppTable.GetSelection()
-		totalRows := ppTable.GetRowCount()
+		row, _ := state.PipelineUIState.PipelineList.GetSelection()
+		totalRows := state.PipelineUIState.PipelineList.GetRowCount()
 
 		if key == tcell.KeyDown && row >= totalRows-2 && nextPageURL != "" {
 			log.Printf("[INFO] Near bottom, loading more: %s", nextPageURL)
@@ -158,8 +157,6 @@ func PopulatePipelineList(ppTable *tview.Table) *tview.Table {
 
 		return event
 	})
-
-	return ppTable
 }
 
 func HandleOnPipelineSelect(pipelines []types.PipelineResponse, row int, frame int) {
@@ -179,9 +176,13 @@ func HandleOnPipelineSelect(pipelines []types.PipelineResponse, row int, frame i
 	}
 
 	selectedPipeline := pipelines[row]
+
+	state.SetSelectedPipeline(&selectedPipeline)
+	state.PipelineUIState.PipelineList.UpdateSelectedRow(row)
+
 	log.Printf("Selected pipeline UUID: %s, Name: %s", selectedPipeline.UUID, selectedPipeline.Creator.DisplayName)
 
-	util.ShowPipelineLoadingSpinner(state.PipelineUIState.PipelineSteps, func() (interface{}, error) {
+	support.ShowPipelineLoadingSpinner(state.PipelineUIState.PipelineSteps, func() (interface{}, error) {
 		EmptyAllPipelineListDependentViews()
 
 		steps := bitbucket.FetchPipelineSteps(selectedPipeline.UUID)
@@ -193,7 +194,7 @@ func HandleOnPipelineSelect(pipelines []types.PipelineResponse, row int, frame i
 	}, func(result interface{}, err error) {
 		steps, ok := result.([]types.StepDetail)
 		if !ok {
-			util.UpdateView(state.PipelineUIState.PipelineSteps, fmt.Sprintf("[red]Error: %v[-]", err))
+			support.UpdateView(state.PipelineUIState.PipelineSteps, fmt.Sprintf("[red]Error: %v[-]", err))
 			return
 		}
 
@@ -202,14 +203,17 @@ func HandleOnPipelineSelect(pipelines []types.PipelineResponse, row int, frame i
 
 		view := GenerateStepsView(steps, selectedPipeline, frame)
 
-		util.UpdateView(state.PipelineUIState.PipelineStepsDebugView, GeneratePPDebugInfo(selectedPipeline))
-		util.UpdateView(state.PipelineUIState.PipelineSteps, view)
+		support.UpdateView(state.PipelineUIState.PipelineStepsDebugView, GeneratePPDebugInfo(selectedPipeline))
+		support.UpdateView(state.PipelineUIState.PipelineSteps, view)
 
 		HandleOnStepSelect(steps, selectedPipeline, 0) // Auto select first step and fetch the info
 	})
 }
 
 func TrackPipelineLive(pipeline types.PipelineResponse, frame int) {
+	if !pipeline.State.Name.NeedsTracking() {
+		return
+	}
 	log.Printf("[INFO] Starting live tracking for pipeline: %s", pipeline.UUID)
 
 	ticker := time.NewTicker(3 * time.Second)
@@ -250,7 +254,7 @@ func TrackPipelineLive(pipeline types.PipelineResponse, frame int) {
 
 		// Re-render step view
 		view := GenerateStepsView(steps, *updatedPipeline, frame)
-		util.UpdateView(state.PipelineUIState.PipelineSteps, view)
+		support.UpdateView(state.PipelineUIState.PipelineSteps, view)
 
 		// Exit only after N consecutive stable reads
 		if !updatedPipeline.State.Name.InProgress() && stableCount >= stableThreshold {
@@ -263,9 +267,9 @@ func TrackPipelineLive(pipeline types.PipelineResponse, frame int) {
 func EmptyAllPipelineListDependentViews() {
 	// Always start a fresh slate for rest of dependent views
 	emptyView := tview.NewFlex()
-	util.UpdateView(state.PipelineUIState.PipelineStepsDebugView, emptyView)
-	util.UpdateView(state.PipelineUIState.PipelineSteps, emptyView)
-	util.UpdateView(state.PipelineUIState.PipelineStep, emptyView)
-	util.UpdateView(state.PipelineUIState.PipelineStepCommandsView, emptyView)
-	util.UpdateView(state.PipelineUIState.PipelineStepCommandLogView, emptyView)
+	support.UpdateView(state.PipelineUIState.PipelineStepsDebugView, emptyView)
+	support.UpdateView(state.PipelineUIState.PipelineSteps, emptyView)
+	support.UpdateView(state.PipelineUIState.PipelineStep, emptyView)
+	support.UpdateView(state.PipelineUIState.PipelineStepCommandsView, emptyView)
+	support.UpdateView(state.PipelineUIState.PipelineStepCommandLogView, emptyView)
 }

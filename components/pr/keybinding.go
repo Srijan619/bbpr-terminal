@@ -1,8 +1,9 @@
-package util
+package pr
 
 import (
 	"log"
 	"simple-git-terminal/state"
+	"simple-git-terminal/support"
 
 	"github.com/gdamore/tcell/v2"
 	"github.com/rivo/tview"
@@ -19,7 +20,7 @@ func SetupKeyBindings(callback func()) {
 	}
 	// Define focus order
 	currentFocusIndex := 0
-	UpdateFocusBorders(focusOrder, currentFocusIndex, VIEW_ACTIVE_BORDER_COLOR)
+	support.UpdateFocusBorders(focusOrder, currentFocusIndex, VIEW_ACTIVE_BORDER_COLOR)
 
 	state.GlobalState.App.SetInputCapture(func(event *tcell.EventKey) *tcell.EventKey {
 		// If in search mode, only allow Esc or Enter keys
@@ -30,7 +31,7 @@ func SetupKeyBindings(callback func()) {
 				state.SetIsSearchMode(false)
 				state.GlobalState.App.SetFocus(state.GlobalState.PrList) // Focus back to PrList or another view
 				log.Printf("Esc pressed escaping now......")
-				UpdateFocusBorders(focusOrder, currentFocusIndex, VIEW_ACTIVE_BORDER_COLOR)
+				support.UpdateFocusBorders(focusOrder, currentFocusIndex, VIEW_ACTIVE_BORDER_COLOR)
 			case tcell.KeyEnter:
 				currentFocusIndex = 0
 				state.SetSearchTerm(state.GlobalState.PrListSearchBar.GetText())
@@ -61,7 +62,7 @@ func SetupKeyBindings(callback func()) {
 
 					state.GlobalState.App.SetFocus(state.GlobalState.PrListSearchBar)
 					// state.GlobalState.PrListSearchBar.SetText("")
-					UpdateFocusBorders(focusOrder, currentFocusIndex, VIEW_ACTIVE_BORDER_COLOR) // TODO: This is repeated here as we need to return nil from event rune otherwise it adds pressed key rune to textarea
+					support.UpdateFocusBorders(focusOrder, currentFocusIndex, VIEW_ACTIVE_BORDER_COLOR) // TODO: This is repeated here as we need to return nil from event rune otherwise it adds pressed key rune to textarea
 					return nil
 
 				case 't', 'T':
@@ -131,7 +132,7 @@ func SetupKeyBindings(callback func()) {
 				}
 			}
 			// Update focus borders after focus change
-			UpdateFocusBorders(focusOrder, currentFocusIndex, VIEW_ACTIVE_BORDER_COLOR)
+			support.UpdateFocusBorders(focusOrder, currentFocusIndex, VIEW_ACTIVE_BORDER_COLOR)
 		}
 
 		return event

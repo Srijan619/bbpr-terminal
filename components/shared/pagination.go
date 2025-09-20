@@ -1,10 +1,12 @@
-package util
+package shared
 
 import (
 	"fmt"
+	"simple-git-terminal/state"
+	"simple-git-terminal/support"
+
 	"github.com/gdamore/tcell/v2"
 	"github.com/rivo/tview"
-	"simple-git-terminal/state"
 )
 
 func NewPaginationComponent(currentPage int) *tview.Flex {
@@ -153,7 +155,7 @@ func max(a, b int) int {
 func UpdatePaginationViewUI(currentPage int) {
 	if state.GlobalState != nil {
 		pagination := NewPaginationComponent(currentPage)
-		UpdateView(state.GlobalState.PaginationFlex, pagination)
+		support.UpdateView(state.GlobalState.PaginationFlex, pagination)
 	}
 }
 
@@ -166,6 +168,7 @@ func UpdatePaginationState(currentPage int) {
 func updatePaginationView(currentPage int) {
 	UpdatePaginationState(currentPage)
 	UpdatePaginationViewUI(currentPage)
-	ShowSpinnerFetchPRsByQueryAndUpdatePrList()
 
+	// FIXME: This should be done in PR package itself
+	// pr.ShowSpinnerFetchPRsByQueryAndUpdatePrList()
 }

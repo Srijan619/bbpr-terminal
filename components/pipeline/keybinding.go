@@ -2,7 +2,7 @@ package pipeline
 
 import (
 	"simple-git-terminal/state"
-	"simple-git-terminal/util"
+	"simple-git-terminal/support"
 
 	"github.com/gdamore/tcell/v2"
 	"github.com/rivo/tview"
@@ -14,11 +14,11 @@ const (
 
 func SetupKeyBindings() {
 	focusOrder := []tview.Primitive{
-		state.PipelineUIState.PipelineListFlex, state.PipelineUIState.PipelineSteps, state.PipelineUIState.PipelineStep,
+		state.PipelineUIState.PipelineListFlex, state.PipelineUIState.PipelineSteps, state.PipelineUIState.PipelineStepCommandsView,
 	}
 	// Define focus order
 	currentFocusIndex := 0
-	util.UpdateFocusBorders(focusOrder, currentFocusIndex, VIEW_ACTIVE_BORDER_COLOR)
+	support.UpdateFocusBorders(focusOrder, currentFocusIndex, VIEW_ACTIVE_BORDER_COLOR)
 
 	state.PipelineUIState.App.SetInputCapture(func(event *tcell.EventKey) *tcell.EventKey {
 		// Handle keybindings when not in search mode
@@ -34,11 +34,11 @@ func SetupKeyBindings() {
 		case tcell.KeyRune:
 			switch event.Rune() {
 			case 'r':
-				PopulatePipelineList(state.PipelineUIState.PipelineList)
+				PopulatePipelineList()
 			}
 		}
 		// Update focus borders after focus change
-		util.UpdateFocusBorders(focusOrder, currentFocusIndex, VIEW_ACTIVE_BORDER_COLOR)
+		support.UpdateFocusBorders(focusOrder, currentFocusIndex, VIEW_ACTIVE_BORDER_COLOR)
 
 		return event
 	})

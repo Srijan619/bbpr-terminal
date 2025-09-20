@@ -5,6 +5,7 @@ import (
 	"os"
 	"os/exec"
 	"regexp"
+	"simple-git-terminal/constants"
 	"simple-git-terminal/types"
 	"strings"
 
@@ -76,7 +77,7 @@ func formatCommentWithBox(comment types.Comment) string {
 	commentLine := "╭" + strings.Repeat("-", borderLen) + "╮\n"
 
 	if comment.Parent.ID > 0 {
-		commentLine = commentLine + fmt.Sprintf("[steelblue] %s %s %s %s[-]", ICON_SIDE_ARROW, ICON_COMMENT, comment.User.DisplayName, markdownContent)
+		commentLine = commentLine + fmt.Sprintf("[steelblue] %s %s %s %s[-]", constants.ICON_SIDE_ARROW, ICON_COMMENT, comment.User.DisplayName, markdownContent)
 	} else {
 		// Need to check if the comment was resolved
 		if comment.Resolution != nil {

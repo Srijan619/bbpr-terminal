@@ -1,5 +1,4 @@
-// util/ui_utils.go
-package util
+package support
 
 import (
 	"simple-git-terminal/constants"
@@ -56,12 +55,7 @@ func CellFormat(text string, color tcell.Color) *tview.TableCell {
 // CreateStateCell creates a table cell with the appropriate color and alignment
 func CreateStateCell(state string) *tview.TableCell {
 	stateColor := GetPRStateColor(state)
-
-	// TODO: Should use support.CreateTableCell(state, stateColor) later
-	return tview.NewTableCell(state).
-		SetTextColor(stateColor).
-		SetAlign(tview.AlignLeft).
-		SetSelectable(true)
+	return CreateTableCell(state, stateColor)
 }
 
 func EllipsizeText(text string, max int) string {

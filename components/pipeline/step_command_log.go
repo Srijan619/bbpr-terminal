@@ -2,14 +2,14 @@ package pipeline
 
 import (
 	"fmt"
-	"simple-git-terminal/util"
+	"simple-git-terminal/support"
 
 	"github.com/rivo/tview"
 )
 
 // GenerateStepCommandLogView renders the raw logs of a selected command step.
 func GenerateStepCommandLogView(logText string, commandName string) tview.Primitive {
-	logView := util.CreateTextviewComponent(fmt.Sprintf("   Logs: %s", commandName), false)
+	logView := support.CreateTextviewComponent(fmt.Sprintf("   Logs: %s", commandName), false)
 	logView.
 		SetScrollable(true)
 

@@ -1,4 +1,4 @@
-package util
+package support
 
 import (
 	"github.com/gdamore/tcell/v2"

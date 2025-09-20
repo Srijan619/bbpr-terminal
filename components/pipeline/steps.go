@@ -5,6 +5,7 @@ import (
 	"log"
 	"simple-git-terminal/apis/bitbucket"
 	"simple-git-terminal/state"
+	"simple-git-terminal/support"
 	"simple-git-terminal/types"
 	"simple-git-terminal/util"
 
@@ -101,7 +102,7 @@ func HandleOnStepSelect(steps []types.StepDetail, selectedPipeline types.Pipelin
 	selectedStep := steps[row]
 	log.Printf("Selected step UUID: %s", selectedStep.UUID)
 
-	util.ShowPipelineLoadingSpinner(state.PipelineUIState.PipelineStep, func() (interface{}, error) {
+	support.ShowPipelineLoadingSpinner(state.PipelineUIState.PipelineStep, func() (interface{}, error) {
 		step := bitbucket.FetchPipelineStep(selectedPipeline.UUID, selectedStep.UUID)
 		if step.UUID == "" {
 			log.Println("Failed to fetch single step, empty UUID returned")
@@ -112,12 +113,12 @@ func HandleOnStepSelect(steps []types.StepDetail, selectedPipeline types.Pipelin
 	}, func(result interface{}, err error) {
 		step, ok := result.(types.StepDetail)
 		if !ok {
-			util.UpdateView(state.PipelineUIState.PipelineStep, fmt.Sprintf("[red]Error: %v[-]", err))
+			support.UpdateView(state.PipelineUIState.PipelineStep, fmt.Sprintf("[red]Error: %v[-]", err))
 			return
 		}
 
 		view := GenerateStepView(step, selectedPipeline)
 
-		util.UpdateView(state.PipelineUIState.PipelineStep, view)
+		support.UpdateView(state.PipelineUIState.PipelineStep, view)
 	})
 }
