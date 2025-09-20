@@ -69,7 +69,7 @@ func GenerateStepView(step types.StepDetail, selectedPipeline types.PipelineResp
 
 	scriptTable.SetSelectedFunc(func(row, column int) {
 		go func() {
-			HandleOnScriptCommandSelected(step.SetupCommands, step, selectedPipeline, row)
+			HandleOnScriptCommandSelected(step.ScriptCommands, step, selectedPipeline, row)
 		}()
 	})
 	scriptTable.SetSelectedStyle(tcell.StyleDefault.Foreground(tcell.ColorDarkOrange))
@@ -91,10 +91,14 @@ func HandleOnScriptCommandSelected(commands []types.CommandDetail, selectedStep 
 	selectedCommand := commands[row]
 
 	util.ShowPipelineLoadingSpinner(state.PipelineUIState.PipelineStepCommandLogView, func() (interface{}, error) {
-		commandLog, error := bitbucket.FetchPipelineStepCommandLogs(selectedPipeline.UUID, selectedStep.UUID, selectedCommand.Name)
-
-		if error != nil {
+		fullLog, err := bitbucket.FetchPipelineStepLog(selectedPipeline.UUID, selectedStep.UUID)
+		if err != nil {
 			return nil, fmt.Errorf("failed to fetch single step command %s", selectedCommand.Name)
+		}
+
+		commandLog, err := util.ExtractCommandLog(fullLog, selectedCommand.Name)
+		if err != nil {
+			return nil, fmt.Errorf("failed to extract command %s log from full log", selectedCommand.Name)
 		}
 
 		return commandLog, nil
