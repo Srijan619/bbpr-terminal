@@ -114,7 +114,7 @@ func PopulatePipelineList(ppTable *tview.Table) *tview.Table {
 					color := util.GetColorForStatus(updatedPipeline.State.Name)
 					text := fmt.Sprintf("%s %s", icon, updatedPipeline.State.Name)
 
-					ppTable.SetCell(i, 7, util.CellFormat(text, color)) // Column 7 is status
+					ppTable.SetCell(i, 6, util.CellFormat(text, color)) // Column 6 is status
 				}
 			})
 		}

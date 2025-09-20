@@ -78,9 +78,12 @@ func tcellColorToDynamicColor(c tcell.Color) string {
 func GetIconForStatusWithColorAnimated(status types.PipelineStatus, frame int) string {
 	var icon string
 
+	spinFrames := []string{
+		"←", "↖", "↑", "↗", "→", "↘", "↓", "↙",
+	}
+
 	switch {
 	case status.InProgress(), status.Running(), status.Pending():
-		spinFrames := []string{"⏳", "⌛", "⏱", "⏲"}
 		icon = spinFrames[frame%len(spinFrames)]
 	default:
 		icon = ""
