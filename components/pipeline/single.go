@@ -9,47 +9,59 @@ import (
 	"github.com/rivo/tview"
 )
 
-func GenerateStepView(steps []types.StepDetail, selectedPipeline types.PipelineResponse) *tview.List {
-	list := tview.NewList()
+func GenerateStepView(steps []types.StepDetail, selectedPipeline types.PipelineResponse) tview.Primitive {
+	stepTable := tview.NewTable()
 
-	for _, step := range steps {
-		status := step.State.Result.Name
-		if status == "" {
-			status = step.State.Name
-		}
+	stepTable.
+		SetBorders(false).
+		SetSelectable(false, false).
+		SetBackgroundColor(tcell.ColorDefault)
 
-		icon := util.GetIconForStatus(status)
-		color := util.GetColorForStatus(status)
-		colorHex := util.HexColor(color)
+		// Determine left bar color from most critical status
+	barColor := tcell.ColorDarkGray
 
-		title := fmt.Sprintf("[#%s]%s[-] %s", colorHex, icon, step.Name)
+	if len(steps) == 0 {
+		stepTable.SetCell(0, 0, util.CellFormat(" No steps available", tcell.ColorGray))
+	} else {
+		for i, step := range steps {
+			status := step.State.Result.Name
+			if status == "" {
+				status = step.State.Name
+			}
 
-		list.AddItem(title, "", 0, nil)
-	}
+			icon := util.GetIconForStatus(status)
+			color := util.GetColorForStatus(status)
+			colorHex := util.HexColor(color)
 
-	list.ShowSecondaryText(false).
-		SetBorder(true).
-		SetTitle(fmt.Sprintf(" Build %d - Steps ", selectedPipeline.BuildNumber)).
-		SetTitleAlign(tview.AlignLeft).SetBackgroundColor(tcell.ColorDefault)
-
-	// Determine overall border color based on status of steps
-	var borderColor tcell.Color = tcell.ColorDarkGray
-	for _, step := range steps {
-		status := step.State.Result.Name
-		if status == "" {
-			status = step.State.Name
-		}
-
-		if status.Failed() {
-			borderColor = tcell.ColorRed
-			break
-		}
-		if status.Successful() {
-			borderColor = tcell.ColorGreen
+			barColor = color
+			text := fmt.Sprintf("[#%s:-]%s[-:-] %s", colorHex, icon, step.Name)
+			cell := util.CellFormat(text, color)
+			stepTable.SetCell(i, 0, cell)
 		}
 	}
 
-	list.SetBorderColor(borderColor)
+	listHeight := len(steps)
+	if listHeight == 0 {
+		listHeight = 1
+	}
 
-	return list
+	// Left color bar
+	leftBar := tview.NewBox().
+		SetBorder(false).
+		SetBackgroundColor(barColor)
+
+	leftBarFlex := tview.NewFlex().
+		SetDirection(tview.FlexRow).
+		AddItem(leftBar, listHeight, 0, false)
+
+	// Compose UI with left bar and step table
+	layout := tview.NewFlex()
+
+	layout.
+		SetDirection(tview.FlexColumn).
+		AddItem(leftBarFlex, 1, 0, false).
+		AddItem(stepTable, 0, 1, true).
+		SetBackgroundColor(tcell.ColorDefault)
+
+	return layout
 }
