@@ -19,13 +19,13 @@ func GeneratePPDebugInfo(pipeline types.PipelineResponse) *tview.TextView {
 	icon := util.GetIconForStatus(status)
 	statusColor := util.HexColor(util.GetColorForStatus(status))
 
-	sb.WriteString(fmt.Sprintf("[::b]🛠️  Pipeline #[-]%d [::b](Run #%d)[-]\n", pipeline.BuildNumber, pipeline.RunNumber))
+	sb.WriteString(fmt.Sprintf("[::b]%s Pipeline #[-]%d [::b](Run #%d)[-]\n", util.ICON_BUILD, pipeline.BuildNumber, pipeline.RunNumber))
 	sb.WriteString(fmt.Sprintf("[::b]Status      :[-] [%s]%s[-] %s\n", statusColor, icon, status))
 	sb.WriteString(fmt.Sprintf("[::b]Started     :[-] %s\n", util.FormatTime(pipeline.CreatedOn)))
 	sb.WriteString(fmt.Sprintf("[::b]Completed   :[-] %s\n", util.FormatTime(pipeline.CompletedOn)))
 	sb.WriteString(fmt.Sprintf("[::b]Duration    :[-] %d seconds\n", pipeline.Duration))
 
-	sb.WriteString("\n[::b]👤 Triggered by:[-] ")
+	sb.WriteString(fmt.Sprintf("\n[::b]%s Triggered by:[-] ", util.ICON_COMMIT))
 	if pipeline.Trigger.Type != "" {
 		sb.WriteString(fmt.Sprintf("%s (%s)\n", pipeline.Trigger.Name, pipeline.Trigger.Type))
 	} else {
@@ -33,7 +33,7 @@ func GeneratePPDebugInfo(pipeline types.PipelineResponse) *tview.TextView {
 	}
 	sb.WriteString(fmt.Sprintf("[::b]Created by :[-] %s\n", pipeline.Creator.DisplayName))
 
-	sb.WriteString("\n[::b]🔀 Target[-]\n")
+	sb.WriteString(fmt.Sprintf("\n[::b]%s Target[-]\n", util.ICON_BRANCH))
 	sb.WriteString(fmt.Sprintf("[::b]Type       :[-] %s\n", pipeline.Target.RefType))
 	sb.WriteString(fmt.Sprintf("[::b]Name       :[-] %s\n", pipeline.Target.RefName))
 	sb.WriteString(fmt.Sprintf("[::b]Commit     :[-] %s\n", pipeline.Target.Commit.Hash))
