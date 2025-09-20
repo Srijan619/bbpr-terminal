@@ -14,7 +14,7 @@ func GenerateStepView(steps []types.StepDetail, selectedPipeline types.PipelineR
 
 	stepTable.
 		SetBorders(false).
-		SetSelectable(false, false).
+		SetSelectable(true, false).
 		SetBackgroundColor(tcell.ColorDefault)
 
 		// Determine left bar color from most critical status
@@ -63,5 +63,14 @@ func GenerateStepView(steps []types.StepDetail, selectedPipeline types.PipelineR
 		AddItem(stepTable, 0, 1, true).
 		SetBackgroundColor(tcell.ColorDefault)
 
+	stepTable.SetSelectedFunc(func(row, column int) {
+		go func() {
+			HandleOnStepSelect(steps, row)
+		}()
+	})
+	stepTable.SetSelectedStyle(tcell.StyleDefault.Foreground(tcell.ColorDarkOrange))
 	return layout
+}
+
+func HandleOnStepSelect(steps []types.StepDetail, row int) {
 }
