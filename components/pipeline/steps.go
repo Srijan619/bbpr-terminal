@@ -12,7 +12,7 @@ import (
 	"github.com/rivo/tview"
 )
 
-func GenerateStepsView(steps []types.StepDetail, selectedPipeline types.PipelineResponse) tview.Primitive {
+func GenerateStepsView(steps []types.StepDetail, selectedPipeline types.PipelineResponse, frame int) tview.Primitive {
 	stepTable := tview.NewTable()
 
 	stepTable.
@@ -32,12 +32,19 @@ func GenerateStepsView(steps []types.StepDetail, selectedPipeline types.Pipeline
 				status = step.State.Name
 			}
 
-			icon := util.GetIconForStatus(status)
 			color := util.GetColorForStatus(status)
 			colorHex := util.HexColor(color)
 
+			// Animated icon if in progress
+			var statusIcon string
+			if status.NeedsTracking() {
+				statusIcon = util.GetIconForStatusWithColorAnimated(status, frame)
+			} else {
+				statusIcon = util.GetIconForStatusWithColor(status)
+			}
+
 			barColor = color
-			text := fmt.Sprintf(" [#%s:-]%s[-:-] %s", colorHex, icon, step.Name)
+			text := fmt.Sprintf(" [#%s:-]%s[-:-] %s", colorHex, statusIcon, step.Name)
 			cell := util.CellFormat(text, color)
 			stepTable.SetCell(i, 0, cell)
 		}

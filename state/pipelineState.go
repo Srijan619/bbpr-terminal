@@ -19,6 +19,7 @@ type PipelineState struct {
 	PipelineStepsDebugView     *tview.Flex
 	PipelineSteps              *tview.Flex
 	PipelineStep               *tview.Flex
+	PipelineStepCommandsView   *tview.Flex
 	PipelineStepCommandLogView *tview.Flex
 	RightPanelHeader           *tview.TextView
 	CurrentView                tview.Primitive
@@ -40,6 +41,7 @@ func InitializePipelineViews(
 	pipelineStepsDebugView *tview.Flex,
 	pipelineSteps *tview.Flex,
 	pipelineStep *tview.Flex,
+	pipelineStepCommandsView *tview.Flex,
 	pipelineStepCommandLogView *tview.Flex,
 	pipelineStatusFilter, paginationFlex *tview.Flex,
 	pipelineSearchBar *tview.InputField,
@@ -52,6 +54,7 @@ func InitializePipelineViews(
 		PipelineStepsDebugView:     pipelineStepsDebugView,
 		PipelineSteps:              pipelineSteps,
 		PipelineStep:               pipelineStep,
+		PipelineStepCommandsView:   pipelineStepCommandsView,
 		PipelineStepCommandLogView: pipelineStepCommandLogView,
 		PipelineStatusFilter:       pipelineStatusFilter,
 		PaginationFlex:             paginationFlex,

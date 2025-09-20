@@ -25,6 +25,14 @@ func PopulatePipelineList(ppTable *tview.Table) *tview.Table {
 		frame         int
 	)
 
+	// Caching pipeline fetch results to reduce frequent API calls
+	type pipelineCacheEntry struct {
+		lastFetched time.Time
+		data        types.PipelineResponse
+	}
+
+	pipelineCache := make(map[string]pipelineCacheEntry)
+
 	loadPipelines := func(query string, appendData bool) {
 		if lastFetchDone {
 			log.Println("[INFO] Already fetched this page, skipping...")
@@ -43,19 +51,14 @@ func PopulatePipelineList(ppTable *tview.Table) *tview.Table {
 				return nil, fmt.Errorf("failed to fetch pipelines")
 			}
 
-			// If the number of pipelines fetched is less than the batch (max of 10),
-			// this means we have reached the last page and there are no more pipelines to fetch.
-			// Therefore, clear nextPageURL to prevent further pagination.
-			//
-			// This is based on the assumption that the query contains a 'pagelen' parameter indicating the page size.
+			// If page size is less than 10, we assume it's the last page
 			if pagination.PageLen < 10 {
-				log.Printf("[INFO] No more pipelines to fetch, reached less than 10 page leng. %d", len(pps))
+				log.Printf("[INFO] No more pipelines to fetch, less than page size. Fetched: %d", len(pps))
 				lastFetchDone = true
 			} else {
 				nextPageURL = pagination.Next
 			}
 
-			nextPageURL = pagination.Next
 			return pps, nil
 		}, func(result interface{}, err error) {
 			defer func() { isLoading = false }()
@@ -76,18 +79,21 @@ func PopulatePipelineList(ppTable *tview.Table) *tview.Table {
 
 			ppTable.SetSelectedFunc(func(row, column int) {
 				go func() {
-					HandleOnPipelineSelect(pipelineList, row)
+					HandleOnPipelineSelect(pipelineList, row, frame)
 				}()
 			})
+
+			// Select first pipeline by default
+			HandleOnPipelineSelect(pipelineList, 0, frame)
 		})
 	}
 
-	// Initial fetch
+	// Initial load
 	go loadPipelines(bitbucket.BuildQuery(""), false)
 
-	// Animate pipeline list with frame counter
+	// Animate status with throttled refresh
 	go func() {
-		ticker := time.NewTicker(200 * time.Millisecond)
+		ticker := time.NewTicker(1 * time.Second) // Slower animation
 		defer ticker.Stop()
 
 		for range ticker.C {
@@ -107,44 +113,56 @@ func PopulatePipelineList(ppTable *tview.Table) *tview.Table {
 						continue
 					}
 
-					// Fetch new state
-					updatedPipeline := bitbucket.FetchPipeline(pp.UUID)
+					// Check cache
+					cached, found := pipelineCache[pp.UUID]
+					if found && time.Since(cached.lastFetched) < 10*time.Second {
+						// Use cached result
+						updated := cached.data
+						icon := util.GetIconForStatusWithColorAnimated(updated.State.Name, frame)
+						color := util.GetColorForStatus(updated.State.Name)
+						text := fmt.Sprintf("%s %s", icon, updated.State.Name)
+						ppTable.SetCell(i, 6, util.CellFormat(text, color))
+						continue
+					}
 
-					icon := util.GetIconForStatusWithColorAnimated(updatedPipeline.State.Name, frame)
-					color := util.GetColorForStatus(updatedPipeline.State.Name)
-					text := fmt.Sprintf("%s %s", icon, updatedPipeline.State.Name)
+					// Fetch updated pipeline status
+					updated := bitbucket.FetchPipeline(pp.UUID)
+					pipelineCache[pp.UUID] = pipelineCacheEntry{
+						lastFetched: time.Now(),
+						data:        *updated,
+					}
 
-					ppTable.SetCell(i, 6, util.CellFormat(text, color)) // Column 6 is status
+					icon := util.GetIconForStatusWithColorAnimated(updated.State.Name, frame)
+					color := util.GetColorForStatus(updated.State.Name)
+					text := fmt.Sprintf("%s %s", icon, updated.State.Name)
+					ppTable.SetCell(i, 6, util.CellFormat(text, color))
 				}
 			})
 		}
 	}()
 
-	// Handle scroll near bottom to fetch more
+	// Infinite scroll - load next page if user scrolls to the bottom
 	ppTable.SetInputCapture(func(event *tcell.EventKey) *tcell.EventKey {
 		key := event.Key()
 		row, _ := ppTable.GetSelection()
 		totalRows := ppTable.GetRowCount()
 
 		if key == tcell.KeyDown && row >= totalRows-2 && nextPageURL != "" {
-			log.Printf("[INFO] Scrolling near bottom, loading next page: %s", nextPageURL)
+			log.Printf("[INFO] Near bottom, loading more: %s", nextPageURL)
 
-			// Extract query string only
 			query := util.ExtractQueryFromNextURL(nextPageURL)
+			nextPageURL = "" // prevent duplicate triggers
 
-			// Avoid firing multiple times
-			nextPageURL = ""
-
-			// Load next page in background
 			go loadPipelines(query, true)
 		}
 
 		return event
 	})
+
 	return ppTable
 }
 
-func HandleOnPipelineSelect(pipelines []types.PipelineResponse, row int) {
+func HandleOnPipelineSelect(pipelines []types.PipelineResponse, row int, frame int) {
 	// Validate row index
 	if row < 0 || row >= len(pipelines) {
 		log.Printf("Invalid row index: %d, pipelines count: %d", row, len(pipelines))
@@ -179,11 +197,10 @@ func HandleOnPipelineSelect(pipelines []types.PipelineResponse, row int) {
 			return
 		}
 
-		if selectedPipeline.State.Name.InProgress() {
-			// if selected pipeline is in progress, track it with constant polling in backgroun until it is completed
-			go TrackPipelineLive(selectedPipeline)
-		}
-		view := GenerateStepsView(steps, selectedPipeline)
+		// Track pipeline based on all status change..
+		go TrackPipelineLive(selectedPipeline, frame)
+
+		view := GenerateStepsView(steps, selectedPipeline, frame)
 
 		util.UpdateView(state.PipelineUIState.PipelineStepsDebugView, GeneratePPDebugInfo(selectedPipeline))
 		util.UpdateView(state.PipelineUIState.PipelineSteps, view)
@@ -192,11 +209,15 @@ func HandleOnPipelineSelect(pipelines []types.PipelineResponse, row int) {
 	})
 }
 
-func TrackPipelineLive(pipeline types.PipelineResponse) {
+func TrackPipelineLive(pipeline types.PipelineResponse, frame int) {
 	log.Printf("[INFO] Starting live tracking for pipeline: %s", pipeline.UUID)
 
-	ticker := time.NewTicker(3 * time.Second) // poll every 3 seconds
+	ticker := time.NewTicker(3 * time.Second)
 	defer ticker.Stop()
+
+	// Track how many consecutive times we see all steps finished
+	const stableThreshold = 3
+	stableCount := 0
 
 	for range ticker.C {
 		updatedPipeline := bitbucket.FetchPipeline(pipeline.UUID)
@@ -205,20 +226,37 @@ func TrackPipelineLive(pipeline types.PipelineResponse) {
 			continue
 		}
 
-		if !updatedPipeline.State.Name.InProgress() {
-			log.Printf("[INFO] Pipeline %s is no longer in progress. Stopping tracker.", pipeline.UUID)
-			break
-		}
-
 		steps := bitbucket.FetchPipelineSteps(updatedPipeline.UUID)
 		if steps == nil {
 			log.Printf("[WARN] Could not fetch updated steps for pipeline %s", updatedPipeline.UUID)
 			continue
 		}
 
+		// Check if all steps are in terminal state
+		allDone := true
+		for _, step := range steps {
+			if step.State.Name.InProgress() || step.State.Name.Running() || step.State.Name.Pending() {
+				allDone = false
+				break
+			}
+		}
+
+		if allDone {
+			stableCount++
+			log.Printf("[INFO] All steps appear complete for pipeline %s (%d/%d confirmations)", pipeline.UUID, stableCount, stableThreshold)
+		} else {
+			stableCount = 0
+		}
+
 		// Re-render step view
-		view := GenerateStepsView(steps, *updatedPipeline)
+		view := GenerateStepsView(steps, *updatedPipeline, frame)
 		util.UpdateView(state.PipelineUIState.PipelineSteps, view)
+
+		// Exit only after N consecutive stable reads
+		if !updatedPipeline.State.Name.InProgress() && stableCount >= stableThreshold {
+			log.Printf("[INFO] Pipeline %s has finished and all steps are stable. Stopping tracker.", pipeline.UUID)
+			break
+		}
 	}
 }
 
@@ -228,5 +266,6 @@ func EmptyAllPipelineListDependentViews() {
 	util.UpdateView(state.PipelineUIState.PipelineStepsDebugView, emptyView)
 	util.UpdateView(state.PipelineUIState.PipelineSteps, emptyView)
 	util.UpdateView(state.PipelineUIState.PipelineStep, emptyView)
+	util.UpdateView(state.PipelineUIState.PipelineStepCommandsView, emptyView)
 	util.UpdateView(state.PipelineUIState.PipelineStepCommandLogView, emptyView)
 }

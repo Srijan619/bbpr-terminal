@@ -94,3 +94,6 @@ func (s PipelineStatus) InProgress() bool { return s == InProgress }
 func (s PipelineStatus) Successful() bool { return s == Successful }
 func (s PipelineStatus) NotRun() bool     { return s == NotRun }
 func (s PipelineStatus) Unknown() bool    { return s == StatusUnknown }
+func (s PipelineStatus) NeedsTracking() bool {
+	return s.InProgress() || s.Running() || s.Pending()
+}

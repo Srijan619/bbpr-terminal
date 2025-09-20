@@ -33,7 +33,7 @@ func PopulatePPList(ppList *tview.Table, pps []types.PipelineResponse, frame int
 
 		// Animated icon if in progress
 		var statusIcon string
-		if status.InProgress() || status.Running() || status.Pending() {
+		if status.NeedsTracking() {
 			statusIcon = util.GetIconForStatusWithColorAnimated(status, frame)
 		} else {
 			statusIcon = util.GetIconForStatusWithColor(status)

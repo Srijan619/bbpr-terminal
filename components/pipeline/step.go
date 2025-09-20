@@ -48,8 +48,6 @@ func GenerateStepView(step types.StepDetail, selectedPipeline types.PipelineResp
 		SetSelectable(true, false).
 		SetBackgroundColor(tcell.ColorDefault)
 
-	scriptTable.SetTitle("Script Commands").SetTitleAlign(tview.AlignLeft).SetBorder(true)
-
 	for i, cmd := range step.ScriptCommands {
 		cmdText := fmt.Sprintf("%s [::b]%s", util.ICON_SIDE_ARROW, cmd.Name)
 		scriptTable.SetCell(i, 0, util.CellFormat(cmdText, tcell.ColorWhite))
@@ -64,8 +62,7 @@ func GenerateStepView(step types.StepDetail, selectedPipeline types.PipelineResp
 
 	layout.
 		SetDirection(tview.FlexRow).
-		AddItem(textView, 0, 3, false).
-		AddItem(scriptTable, 0, 1, true)
+		AddItem(textView, 0, 3, false)
 
 	scriptTable.SetSelectedFunc(func(row, column int) {
 		go func() {
@@ -73,6 +70,9 @@ func GenerateStepView(step types.StepDetail, selectedPipeline types.PipelineResp
 		}()
 	})
 	scriptTable.SetSelectedStyle(tcell.StyleDefault.Foreground(tcell.ColorDarkOrange))
+
+	// script table goes into its own view
+	util.UpdateView(state.PipelineUIState.PipelineStepCommandsView, scriptTable)
 
 	// Select first step and fetch its command already
 	HandleOnScriptCommandSelected(step.ScriptCommands, step, selectedPipeline, 0)

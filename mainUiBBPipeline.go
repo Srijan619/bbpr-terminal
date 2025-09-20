@@ -62,12 +62,14 @@ func CreateMainAppForBBPipeline() *tview.Application {
 	stepsWrapper.SetDirection(tview.FlexRow).SetBackgroundColor(tcell.ColorDefault)
 
 	debugView := util.CreateFlexComponent("Debug Info")
-	steps := tview.NewFlex()
+	steps := util.CreateFlexComponent("Steps Info")
 	steps.SetBackgroundColor(tcell.ColorDefault)
 
+	stepCommandsView := util.CreateFlexComponent("Script Commands")
 	stepsWrapper.
-		AddItem(debugView, 0, 1, true).
-		AddItem(steps, 0, 3, true)
+		AddItem(debugView, 0, 2, true).
+		AddItem(steps, 0, 1, true).
+		AddItem(stepCommandsView, 0, 4, true)
 
 		// Right
 	stepWrapper := tview.NewFlex()
@@ -92,7 +94,7 @@ func CreateMainAppForBBPipeline() *tview.Application {
 	mainFlexWrapper.AddItem(leftFullFlex, 0, 1, true).
 		AddItem(middleFullFlex, 0, 3, false)
 
-	state.InitializePipelineViews(app, mainFlexWrapper, ppListFlex, ppList, debugView, steps, step, stepCommandLogView, nil, nil, nil)
+	state.InitializePipelineViews(app, mainFlexWrapper, ppListFlex, ppList, debugView, steps, step, stepCommandsView, stepCommandLogView, nil, nil, nil)
 	pipeline.PopulatePipelineList(ppList)
 
 	pipeline.SetupKeyBindings()
