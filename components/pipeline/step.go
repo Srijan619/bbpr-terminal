@@ -14,7 +14,7 @@ func GenerateStepView(step types.StepDetail, selectedPipeline types.PipelineResp
 
 	table.
 		SetBorders(false).
-		SetSelectable(false, false).
+		SetSelectable(true, false).
 		SetBackgroundColor(tcell.ColorDefault)
 
 	// Determine status & color

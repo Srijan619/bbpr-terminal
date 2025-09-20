@@ -357,3 +357,34 @@ func FetchPipelineStep(pipelineUUID string, stepUUID string) types.StepDetail {
 
 	return stepDetail
 }
+
+func FetchPipelineStepCommandLogs(pipelineUUID string, stepUUID string, commandUUID string) (string, error) {
+	client := createClient()
+
+	url := fmt.Sprintf(
+		"%s/repositories/%s/%s/pipelines/%s/steps/%s/commands/%s/logs",
+		BitbucketBaseURL,
+		state.Workspace,
+		state.Repo,
+		pipelineUUID,
+		stepUUID,
+		commandUUID,
+	)
+
+	log.Printf("[CLIENT] Fetching command logs for pipeline UUID: %s, step UUID: %s, command UUID: %s",
+		pipelineUUID, stepUUID, commandUUID)
+
+	resp, err := client.R().Get(url)
+	if err != nil {
+		log.Printf("[ERROR] Failed to fetch command logs: %v", err)
+		return "", err
+	}
+
+	if resp.StatusCode() != 200 {
+		log.Printf("[ERROR] Unexpected status code: %d\nBody: %s", resp.StatusCode(), string(resp.Body()))
+		return "", fmt.Errorf("unexpected status code: %d", resp.StatusCode())
+	}
+
+	// Return raw text log as string
+	return string(resp.Body()), nil
+}
