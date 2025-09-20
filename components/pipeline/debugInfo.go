@@ -3,60 +3,41 @@ package pipeline
 import (
 	"fmt"
 	"simple-git-terminal/types"
+	"simple-git-terminal/util"
 	"strings"
-	"time"
+
+	"github.com/rivo/tview"
 )
 
-func GeneratePPDebugInfo(pipeline *types.PipelineResponse) string {
-	if pipeline == nil {
-		return "No pipeline data available."
-	}
-
-	formatTime := func(t string) string {
-		parsed, err := time.Parse(time.RFC3339, t)
-		if err != nil {
-			return t
-		}
-		return parsed.Format("2006-01-02 15:04:05")
-	}
-
-	getStatusEmoji := func(status types.PipelineStatus) string {
-		switch {
-		case status.Successful():
-			return "✅"
-		case status.Failed():
-			return "❌"
-		case status.Running():
-			return "🏃"
-		case status.Pending():
-			return "⏳"
-		case status.Stopped():
-			return "⛔"
-		default:
-			return "❔"
-		}
-	}
+func GeneratePPDebugInfo(pipeline types.PipelineResponse) *tview.TextView {
+	textView := util.CreateTextviewComponent("Pipeline Details", false)
 
 	var sb strings.Builder
 
-	sb.WriteString(fmt.Sprintf("🛠️  Pipeline #%d (Run #%d)\n", pipeline.BuildNumber, pipeline.RunNumber))
-	sb.WriteString(fmt.Sprintf("Status      : %s %s\n", pipeline.State.Result.Name, getStatusEmoji(pipeline.State.Result.Name)))
-	sb.WriteString(fmt.Sprintf("Started     : %s\n", formatTime(pipeline.CreatedOn)))
-	sb.WriteString(fmt.Sprintf("Completed   : %s\n", formatTime(pipeline.CompletedOn)))
-	sb.WriteString(fmt.Sprintf("Duration    : %d seconds\n", pipeline.Duration))
+	status := pipeline.State.Result.Name
+	icon := util.GetIconForStatus(status)
+	statusColor := util.HexColor(util.GetColorForStatus(status))
 
-	sb.WriteString("\n👤 Triggered by: ")
+	sb.WriteString(fmt.Sprintf("[::b]🛠️  Pipeline #[-]%d [::b](Run #%d)[-]\n", pipeline.BuildNumber, pipeline.RunNumber))
+	sb.WriteString(fmt.Sprintf("[::b]Status      :[-] [%s]%s[-] %s\n", statusColor, icon, status))
+	sb.WriteString(fmt.Sprintf("[::b]Started     :[-] %s\n", util.FormatTime(pipeline.CreatedOn)))
+	sb.WriteString(fmt.Sprintf("[::b]Completed   :[-] %s\n", util.FormatTime(pipeline.CompletedOn)))
+	sb.WriteString(fmt.Sprintf("[::b]Duration    :[-] %d seconds\n", pipeline.Duration))
+
+	sb.WriteString("\n[::b]👤 Triggered by:[-] ")
 	if pipeline.Trigger.Type != "" {
 		sb.WriteString(fmt.Sprintf("%s (%s)\n", pipeline.Trigger.Name, pipeline.Trigger.Type))
 	} else {
 		sb.WriteString("Unknown\n")
 	}
-	sb.WriteString(fmt.Sprintf("Created by : %s\n", pipeline.Creator.DisplayName))
+	sb.WriteString(fmt.Sprintf("[::b]Created by :[-] %s\n", pipeline.Creator.DisplayName))
 
-	sb.WriteString("\n🔀 Target\n")
-	sb.WriteString(fmt.Sprintf("Type       : %s\n", pipeline.Target.RefType))
-	sb.WriteString(fmt.Sprintf("Name       : %s\n", pipeline.Target.RefName))
-	sb.WriteString(fmt.Sprintf("Commit     : %s\n", pipeline.Target.Commit.Hash))
+	sb.WriteString("\n[::b]🔀 Target[-]\n")
+	sb.WriteString(fmt.Sprintf("[::b]Type       :[-] %s\n", pipeline.Target.RefType))
+	sb.WriteString(fmt.Sprintf("[::b]Name       :[-] %s\n", pipeline.Target.RefName))
+	sb.WriteString(fmt.Sprintf("[::b]Commit     :[-] %s\n", pipeline.Target.Commit.Hash))
 
-	return sb.String()
+	textView.SetText(sb.String())
+
+	return textView
 }

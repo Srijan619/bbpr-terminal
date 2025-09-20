@@ -20,3 +20,11 @@ func HumanizeTimeAgo(t time.Time) string {
 		return fmt.Sprintf("%dd ago", days)
 	}
 }
+
+func FormatTime(input string) string {
+	t, err := time.Parse(time.RFC3339, input)
+	if err != nil {
+		return input
+	}
+	return t.Format("2006-01-02 15:04:05")
+}
