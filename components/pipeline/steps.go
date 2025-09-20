@@ -2,6 +2,9 @@ package pipeline
 
 import (
 	"fmt"
+	"log"
+	"simple-git-terminal/apis/bitbucket"
+	"simple-git-terminal/state"
 	"simple-git-terminal/types"
 	"simple-git-terminal/util"
 
@@ -9,7 +12,7 @@ import (
 	"github.com/rivo/tview"
 )
 
-func GenerateStepView(steps []types.StepDetail, selectedPipeline types.PipelineResponse) tview.Primitive {
+func GenerateStepsView(steps []types.StepDetail, selectedPipeline types.PipelineResponse) tview.Primitive {
 	stepTable := tview.NewTable()
 
 	stepTable.
@@ -65,12 +68,49 @@ func GenerateStepView(steps []types.StepDetail, selectedPipeline types.PipelineR
 
 	stepTable.SetSelectedFunc(func(row, column int) {
 		go func() {
-			HandleOnStepSelect(steps, row)
+			HandleOnStepSelect(steps, selectedPipeline, row)
 		}()
 	})
 	stepTable.SetSelectedStyle(tcell.StyleDefault.Foreground(tcell.ColorDarkOrange))
 	return layout
 }
 
-func HandleOnStepSelect(steps []types.StepDetail, row int) {
+func HandleOnStepSelect(steps []types.StepDetail, selectedPipeline types.PipelineResponse, row int) {
+	// Validate row index
+	if row < 0 || row >= len(steps) {
+		log.Printf("Invalid row index: %d, steps count: %d", row, len(steps))
+		return
+	}
+
+	if state.PipelineUIState == nil {
+		log.Println("PipelineUIState is nil, cannot update UI")
+		return
+	}
+	if state.PipelineUIState.PipelineStep == nil {
+		log.Println("PipelineSteps view is nil, cannot update UI")
+		return
+	}
+
+	selectedStep := steps[row]
+	log.Printf("Selected step UUID: %s", selectedStep.UUID)
+
+	util.ShowPipelineLoadingSpinner(state.PipelineUIState.PipelineStep, func() (interface{}, error) {
+		step := bitbucket.FetchPipelineStep(selectedPipeline.UUID, selectedStep.UUID)
+		if step.UUID == "" {
+			log.Println("Failed to fetch single step, empty UUID returned")
+			return nil, fmt.Errorf("failed to fetch single step")
+		}
+
+		return step, nil
+	}, func(result interface{}, err error) {
+		step, ok := result.(types.StepDetail)
+		if !ok {
+			util.UpdateView(state.PipelineUIState.PipelineStep, fmt.Sprintf("[red]Error: %v[-]", err))
+			return
+		}
+
+		view := GenerateStepView(step, selectedPipeline)
+
+		util.UpdateView(state.PipelineUIState.PipelineStep, view)
+	})
 }

@@ -80,7 +80,7 @@ func HandleOnPipelineSelect(pipelines []types.PipelineResponse, row int) {
 			return
 		}
 
-		view := GenerateStepView(steps, selectedPipeline)
+		view := GenerateStepsView(steps, selectedPipeline)
 
 		util.UpdateView(state.PipelineUIState.PipelineStepsDebugView, GeneratePPDebugInfo(selectedPipeline))
 		util.UpdateView(state.PipelineUIState.PipelineSteps, view)

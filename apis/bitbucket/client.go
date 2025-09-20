@@ -313,7 +313,7 @@ func FetchPipelineSteps(pipelineUUID string) []types.StepDetail {
 	log.Printf("[CLIENT] Fetching steps for pipeline UUID: %s", pipelineUUID)
 
 	resp, err := client.R().
-		SetResult(&types.BitbucketStepsResponse{}). // You need this type (see below)
+		SetResult(&types.BitbucketStepsResponse{}).
 		Get(url)
 	if err != nil {
 		log.Printf("[ERROR] Failed to fetch pipeline steps: %v", err)
@@ -328,4 +328,32 @@ func FetchPipelineSteps(pipelineUUID string) []types.StepDetail {
 	result := resp.Result().(*types.BitbucketStepsResponse)
 	log.Printf("[INFO] Successfully fetched %d steps", len(result.Values))
 	return result.Values
+}
+
+func FetchPipelineStep(pipelineUUID string, stepUUID string) types.StepDetail {
+	client := createClient()
+
+	url := fmt.Sprintf("%s/repositories/%s/%s/pipelines/%s/steps/%s",
+		BitbucketBaseURL, state.Workspace, state.Repo, pipelineUUID, stepUUID)
+
+	log.Printf("[CLIENT] Fetching step for pipeline UUID: %s, step UUID: %s", pipelineUUID, stepUUID)
+
+	var stepDetail types.StepDetail
+
+	resp, err := client.R().
+		SetResult(&stepDetail).
+		Get(url)
+	if err != nil {
+		log.Printf("[ERROR] Failed to fetch step: %v", err)
+		return types.StepDetail{}
+	}
+
+	if resp.StatusCode() != 200 {
+		log.Printf("[ERROR] Unexpected status code: %d\nBody: %s", resp.StatusCode(), string(resp.Body()))
+		return types.StepDetail{}
+	}
+
+	log.Printf("[INFO] Successfully fetched step: %s", stepDetail.UUID)
+
+	return stepDetail
 }
