@@ -13,33 +13,98 @@ import (
 	"github.com/rivo/tview"
 )
 
-func PopulatePipelineList(ppList *tview.Table) *tview.Table {
-	ppList.SetBackgroundColor(tcell.ColorDefault)
+func PopulatePipelineList(ppTable *tview.Table) *tview.Table {
+	ppTable.SetBackgroundColor(tcell.ColorDefault)
 
-	util.ShowPipelineLoadingSpinner(state.PipelineUIState.PipelineList, func() (interface{}, error) {
-		pps, _ := bitbucket.FetchPipelinesByQuery(bitbucket.BuildQuery(""))
-		if pps == nil {
-			log.Println("Failed to fetch pipelines, nil returned")
-			return nil, fmt.Errorf("failed to fetch pipelines")
-		}
-		return pps, nil
-	}, func(result interface{}, err error) {
-		pps, ok := result.([]types.PipelineResponse)
-		if !ok {
-			util.UpdateView(state.PipelineUIState.PipelineList, fmt.Sprintf("[red]Error: %v[-]", err))
+	var (
+		pipelineList  []types.PipelineResponse
+		nextPageURL   string
+		lastFetchDone bool
+		isLoading     bool
+	)
+
+	loadPipelines := func(query string, appendData bool) {
+		if lastFetchDone {
+			log.Println("[INFO] Already fetched this page, skipping...")
 			return
 		}
-		// Populate PR list
-		ui.PopulatePPList(ppList, pps)
 
-		ppList.SetSelectedFunc(func(row, column int) {
-			go func() {
-				HandleOnPipelineSelect(pps, row)
-			}()
+		if isLoading {
+			return
+		}
+		isLoading = true
+
+		util.ShowPipelineLoadingSpinner(state.PipelineUIState.PipelineList, func() (interface{}, error) {
+			pps, pagination := bitbucket.FetchPipelinesByQuery(query)
+			if pps == nil {
+				log.Println("Failed to fetch pipelines, nil returned")
+				return nil, fmt.Errorf("failed to fetch pipelines")
+			}
+
+			// If the number of pipelines fetched is less than the batch (max of 10),
+			// this means we have reached the last page and there are no more pipelines to fetch.
+			// Therefore, clear nextPageURL to prevent further pagination.
+			//
+			// This is based on the assumption that the query contains a 'pagelen' parameter indicating the page size.
+			if pagination.PageLen < 10 {
+				log.Printf("[INFO] No more pipelines to fetch, reached less than 10 page leng. %d", len(pps))
+				lastFetchDone = true
+			} else {
+				nextPageURL = pagination.Next
+			}
+
+			nextPageURL = pagination.Next
+			return pps, nil
+		}, func(result interface{}, err error) {
+			defer func() { isLoading = false }()
+
+			pps, ok := result.([]types.PipelineResponse)
+			if !ok {
+				util.UpdateView(state.PipelineUIState.PipelineList, fmt.Sprintf("[red]Error: %v[-]", err))
+				return
+			}
+
+			if appendData {
+				pipelineList = append(pipelineList, pps...)
+			} else {
+				pipelineList = pps
+			}
+
+			ui.PopulatePPList(ppTable, pipelineList)
+
+			ppTable.SetSelectedFunc(func(row, column int) {
+				go func() {
+					HandleOnPipelineSelect(pipelineList, row)
+				}()
+			})
 		})
-	})
+	}
 
-	return ppList
+	// Initial fetch
+	go loadPipelines(bitbucket.BuildQuery(""), false)
+
+	// Handle scroll near bottom to fetch more
+	ppTable.SetInputCapture(func(event *tcell.EventKey) *tcell.EventKey {
+		key := event.Key()
+		row, _ := ppTable.GetSelection()
+		totalRows := ppTable.GetRowCount()
+
+		if key == tcell.KeyDown && row >= totalRows-2 && nextPageURL != "" {
+			log.Printf("[INFO] Scrolling near bottom, loading next page: %s", nextPageURL)
+
+			// Extract query string only
+			query := util.ExtractQueryFromNextURL(nextPageURL)
+
+			// Avoid firing multiple times
+			nextPageURL = ""
+
+			// Load next page in background
+			go loadPipelines(query, true)
+		}
+
+		return event
+	})
+	return ppTable
 }
 
 func HandleOnPipelineSelect(pipelines []types.PipelineResponse, row int) {

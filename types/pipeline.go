@@ -1,8 +1,8 @@
 package types
 
 type BitbucketPipelineResponse struct {
-	Values     []PipelineResponse `json:"values"`
-	Pagination Pagination         `json:"pagination"`
+	Values []PipelineResponse `json:"values"`
+	Pagination
 }
 
 type PipelineResponse struct {
