@@ -62,6 +62,8 @@ func HandleOnPipelineSelect(pipelines []types.PipelineResponse, row int) {
 	log.Printf("Selected pipeline UUID: %s, Name: %s", selectedPipeline.UUID, selectedPipeline.Creator.DisplayName)
 
 	util.ShowPipelineLoadingSpinner(state.PipelineUIState.PipelineSteps, func() (interface{}, error) {
+		EmptyAllPipelineListDependentViews()
+
 		steps := bitbucket.FetchPipelineSteps(selectedPipeline.UUID)
 		if steps == nil {
 			log.Println("Failed to fetch pipeline steps, nil returned")
@@ -79,5 +81,16 @@ func HandleOnPipelineSelect(pipelines []types.PipelineResponse, row int) {
 
 		util.UpdateView(state.PipelineUIState.PipelineStepsDebugView, GeneratePPDebugInfo(selectedPipeline))
 		util.UpdateView(state.PipelineUIState.PipelineSteps, view)
+
+		HandleOnStepSelect(steps, selectedPipeline, 0) // Auto select first step and fetch the info
 	})
+}
+
+func EmptyAllPipelineListDependentViews() {
+	// Always start a fresh slate for rest of dependent views
+	emptyView := tview.NewFlex()
+	util.UpdateView(state.PipelineUIState.PipelineStepsDebugView, emptyView)
+	util.UpdateView(state.PipelineUIState.PipelineSteps, emptyView)
+	util.UpdateView(state.PipelineUIState.PipelineStep, emptyView)
+	util.UpdateView(state.PipelineUIState.PipelineStepCommandLogView, emptyView)
 }

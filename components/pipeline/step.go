@@ -73,6 +73,9 @@ func GenerateStepView(step types.StepDetail, selectedPipeline types.PipelineResp
 		}()
 	})
 	scriptTable.SetSelectedStyle(tcell.StyleDefault.Foreground(tcell.ColorDarkOrange))
+
+	// Select first step and fetch its command already
+	HandleOnScriptCommandSelected(step.ScriptCommands, step, selectedPipeline, 0)
 	return layout
 }
 
