@@ -304,6 +304,27 @@ func FetchPipelinesByQuery(query string) ([]types.PipelineResponse, types.Pagina
 	return response.Values, response.Pagination
 }
 
+func FetchPipeline(pipelineUUID string) *types.PipelineResponse {
+	client := createClient()
+
+	baseURL := fmt.Sprintf("%s/repositories/%s/%s/pipelines/%s",
+		BitbucketBaseURL, state.Workspace, state.Repo, pipelineUUID)
+
+	log.Printf("[CLIENT] Fetching single pipeline %s", baseURL)
+
+	resp, err := client.R().
+		SetResult(&types.PipelineResponse{}).
+		Get(baseURL)
+	if err != nil {
+		log.Fatalf("Error fetching single pipeline %v", err)
+		return nil
+	}
+
+	response := resp.Result().(*types.PipelineResponse)
+
+	return response
+}
+
 func FetchPipelineSteps(pipelineUUID string) []types.StepDetail {
 	client := createClient()
 

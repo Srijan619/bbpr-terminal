@@ -8,6 +8,7 @@ import (
 	"simple-git-terminal/types"
 	"simple-git-terminal/ui"
 	"simple-git-terminal/util"
+	"time"
 
 	"github.com/gdamore/tcell/v2"
 	"github.com/rivo/tview"
@@ -21,6 +22,7 @@ func PopulatePipelineList(ppTable *tview.Table) *tview.Table {
 		nextPageURL   string
 		lastFetchDone bool
 		isLoading     bool
+		frame         int
 	)
 
 	loadPipelines := func(query string, appendData bool) {
@@ -70,7 +72,7 @@ func PopulatePipelineList(ppTable *tview.Table) *tview.Table {
 				pipelineList = pps
 			}
 
-			ui.PopulatePPList(ppTable, pipelineList)
+			ui.PopulatePPList(ppTable, pipelineList, frame)
 
 			ppTable.SetSelectedFunc(func(row, column int) {
 				go func() {
@@ -82,6 +84,41 @@ func PopulatePipelineList(ppTable *tview.Table) *tview.Table {
 
 	// Initial fetch
 	go loadPipelines(bitbucket.BuildQuery(""), false)
+
+	// Animate pipeline list with frame counter
+	go func() {
+		ticker := time.NewTicker(200 * time.Millisecond)
+		defer ticker.Stop()
+
+		for range ticker.C {
+			if len(pipelineList) == 0 {
+				continue
+			}
+			frame++
+
+			state.PipelineUIState.App.QueueUpdateDraw(func() {
+				for i, pp := range pipelineList {
+					status := pp.State.Result.Name
+					if status == "" {
+						status = pp.State.Name
+					}
+
+					if !(status.InProgress() || status.Running() || status.Pending()) {
+						continue
+					}
+
+					// Fetch new state
+					updatedPipeline := bitbucket.FetchPipeline(pp.UUID)
+
+					icon := util.GetIconForStatusWithColorAnimated(updatedPipeline.State.Name, frame)
+					color := util.GetColorForStatus(updatedPipeline.State.Name)
+					text := fmt.Sprintf("%s %s", icon, updatedPipeline.State.Name)
+
+					ppTable.SetCell(i, 7, util.CellFormat(text, color)) // Column 7 is status
+				}
+			})
+		}
+	}()
 
 	// Handle scroll near bottom to fetch more
 	ppTable.SetInputCapture(func(event *tcell.EventKey) *tcell.EventKey {
@@ -142,6 +179,10 @@ func HandleOnPipelineSelect(pipelines []types.PipelineResponse, row int) {
 			return
 		}
 
+		if selectedPipeline.State.Name.InProgress() {
+			// if selected pipeline is in progress, track it with constant polling in backgroun until it is completed
+			go TrackPipelineLive(selectedPipeline)
+		}
 		view := GenerateStepsView(steps, selectedPipeline)
 
 		util.UpdateView(state.PipelineUIState.PipelineStepsDebugView, GeneratePPDebugInfo(selectedPipeline))
@@ -149,6 +190,36 @@ func HandleOnPipelineSelect(pipelines []types.PipelineResponse, row int) {
 
 		HandleOnStepSelect(steps, selectedPipeline, 0) // Auto select first step and fetch the info
 	})
+}
+
+func TrackPipelineLive(pipeline types.PipelineResponse) {
+	log.Printf("[INFO] Starting live tracking for pipeline: %s", pipeline.UUID)
+
+	ticker := time.NewTicker(3 * time.Second) // poll every 3 seconds
+	defer ticker.Stop()
+
+	for range ticker.C {
+		updatedPipeline := bitbucket.FetchPipeline(pipeline.UUID)
+		if updatedPipeline.UUID == "" {
+			log.Printf("[WARN] Could not fetch pipeline update for %s", pipeline.UUID)
+			continue
+		}
+
+		if !updatedPipeline.State.Name.InProgress() {
+			log.Printf("[INFO] Pipeline %s is no longer in progress. Stopping tracker.", pipeline.UUID)
+			break
+		}
+
+		steps := bitbucket.FetchPipelineSteps(updatedPipeline.UUID)
+		if steps == nil {
+			log.Printf("[WARN] Could not fetch updated steps for pipeline %s", updatedPipeline.UUID)
+			continue
+		}
+
+		// Re-render step view
+		view := GenerateStepsView(steps, *updatedPipeline)
+		util.UpdateView(state.PipelineUIState.PipelineSteps, view)
+	}
 }
 
 func EmptyAllPipelineListDependentViews() {
