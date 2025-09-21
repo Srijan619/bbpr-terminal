@@ -86,9 +86,13 @@ func PopulatePipelineList() {
 			HandleOnPipelineSelect(pipelineList, 0, frame)
 		})
 	}
-
 	// Initial load
 	go loadPipelines(bitbucket.BuildQuery(""), false)
+
+	// callback for refresh while watching changes..
+	state.PipelineUIState.PipelineList.SetOnRefresh(func() {
+		go loadPipelines(bitbucket.BuildQuery(""), false)
+	})
 
 	// Animate status with throttled refresh
 	go func() {
@@ -210,12 +214,12 @@ func HandleOnPipelineSelect(pipelines []types.PipelineResponse, row int, frame i
 		// Track pipeline based on all status change..
 		go TrackPipelineLive(ctx, selectedPipeline, frame)
 
-		view := GenerateStepsView(steps, selectedPipeline, frame)
+		// List changed....
+		go GenerateStepsView(steps, selectedPipeline, frame)
 
 		support.UpdateView(state.PipelineUIState.PipelineStepsDebugView, GeneratePPDebugInfo(selectedPipeline))
-		support.UpdateView(state.PipelineUIState.PipelineSteps, view)
 
-		HandleOnStepSelect(steps, selectedPipeline, 0) // Auto select first step and fetch the info
+		//	HandleOnStepSelect(steps, selectedPipeline, 0) // Auto select first step and fetch the info
 	})
 }
 
@@ -282,8 +286,8 @@ func TrackPipelineLive(ctx context.Context, pipeline types.PipelineResponse, fra
 func EmptyAllPipelineListDependentViews() {
 	// Always start a fresh slate for rest of dependent views
 	emptyView := tview.NewFlex()
+	state.PipelineUIState.PipelineSteps.ClearTable()
 	support.UpdateView(state.PipelineUIState.PipelineStepsDebugView, emptyView)
-	support.UpdateView(state.PipelineUIState.PipelineSteps, emptyView)
 	support.UpdateView(state.PipelineUIState.PipelineStep, emptyView)
 	support.UpdateView(state.PipelineUIState.PipelineStepCommandsView, emptyView)
 	support.UpdateView(state.PipelineUIState.PipelineStepCommandLogView, emptyView)

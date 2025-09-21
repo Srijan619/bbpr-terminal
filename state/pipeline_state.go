@@ -16,10 +16,9 @@ import (
 type PipelineState struct {
 	App                        *tview.Application
 	MainFlexWrapper            *tview.Flex
-	PipelineListFlex           *tview.Flex
 	PipelineList               *widgets.PipelineTable
 	PipelineStepsDebugView     *tview.Flex
-	PipelineSteps              *tview.Flex
+	PipelineSteps              *widgets.StepsTable
 	PipelineStep               *tview.Flex
 	PipelineStepCommandsView   *tview.Flex
 	PipelineStepCommandLogView *tview.Flex
@@ -34,8 +33,11 @@ type PipelineState struct {
 	TrackingCancelFunc context.CancelFunc
 
 	// dynamics
-	PipelineStepTable           *tview.Table
+	PipelineStepsTable          *widgets.StepsTable
 	PipelineScriptCommandsTable *tview.Table
+
+	// central collection of views
+	Views []tview.Primitive
 }
 
 // ✅ Unique name to avoid conflict with other state
@@ -43,10 +45,10 @@ var PipelineUIState *PipelineState
 
 func InitializePipelineViews(
 	app *tview.Application,
-	mainFlexWrapper, pipelineListFlex *tview.Flex,
+	mainFlexWrapper *tview.Flex,
 	pipelineList *widgets.PipelineTable,
 	pipelineStepsDebugView *tview.Flex,
-	pipelineSteps *tview.Flex,
+	pipelineSteps *widgets.StepsTable,
 	pipelineStep *tview.Flex,
 	pipelineStepCommandsView *tview.Flex,
 	pipelineStepCommandLogView *tview.Flex,
@@ -56,7 +58,6 @@ func InitializePipelineViews(
 	PipelineUIState = &PipelineState{
 		App:                        app,
 		MainFlexWrapper:            mainFlexWrapper,
-		PipelineListFlex:           pipelineListFlex,
 		PipelineList:               pipelineList,
 		PipelineStepsDebugView:     pipelineStepsDebugView,
 		PipelineSteps:              pipelineSteps,
@@ -66,6 +67,19 @@ func InitializePipelineViews(
 		PipelineStatusFilter:       pipelineStatusFilter,
 		PaginationFlex:             paginationFlex,
 		PipelineSearchBar:          pipelineSearchBar,
+	}
+
+	PipelineUIState.Views = []tview.Primitive{
+		pipelineList,
+		pipelineSteps,
+		pipelineStepCommandsView,
+		pipelineStatusFilter,
+		pipelineSearchBar,
+		pipelineStepCommandLogView,
+		pipelineStep,
+		pipelineStepsDebugView,
+		paginationFlex,
+		mainFlexWrapper,
 	}
 }
 

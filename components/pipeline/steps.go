@@ -14,7 +14,7 @@ import (
 )
 
 func GenerateStepsView(steps []types.StepDetail, selectedPipeline types.PipelineResponse, frame int) tview.Primitive {
-	stepTable := tview.NewTable()
+	stepTable := state.PipelineUIState.PipelineSteps
 
 	stepTable.
 		SetBorders(false).
@@ -80,7 +80,7 @@ func GenerateStepsView(steps []types.StepDetail, selectedPipeline types.Pipeline
 	})
 	stepTable.SetSelectedStyle(tcell.StyleDefault.Foreground(tcell.ColorDarkOrange))
 
-	state.PipelineUIState.PipelineStepTable = stepTable
+	state.PipelineUIState.PipelineStepsTable = stepTable
 	return layout
 }
 

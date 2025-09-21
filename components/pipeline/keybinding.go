@@ -14,7 +14,7 @@ const (
 
 func SetupKeyBindings() {
 	focusOrder := []tview.Primitive{
-		state.PipelineUIState.PipelineListFlex, state.PipelineUIState.PipelineSteps, state.PipelineUIState.PipelineStepCommandsView,
+		state.PipelineUIState.PipelineList, state.PipelineUIState.PipelineSteps, state.PipelineUIState.PipelineStepCommandsView,
 	}
 	// Define focus order
 	currentFocusIndex := 0
@@ -32,7 +32,7 @@ func SetupKeyBindings() {
 			state.PipelineUIState.App.SetFocus(focusOrder[currentFocusIndex])
 
 			support.SetTableSelectability(focusOrder, currentFocusIndex, map[tview.Primitive]tview.Primitive{
-				state.PipelineUIState.PipelineSteps:            state.PipelineUIState.PipelineStepTable,
+				state.PipelineUIState.PipelineSteps:            state.PipelineUIState.PipelineStepsTable,
 				state.PipelineUIState.PipelineStepCommandsView: state.PipelineUIState.PipelineScriptCommandsTable,
 			})
 

@@ -40,29 +40,22 @@ func CreateMainAppForBBPipeline() *tview.Application {
 	ppStatusFilterFlex.AddItem(pr.CreatePRStatusFilterView(), 0, 1, false)
 
 	// Pipelines LIST UI
-	ppListFlex := support.CreateFlexComponent("Pipelines [green]p|P").
-		SetDirection(tview.FlexRow)
 
 	ppList := widgets.NewPipelineTable()
-	ppListFlex.SetBackgroundColor(tcell.ColorDefault)
-
-	ppListFlex.
-		AddItem(ppList, 0, 1, true)
 
 	leftFullFlex := tview.NewFlex().
 		SetDirection(tview.FlexRow)
 
 	leftFullFlex.
 		AddItem(ppStatusFilterFlex, 0, 2, false).
-		AddItem(ppListFlex, 0, 15, true)
+		AddItem(ppList, 0, 15, true)
 
 		// MIDDLE
 	stepsWrapper := tview.NewFlex()
 	stepsWrapper.SetDirection(tview.FlexRow).SetBackgroundColor(tcell.ColorDefault)
 
 	debugView := support.CreateFlexComponent("Debug Info")
-	steps := support.CreateFlexComponent("Steps Info")
-	steps.SetBackgroundColor(tcell.ColorDefault)
+	steps := widgets.NewStepsTable()
 
 	stepCommandsView := support.CreateFlexComponent("Script Commands")
 	stepsWrapper.
@@ -93,7 +86,7 @@ func CreateMainAppForBBPipeline() *tview.Application {
 	mainFlexWrapper.AddItem(leftFullFlex, 0, 1, true).
 		AddItem(middleFullFlex, 0, 3, false)
 
-	state.InitializePipelineViews(app, mainFlexWrapper, ppListFlex, ppList, debugView, steps, step, stepCommandsView, stepCommandLogView, nil, nil, nil)
+	state.InitializePipelineViews(app, mainFlexWrapper, ppList, debugView, steps, step, stepCommandsView, stepCommandLogView, nil, nil, nil)
 	pipeline.PopulatePipelineList()
 
 	pipeline.SetupKeyBindings()

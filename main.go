@@ -46,6 +46,10 @@ func main() {
 		log.Fatalf("Unknown mode: %s. Use 'pipeline' or 'pr'", mode)
 	}
 
+	if os.Getenv("BBPR_APP_ENV") == "development" {
+		go watchFiles(app)
+	}
+
 	if err := app.Run(); err != nil {
 		log.Fatalf("Error running application: %v", err)
 	}

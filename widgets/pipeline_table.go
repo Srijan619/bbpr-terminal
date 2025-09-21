@@ -5,6 +5,7 @@ import (
 	"simple-git-terminal/constants"
 	"simple-git-terminal/types"
 	"simple-git-terminal/util"
+	widgets "simple-git-terminal/widgets/table"
 	"time"
 
 	"github.com/gdamore/tcell/v2"
@@ -12,23 +13,21 @@ import (
 )
 
 type PipelineTable struct {
-	*tview.Table
-	pipelines   []types.PipelineResponse
-	selectedRow int
+	*widgets.BaseTableView
+	pipelines []types.PipelineResponse
 }
 
 func NewPipelineTable() *PipelineTable {
-	table := tview.NewTable()
+	table := widgets.NewBaseTableView()
 
-	table.
-		SetSelectable(true, false).
-		SetFixed(1, 0).
-		SetBackgroundColor(tcell.ColorDefault)
+	table.SetTitle("Pipelines p|P").
+		SetBackgroundColor(tcell.ColorDefault).
+		SetTitleAlign(tview.AlignLeft)
+	table.SetSelectable(true, false)
 
 	return &PipelineTable{
-		Table:       table,
-		pipelines:   nil,
-		selectedRow: -1,
+		BaseTableView: table,
+		pipelines:     nil,
 	}
 }
 
@@ -90,26 +89,24 @@ func (pt *PipelineTable) SetPipelines(pps []types.PipelineResponse, frame int) {
 	pt.SetSelectedStyle(tcell.StyleDefault.Foreground(tcell.ColorDarkOrange))
 }
 
-func (pt *PipelineTable) UpdateSelectedRow(row int) {
-	if row < 0 || row >= len(pt.pipelines) {
+func (pipelineTable *PipelineTable) UpdateSelectedRow(row int) {
+	if row < 0 || row >= len(pipelineTable.pipelines) {
 		return
 	}
 
-	pt.selectedRow = row
-
 	// Redraw selection icon on all rows
-	for i := 0; i < len(pt.pipelines); i++ {
+	for i := range len(pipelineTable.pipelines) {
 		if i == row {
-			pt.SetCell(i, 0, util.CellFormat(constants.ICON_SELECTED, tcell.ColorOrange))
+			pipelineTable.BaseTableView.UpdateSelectedRow(row)
 		} else {
-			pt.SetCell(i, 0, util.CellFormat("", tcell.ColorDefault))
+			pipelineTable.UpdateUnSelectedRow(row)
 		}
 	}
 }
 
 func (pt *PipelineTable) GetSelectedPipeline() *types.PipelineResponse {
-	if pt.selectedRow >= 0 && pt.selectedRow < len(pt.pipelines) {
-		return &pt.pipelines[pt.selectedRow]
+	if pt.SelectedRow >= 0 && pt.SelectedRow < len(pt.pipelines) {
+		return &pt.pipelines[pt.SelectedRow]
 	}
 	return nil
 }
@@ -120,4 +117,9 @@ func (pt *PipelineTable) UpdateStatus(pipelineUUID string, status *tview.TableCe
 			pt.SetCell(i, 6, status)
 		}
 	}
+}
+
+func (s *PipelineTable) Refresh() {
+	s.BaseTableView.Refresh()
+	s.pipelines = nil
 }
