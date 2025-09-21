@@ -44,6 +44,7 @@ func GenerateStepView(step types.StepDetail, selectedPipeline types.PipelineResp
 
 	// ─── TABLE VIEW: Script Commands ─────────────────────────────────────
 	scriptTable := tview.NewTable()
+	scriptTable.SetSelectable(true, false)
 
 	scriptTable.
 		SetBorders(false).
