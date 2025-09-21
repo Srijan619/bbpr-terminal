@@ -5,18 +5,22 @@ import (
 	"fmt"
 	"log"
 	"os"
+	"simple-git-terminal/state"
 
 	"github.com/rivo/tview"
 )
 
 var (
 	mode      string
+	mocking   bool
 	workspace string
 	repoSlug  string
 )
 
 func init() {
 	flag.StringVar(&mode, "mode", "pr", "Mode of the app: 'pipeline' or 'pr'")
+	// Internal
+	flag.BoolVar(&mocking, "mocking", false, "Use mock mode for network calls")
 }
 
 func main() {
@@ -48,6 +52,7 @@ func main() {
 
 	if os.Getenv("BBPR_APP_ENV") == "development" {
 		go watchFiles(app)
+		state.PipelineUIState.IsNetworkMockMode = mocking
 	}
 
 	if err := app.Run(); err != nil {

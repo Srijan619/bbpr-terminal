@@ -1,12 +1,18 @@
 package widgets
 
 import (
+	"log"
 	"simple-git-terminal/constants"
 	"simple-git-terminal/util"
 
 	"github.com/gdamore/tcell/v2"
 	"github.com/rivo/tview"
 )
+
+// Selectable interface for views that support SetSelectable
+type Selectable interface {
+	SetSelectable(selectable bool, allowsMultiple bool)
+}
 
 // Refreshable is implemented by views that can be refreshed (e.g., after file changes)
 type Refreshable interface {
@@ -16,7 +22,6 @@ type Refreshable interface {
 type BaseTableView struct {
 	*tview.Table
 	SelectedRow int
-	Selectable  bool
 	OnRefresh   func()
 }
 
@@ -31,8 +36,11 @@ func NewBaseTableView() *BaseTableView {
 	return &BaseTableView{
 		Table:       table,
 		SelectedRow: -1,
-		Selectable:  true,
 	}
+}
+
+func (b *BaseTableView) SetSelectable(selectable bool, allowsMultiple bool) {
+	b.Table.SetSelectable(selectable, allowsMultiple)
 }
 
 // Toggle row selection (UI feedback)
@@ -45,25 +53,29 @@ func (b *BaseTableView) GetSelectedRow() int {
 }
 
 func (b *BaseTableView) SetSelectableState(selectable bool) {
-	b.Selectable = selectable
+	// Optional helper method to set selectable state easily
 	b.SetSelectable(selectable, false)
 }
 
 func (b *BaseTableView) UpdateSelectedRow(row int) {
 	if row < 0 {
+		log.Println("[UpdateSelectedRow] Invalid row:", row)
 		return
 	}
 
+	log.Println("[UpdateSelectedRow] Selecting row:", row)
 	b.SelectedRow = row
 	b.SetCell(row, 0, util.CellFormat(constants.ICON_SELECTED, tcell.ColorOrange))
 }
 
 func (b *BaseTableView) UpdateUnSelectedRow(row int) {
 	if row < 0 {
+		log.Println("[UpdateUnSelectedRow] Invalid row:", row)
 		return
 	}
 
-	b.SelectedRow = row
+	log.Println("[UpdateUnSelectedRow] Unselecting row:", row)
+	// Clear selection icon from the row
 	b.SetCell(row, 0, util.CellFormat("", tcell.ColorDefault))
 }
 
@@ -79,6 +91,6 @@ func (b *BaseTableView) Refresh() {
 	}
 }
 
-func (s *BaseTableView) SetOnRefresh(cb func()) {
-	s.OnRefresh = cb
+func (b *BaseTableView) SetOnRefresh(cb func()) {
+	b.OnRefresh = cb
 }

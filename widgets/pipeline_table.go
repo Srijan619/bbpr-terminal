@@ -95,11 +95,11 @@ func (pipelineTable *PipelineTable) UpdateSelectedRow(row int) {
 	}
 
 	// Redraw selection icon on all rows
-	for i := range len(pipelineTable.pipelines) {
+	for i := range pipelineTable.pipelines {
 		if i == row {
-			pipelineTable.BaseTableView.UpdateSelectedRow(row)
+			pipelineTable.BaseTableView.UpdateSelectedRow(i)
 		} else {
-			pipelineTable.UpdateUnSelectedRow(row)
+			pipelineTable.UpdateUnSelectedRow(i)
 		}
 	}
 }

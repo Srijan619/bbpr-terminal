@@ -2,6 +2,7 @@ package support
 
 import (
 	"log"
+	widgets "simple-git-terminal/widgets/table"
 
 	"github.com/gdamore/tcell/v2"
 	"github.com/rivo/tview"
@@ -92,15 +93,8 @@ func SetTableSelectableIfFocused(focus tview.Primitive, table tview.Primitive, f
 
 func SetTableSelectability(focusOrder []tview.Primitive, currentFocusIndex int, tableMap map[tview.Primitive]tview.Primitive) {
 	for view, table := range tableMap {
-		t, ok := table.(*tview.Table)
-		if !ok || t == nil {
-			continue
-		}
-
-		if focusOrder[currentFocusIndex] == view {
-			t.SetSelectable(true, false)
-		} else {
-			t.SetSelectable(false, false)
+		if t, ok := table.(widgets.Selectable); ok {
+			t.SetSelectable(focusOrder[currentFocusIndex] == view, false)
 		}
 	}
 }

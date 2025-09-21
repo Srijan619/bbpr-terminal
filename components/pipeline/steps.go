@@ -14,41 +14,15 @@ import (
 )
 
 func GenerateStepsView(steps []types.StepDetail, selectedPipeline types.PipelineResponse, frame int) tview.Primitive {
-	stepTable := state.PipelineUIState.PipelineSteps
+	stepsTable := state.PipelineUIState.PipelineSteps
 
-	stepTable.
+	stepsTable.
 		SetBorders(false).
 		SetBackgroundColor(tcell.ColorDefault)
 
-		// Determine left bar color from most critical status
-	barColor := tcell.ColorDarkGray
-
-	if len(steps) == 0 {
-		stepTable.SetCell(0, 0, util.CellFormat(" No steps available", tcell.ColorGray))
-	} else {
-		for i, step := range steps {
-			status := step.State.Result.Name
-			if status == "" {
-				status = step.State.Name
-			}
-
-			color := util.GetColorForStatus(status)
-			colorHex := util.HexColor(color)
-
-			// Animated icon if in progress
-			var statusIcon string
-			if status.NeedsTracking() {
-				statusIcon = util.GetIconForStatusWithColorAnimated(status, frame)
-			} else {
-				statusIcon = util.GetIconForStatusWithColor(status)
-			}
-
-			barColor = color
-			text := fmt.Sprintf(" [#%s:-]%s[-:-] %s", colorHex, statusIcon, step.Name)
-			cell := util.CellFormat(text, color)
-			stepTable.SetCell(i, 0, cell)
-		}
-	}
+	stepsTable.SetSteps(steps, frame)
+	// Determine left bar color from most critical status
+	barColor := util.GetColorForStatus(state.PipelineUIState.SelectedPipeline.State.Name) // Bar color is pipeline's state color
 
 	listHeight := len(steps)
 	if listHeight == 0 {
@@ -70,17 +44,17 @@ func GenerateStepsView(steps []types.StepDetail, selectedPipeline types.Pipeline
 	layout.
 		SetDirection(tview.FlexColumn).
 		AddItem(leftBarFlex, 1, 0, false).
-		AddItem(stepTable, 0, 1, true).
+		AddItem(stepsTable, 0, 1, true).
 		SetBackgroundColor(tcell.ColorDefault)
 
-	stepTable.SetSelectedFunc(func(row, column int) {
+	stepsTable.SetSelectedFunc(func(row, column int) {
 		go func() {
 			HandleOnStepSelect(steps, selectedPipeline, row)
 		}()
 	})
-	stepTable.SetSelectedStyle(tcell.StyleDefault.Foreground(tcell.ColorDarkOrange))
+	stepsTable.SetSelectedStyle(tcell.StyleDefault.Foreground(tcell.ColorDarkOrange))
 
-	state.PipelineUIState.PipelineStepsTable = stepTable
+	state.PipelineUIState.PipelineStepsTable = stepsTable
 	return layout
 }
 
@@ -102,6 +76,7 @@ func HandleOnStepSelect(steps []types.StepDetail, selectedPipeline types.Pipelin
 
 	selectedStep := steps[row]
 	log.Printf("Selected step UUID: %s", selectedStep.UUID)
+	state.PipelineUIState.PipelineSteps.UpdateSelectedRow(row)
 
 	support.ShowPipelineLoadingSpinner(state.PipelineUIState.PipelineStep, func() (interface{}, error) {
 		step := bitbucket.FetchPipelineStep(selectedPipeline.UUID, selectedStep.UUID)

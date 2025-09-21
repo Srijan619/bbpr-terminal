@@ -38,6 +38,9 @@ type PipelineState struct {
 
 	// central collection of views
 	Views []tview.Primitive
+
+	// for mocking
+	IsNetworkMockMode bool
 }
 
 // ✅ Unique name to avoid conflict with other state

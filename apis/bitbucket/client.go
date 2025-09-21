@@ -265,6 +265,10 @@ func buildStateFilter() string {
 
 // Pipelines
 func FetchPipelinesByQuery(query string) ([]types.PipelineResponse, types.Pagination) {
+	if state.PipelineUIState.IsNetworkMockMode {
+		return TestFetchPipelinesByQuery(query)
+	}
+
 	client := createClient()
 
 	baseURL := fmt.Sprintf("%s/repositories/%s/%s/pipelines",
@@ -305,6 +309,9 @@ func FetchPipelinesByQuery(query string) ([]types.PipelineResponse, types.Pagina
 }
 
 func FetchPipeline(pipelineUUID string) *types.PipelineResponse {
+	if state.PipelineUIState.IsNetworkMockMode {
+		return TestFetchPipeline(pipelineUUID)
+	}
 	client := createClient()
 
 	baseURL := fmt.Sprintf("%s/repositories/%s/%s/pipelines/%s",
@@ -330,6 +337,10 @@ func FetchPipeline(pipelineUUID string) *types.PipelineResponse {
 // Stops early if last page is reached before 3 pages.
 // Returns a combined slice of all steps.
 func FetchPipelineSteps(pipelineUUID string) []types.StepDetail {
+	if state.PipelineUIState.IsNetworkMockMode {
+		return SimulatedFetchPipelineSteps(pipelineUUID)
+	}
+
 	client := createClient()
 
 	baseURL := fmt.Sprintf("%s/repositories/%s/%s/pipelines/%s/steps",

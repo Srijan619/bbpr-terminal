@@ -96,7 +96,8 @@ func PopulatePipelineList() {
 
 	// Animate status with throttled refresh
 	go func() {
-		ticker := time.NewTicker(1 * time.Second) // Slower animation
+		ticker := time.NewTicker(100 * time.Millisecond) // 10 FPS
+
 		defer ticker.Stop()
 
 		for range ticker.C {
@@ -212,49 +213,63 @@ func HandleOnPipelineSelect(pipelines []types.PipelineResponse, row int, frame i
 		state.PipelineUIState.TrackingCancelFunc = cancel
 
 		// Track pipeline based on all status change..
-		go TrackPipelineLive(ctx, selectedPipeline, frame)
+		go TrackPipelineLive(ctx, selectedPipeline)
 
-		// List changed....
-		go GenerateStepsView(steps, selectedPipeline, frame)
+		stepsView := GenerateStepsView(steps, selectedPipeline, frame)
 
 		support.UpdateView(state.PipelineUIState.PipelineStepsDebugView, GeneratePPDebugInfo(selectedPipeline))
+		support.UpdateView(state.PipelineUIState.PipelineSteps, stepsView)
 
 		//	HandleOnStepSelect(steps, selectedPipeline, 0) // Auto select first step and fetch the info
 	})
 }
 
-func TrackPipelineLive(ctx context.Context, pipeline types.PipelineResponse, frame int) {
+func TrackPipelineLive(ctx context.Context, pipeline types.PipelineResponse) {
 	if !pipeline.State.Name.NeedsTracking() {
 		return
 	}
 	log.Printf("[INFO] Starting live tracking for pipeline: %s", pipeline.UUID)
 
-	ticker := time.NewTicker(3 * time.Second)
-	defer ticker.Stop()
+	animationTicker := time.NewTicker(100 * time.Millisecond) // 10 FPS animation
+	defer animationTicker.Stop()
 
-	// Track how many consecutive times we see all steps finished
+	fetchTicker := time.NewTicker(3 * time.Second) // 3 seconds fetch interval
+	defer fetchTicker.Stop()
+
 	const stableThreshold = 3
 	stableCount := 0
+
+	frame := 0
+	steps := []types.StepDetail{}
 
 	for {
 		select {
 		case <-ctx.Done():
 			log.Printf("[INFO] Tracking for pipeline %s cancelled", pipeline.UUID)
 			return
-		case <-ticker.C:
+
+		case <-animationTicker.C:
+			// Just update animation frame, patch UI with same steps but new frame for spinner
+			frame++
+			state.PipelineUIState.PipelineSteps.PatchSteps(steps, frame)
+
+		case <-fetchTicker.C:
 			updatedPipeline := bitbucket.FetchPipeline(pipeline.UUID)
 			if updatedPipeline.UUID == "" {
 				log.Printf("[WARN] Could not fetch pipeline update for %s", pipeline.UUID)
 				continue
 			}
 
-			steps := bitbucket.FetchPipelineSteps(updatedPipeline.UUID)
-			if steps == nil {
+			newSteps := bitbucket.FetchPipelineSteps(updatedPipeline.UUID)
+			if newSteps == nil {
 				log.Printf("[WARN] Could not fetch updated steps for pipeline %s", updatedPipeline.UUID)
 				continue
 			}
 
-			// Check if all steps are in terminal state
+			// Update steps with new data
+			steps = newSteps
+
+			// Check if all steps are done
 			allDone := true
 			for _, step := range steps {
 				if step.State.Name.InProgress() || step.State.Name.Running() || step.State.Name.Pending() {
@@ -265,19 +280,17 @@ func TrackPipelineLive(ctx context.Context, pipeline types.PipelineResponse, fra
 
 			if allDone {
 				stableCount++
-				log.Printf("[INFO] All steps appear complete for pipeline %s (%d/%d confirmations)", pipeline.UUID, stableCount, stableThreshold)
+				log.Printf("[INFO] All steps complete for pipeline %s (%d/%d confirmations)", pipeline.UUID, stableCount, stableThreshold)
 			} else {
 				stableCount = 0
 			}
 
-			// Re-render step view
-			view := GenerateStepsView(steps, *updatedPipeline, frame)
-			support.UpdateView(state.PipelineUIState.PipelineSteps, view)
+			// Patch UI immediately on fetch as well
+			state.PipelineUIState.PipelineSteps.PatchSteps(steps, frame)
 
-			// Exit only after N consecutive stable reads
 			if !updatedPipeline.State.Name.InProgress() && stableCount >= stableThreshold {
-				log.Printf("[INFO] Pipeline %s has finished and all steps are stable. Stopping tracker.", pipeline.UUID)
-				break
+				log.Printf("[INFO] Pipeline %s finished and stable. Stopping tracker.", pipeline.UUID)
+				return
 			}
 		}
 	}
@@ -286,7 +299,7 @@ func TrackPipelineLive(ctx context.Context, pipeline types.PipelineResponse, fra
 func EmptyAllPipelineListDependentViews() {
 	// Always start a fresh slate for rest of dependent views
 	emptyView := tview.NewFlex()
-	state.PipelineUIState.PipelineSteps.ClearTable()
+	support.UpdateView(state.PipelineUIState.PipelineSteps, emptyView)
 	support.UpdateView(state.PipelineUIState.PipelineStepsDebugView, emptyView)
 	support.UpdateView(state.PipelineUIState.PipelineStep, emptyView)
 	support.UpdateView(state.PipelineUIState.PipelineStepCommandsView, emptyView)
