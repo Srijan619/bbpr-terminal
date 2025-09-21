@@ -47,7 +47,6 @@ func GenerateStepView(step types.StepDetail, selectedPipeline types.PipelineResp
 
 	scriptTable.
 		SetBorders(false).
-		SetSelectable(true, false).
 		SetBackgroundColor(tcell.ColorDefault)
 
 	for i, cmd := range step.ScriptCommands {
@@ -59,6 +58,7 @@ func GenerateStepView(step types.StepDetail, selectedPipeline types.PipelineResp
 		scriptTable.SetCell(0, 0, util.CellFormat(" No script commands available", tcell.ColorGray))
 	}
 
+	state.PipelineUIState.PipelineScriptCommandsTable = scriptTable
 	// ─── MAIN FLEX ───────────────────────────────────────────────────────
 	layout := tview.NewFlex()
 

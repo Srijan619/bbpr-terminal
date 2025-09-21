@@ -31,6 +31,11 @@ func SetupKeyBindings() {
 			}
 			state.PipelineUIState.App.SetFocus(focusOrder[currentFocusIndex])
 
+			support.SetTableSelectability(focusOrder, currentFocusIndex, map[tview.Primitive]tview.Primitive{
+				state.PipelineUIState.PipelineSteps:            state.PipelineUIState.PipelineStepTable,
+				state.PipelineUIState.PipelineStepCommandsView: state.PipelineUIState.PipelineScriptCommandsTable,
+			})
+
 		case tcell.KeyRune:
 			switch event.Rune() {
 			case 'r':

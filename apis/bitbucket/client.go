@@ -325,30 +325,51 @@ func FetchPipeline(pipelineUUID string) *types.PipelineResponse {
 	return response
 }
 
+// FetchPipelineSteps fetches pipeline steps from Bitbucket API.
+// It fetches up to 3 pages maximum, combining all steps from those pages.
+// Stops early if last page is reached before 3 pages.
+// Returns a combined slice of all steps.
 func FetchPipelineSteps(pipelineUUID string) []types.StepDetail {
 	client := createClient()
 
-	url := fmt.Sprintf("%s/repositories/%s/%s/pipelines/%s/steps",
+	baseURL := fmt.Sprintf("%s/repositories/%s/%s/pipelines/%s/steps",
 		BitbucketBaseURL, state.Workspace, state.Repo, pipelineUUID)
 
-	log.Printf("[CLIENT] Fetching steps for pipeline UUID: %s", pipelineUUID)
+	var allSteps []types.StepDetail
 
-	resp, err := client.R().
-		SetResult(&types.BitbucketStepsResponse{}).
-		Get(url)
-	if err != nil {
-		log.Printf("[ERROR] Failed to fetch pipeline steps: %v", err)
-		return nil
+	const maxPages = 3
+	for page := 1; page <= maxPages; page++ {
+		url := fmt.Sprintf("%s?page=%d", baseURL, page)
+
+		log.Printf("[CLIENT] Fetching steps for pipeline UUID: %s, page: %d", pipelineUUID, page)
+
+		resp, err := client.R().
+			SetResult(&types.BitbucketStepsResponse{}).
+			Get(url)
+		if err != nil {
+			log.Printf("[ERROR] Failed to fetch pipeline steps: %v", err)
+			break
+		}
+
+		if resp.StatusCode() != 200 {
+			log.Printf("[ERROR] Unexpected status code: %d\nBody: %s", resp.StatusCode(), string(resp.Body()))
+			break
+		}
+
+		result := resp.Result().(*types.BitbucketStepsResponse)
+		log.Printf("[INFO] Successfully fetched %d steps on page %d", len(result.Values), page)
+
+		allSteps = append(allSteps, result.Values...)
+
+		// Check if this is the last page by comparing current page with total pages
+		// Bitbucket API does not provide total pages directly, but if size <= pagelen * page, we are done.
+		if result.Page >= 3 || (result.Size <= result.PageLen*result.Page) {
+			// Reached last page or max page limit
+			break
+		}
 	}
 
-	if resp.StatusCode() != 200 {
-		log.Printf("[ERROR] Unexpected status code: %d\nBody: %s", resp.StatusCode(), string(resp.Body()))
-		return nil
-	}
-
-	result := resp.Result().(*types.BitbucketStepsResponse)
-	log.Printf("[INFO] Successfully fetched %d steps", len(result.Values))
-	return result.Values
+	return allSteps
 }
 
 func FetchPipelineStep(pipelineUUID string, stepUUID string) types.StepDetail {

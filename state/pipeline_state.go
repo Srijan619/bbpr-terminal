@@ -1,6 +1,7 @@
 package state
 
 import (
+	"context"
 	"log"
 	"simple-git-terminal/types"
 	"simple-git-terminal/widgets"
@@ -28,8 +29,13 @@ type PipelineState struct {
 	PipelineSearchBar          *tview.InputField
 	PaginationFlex             *tview.Flex
 
-	SelectedPipeline  *types.PipelineResponse
-	FilteredPipelines *[]types.PipelineResponse
+	SelectedPipeline   *types.PipelineResponse
+	FilteredPipelines  *[]types.PipelineResponse
+	TrackingCancelFunc context.CancelFunc
+
+	// dynamics
+	PipelineStepTable           *tview.Table
+	PipelineScriptCommandsTable *tview.Table
 }
 
 // ✅ Unique name to avoid conflict with other state

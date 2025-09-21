@@ -81,3 +81,26 @@ func UpdateView(targetView interface{}, content interface{}) {
 		}
 	}
 }
+
+func SetTableSelectableIfFocused(focus tview.Primitive, table tview.Primitive, focusOrder []tview.Primitive, currentFocusIndex int) {
+	if focusOrder[currentFocusIndex] == focus {
+		if t, ok := table.(*tview.Table); ok {
+			t.SetSelectable(true, false)
+		}
+	}
+}
+
+func SetTableSelectability(focusOrder []tview.Primitive, currentFocusIndex int, tableMap map[tview.Primitive]tview.Primitive) {
+	for view, table := range tableMap {
+		t, ok := table.(*tview.Table)
+		if !ok || t == nil {
+			continue
+		}
+
+		if focusOrder[currentFocusIndex] == view {
+			t.SetSelectable(true, false)
+		} else {
+			t.SetSelectable(false, false)
+		}
+	}
+}

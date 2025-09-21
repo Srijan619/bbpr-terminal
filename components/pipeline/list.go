@@ -1,6 +1,7 @@
 package pipeline
 
 import (
+	"context"
 	"fmt"
 	"log"
 	"simple-git-terminal/apis/bitbucket"
@@ -198,8 +199,16 @@ func HandleOnPipelineSelect(pipelines []types.PipelineResponse, row int, frame i
 			return
 		}
 
+		if state.PipelineUIState.TrackingCancelFunc != nil {
+			state.PipelineUIState.TrackingCancelFunc()
+		}
+
+		// Create new cancellable context for tracker
+		ctx, cancel := context.WithCancel(context.Background())
+		state.PipelineUIState.TrackingCancelFunc = cancel
+
 		// Track pipeline based on all status change..
-		go TrackPipelineLive(selectedPipeline, frame)
+		go TrackPipelineLive(ctx, selectedPipeline, frame)
 
 		view := GenerateStepsView(steps, selectedPipeline, frame)
 
@@ -210,7 +219,7 @@ func HandleOnPipelineSelect(pipelines []types.PipelineResponse, row int, frame i
 	})
 }
 
-func TrackPipelineLive(pipeline types.PipelineResponse, frame int) {
+func TrackPipelineLive(ctx context.Context, pipeline types.PipelineResponse, frame int) {
 	if !pipeline.State.Name.NeedsTracking() {
 		return
 	}
@@ -223,43 +232,49 @@ func TrackPipelineLive(pipeline types.PipelineResponse, frame int) {
 	const stableThreshold = 3
 	stableCount := 0
 
-	for range ticker.C {
-		updatedPipeline := bitbucket.FetchPipeline(pipeline.UUID)
-		if updatedPipeline.UUID == "" {
-			log.Printf("[WARN] Could not fetch pipeline update for %s", pipeline.UUID)
-			continue
-		}
+	for {
+		select {
+		case <-ctx.Done():
+			log.Printf("[INFO] Tracking for pipeline %s cancelled", pipeline.UUID)
+			return
+		case <-ticker.C:
+			updatedPipeline := bitbucket.FetchPipeline(pipeline.UUID)
+			if updatedPipeline.UUID == "" {
+				log.Printf("[WARN] Could not fetch pipeline update for %s", pipeline.UUID)
+				continue
+			}
 
-		steps := bitbucket.FetchPipelineSteps(updatedPipeline.UUID)
-		if steps == nil {
-			log.Printf("[WARN] Could not fetch updated steps for pipeline %s", updatedPipeline.UUID)
-			continue
-		}
+			steps := bitbucket.FetchPipelineSteps(updatedPipeline.UUID)
+			if steps == nil {
+				log.Printf("[WARN] Could not fetch updated steps for pipeline %s", updatedPipeline.UUID)
+				continue
+			}
 
-		// Check if all steps are in terminal state
-		allDone := true
-		for _, step := range steps {
-			if step.State.Name.InProgress() || step.State.Name.Running() || step.State.Name.Pending() {
-				allDone = false
+			// Check if all steps are in terminal state
+			allDone := true
+			for _, step := range steps {
+				if step.State.Name.InProgress() || step.State.Name.Running() || step.State.Name.Pending() {
+					allDone = false
+					break
+				}
+			}
+
+			if allDone {
+				stableCount++
+				log.Printf("[INFO] All steps appear complete for pipeline %s (%d/%d confirmations)", pipeline.UUID, stableCount, stableThreshold)
+			} else {
+				stableCount = 0
+			}
+
+			// Re-render step view
+			view := GenerateStepsView(steps, *updatedPipeline, frame)
+			support.UpdateView(state.PipelineUIState.PipelineSteps, view)
+
+			// Exit only after N consecutive stable reads
+			if !updatedPipeline.State.Name.InProgress() && stableCount >= stableThreshold {
+				log.Printf("[INFO] Pipeline %s has finished and all steps are stable. Stopping tracker.", pipeline.UUID)
 				break
 			}
-		}
-
-		if allDone {
-			stableCount++
-			log.Printf("[INFO] All steps appear complete for pipeline %s (%d/%d confirmations)", pipeline.UUID, stableCount, stableThreshold)
-		} else {
-			stableCount = 0
-		}
-
-		// Re-render step view
-		view := GenerateStepsView(steps, *updatedPipeline, frame)
-		support.UpdateView(state.PipelineUIState.PipelineSteps, view)
-
-		// Exit only after N consecutive stable reads
-		if !updatedPipeline.State.Name.InProgress() && stableCount >= stableThreshold {
-			log.Printf("[INFO] Pipeline %s has finished and all steps are stable. Stopping tracker.", pipeline.UUID)
-			break
 		}
 	}
 }
