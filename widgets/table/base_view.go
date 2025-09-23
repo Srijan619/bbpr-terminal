@@ -14,6 +14,10 @@ type Selectable interface {
 	SetSelectable(selectable bool, allowsMultiple bool)
 }
 
+type TableView interface {
+	SetCell(row, col int, cell *tview.TableCell)
+}
+
 // Refreshable is implemented by views that can be refreshed (e.g., after file changes)
 type Refreshable interface {
 	Refresh()
@@ -37,6 +41,11 @@ func NewBaseTableView() *BaseTableView {
 		Table:       table,
 		SelectedRow: -1,
 	}
+}
+
+func (b *BaseTableView) SetCell(row, col int, cell *tview.TableCell) {
+	cell.SetBackgroundColor(tcell.ColorDefault)
+	b.Table.SetCell(row, col, cell)
 }
 
 func (b *BaseTableView) SetSelectable(selectable bool, allowsMultiple bool) {

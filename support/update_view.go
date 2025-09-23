@@ -64,7 +64,7 @@ func UpdateView(targetView interface{}, content interface{}) {
 				v.SetText("[red]Unsupported content type[-]")
 			}
 
-		case *tview.Table:
+		case widgets.TableView:
 			switch c := content.(type) {
 			case string:
 				tcell := CreateTableCell(c, tcell.ColorDefault)

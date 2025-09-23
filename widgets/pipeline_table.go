@@ -31,6 +31,10 @@ func NewPipelineTable() *PipelineTable {
 	}
 }
 
+func (p *PipelineTable) SetCell(row, col int, cell *tview.TableCell) {
+	p.BaseTableView.SetCell(row, col, cell)
+}
+
 func (pt *PipelineTable) SetPipelines(pps []types.PipelineResponse, frame int) {
 	pt.pipelines = pps
 

@@ -15,3 +15,5 @@ Run the following command to install:
 curl -fsSL https://raw.githubusercontent.com/srijan619/bbpr-terminal/main/install.sh | bash
 
 ```
+
+-- TODO: Add support to not show commands that are not yet executed (or at least hide them or disabl)

@@ -29,6 +29,10 @@ func NewStepsTable() *StepsTable {
 	}
 }
 
+func (p *StepsTable) SetCell(row, col int, cell *tview.TableCell) {
+	p.BaseTableView.SetCell(row, col, cell)
+}
+
 func (stepTable *StepsTable) SetSteps(steps []types.StepDetail, frame int) {
 	stepTable.steps = steps
 	stepTable.Clear()
