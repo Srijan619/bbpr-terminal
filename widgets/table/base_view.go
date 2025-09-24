@@ -4,6 +4,7 @@ import (
 	"log"
 	"simple-git-terminal/constants"
 	"simple-git-terminal/util"
+	"strings"
 
 	"github.com/gdamore/tcell/v2"
 	"github.com/rivo/tview"
@@ -16,6 +17,9 @@ type Selectable interface {
 
 type TableView interface {
 	SetCell(row, col int, cell *tview.TableCell)
+	SetLoadingCell(cell *tview.TableCell)
+	GetRowCount() int
+	GetColumnCount() int
 }
 
 // Refreshable is implemented by views that can be refreshed (e.g., after file changes)
@@ -27,6 +31,8 @@ type BaseTableView struct {
 	*tview.Table
 	SelectedRow int
 	OnRefresh   func()
+
+	loading bool
 }
 
 // Constructor
@@ -35,17 +41,39 @@ func NewBaseTableView() *BaseTableView {
 
 	table.
 		SetFixed(1, 0).
-		SetBackgroundColor(tcell.ColorDefault)
+		SetBackgroundColor(tcell.ColorDefault).
+		SetTitleAlign(tview.AlignLeft)
 
 	return &BaseTableView{
 		Table:       table,
 		SelectedRow: -1,
+		loading:     false,
 	}
 }
 
 func (b *BaseTableView) SetCell(row, col int, cell *tview.TableCell) {
-	cell.SetBackgroundColor(tcell.ColorDefault)
+	// Block all updates except to the loading cell
+	if b.loading {
+		return
+	}
 	b.Table.SetCell(row, col, cell)
+}
+
+func (b *BaseTableView) SetLoadingCell(cell *tview.TableCell) {
+	b.loading = true
+
+	text := cell.Text
+	if idx := strings.Index(text, "Loading..."); idx != -1 {
+		text = text[:idx] // keep everything before "Loading..." // FIXME: Super hacky for now
+	}
+	cell.SetText(text).
+		SetTextColor(tcell.ColorOrange)
+
+	b.Table.SetCell(0, 0, cell)
+}
+
+func (b *BaseTableView) ClearLoading() {
+	b.loading = false
 }
 
 func (b *BaseTableView) SetSelectable(selectable bool, allowsMultiple bool) {

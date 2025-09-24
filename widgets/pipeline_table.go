@@ -20,10 +20,7 @@ type PipelineTable struct {
 func NewPipelineTable() *PipelineTable {
 	table := widgets.NewBaseTableView()
 
-	table.SetTitle("Pipelines p|P").
-		SetBackgroundColor(tcell.ColorDefault).
-		SetTitleAlign(tview.AlignLeft)
-	table.SetSelectable(true, false)
+	table.SetTitle("Pipelines p|P")
 
 	return &PipelineTable{
 		BaseTableView: table,
@@ -35,7 +32,12 @@ func (p *PipelineTable) SetCell(row, col int, cell *tview.TableCell) {
 	p.BaseTableView.SetCell(row, col, cell)
 }
 
+func (p *PipelineTable) SetLoadingCell(cell *tview.TableCell) {
+	p.BaseTableView.SetLoadingCell(cell)
+}
+
 func (pt *PipelineTable) SetPipelines(pps []types.PipelineResponse, frame int) {
+	pt.ClearLoading()
 	pt.pipelines = pps
 
 	// Clear and populate
@@ -91,6 +93,7 @@ func (pt *PipelineTable) SetPipelines(pps []types.PipelineResponse, frame int) {
 		pt.SetCell(i, 11, util.CellFormat(startStr, tcell.ColorDarkGray))                                                  // Started
 	}
 	pt.SetSelectedStyle(tcell.StyleDefault.Foreground(tcell.ColorDarkOrange))
+	pt.Table.SetSelectable(true, false)
 }
 
 func (pipelineTable *PipelineTable) UpdateSelectedRow(row int) {

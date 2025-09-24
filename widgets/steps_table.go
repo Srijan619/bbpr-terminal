@@ -20,8 +20,7 @@ type StepsTable struct {
 func NewStepsTable() *StepsTable {
 	table := widgets.NewBaseTableView()
 
-	table.SetTitle("Steps Info").
-		SetTitleAlign(tview.AlignLeft)
+	table.SetTitle("Steps Info")
 
 	return &StepsTable{
 		BaseTableView: table,
@@ -29,11 +28,17 @@ func NewStepsTable() *StepsTable {
 	}
 }
 
-func (p *StepsTable) SetCell(row, col int, cell *tview.TableCell) {
-	p.BaseTableView.SetCell(row, col, cell)
+func (s *StepsTable) SetCell(row, col int, cell *tview.TableCell) {
+	s.BaseTableView.SetCell(row, col, cell)
+}
+
+func (s *StepsTable) SetLoadingCell(cell *tview.TableCell) {
+	s.BaseTableView.SetLoadingCell(cell)
 }
 
 func (stepTable *StepsTable) SetSteps(steps []types.StepDetail, frame int) {
+	stepTable.ClearLoading()
+
 	stepTable.steps = steps
 	stepTable.Clear()
 

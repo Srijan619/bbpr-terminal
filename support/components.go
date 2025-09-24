@@ -110,7 +110,8 @@ func CreateTableCell(text string, color tcell.Color) *tview.TableCell {
 	return tview.NewTableCell(text).
 		SetTextColor(color).
 		SetAlign(tview.AlignLeft).
-		SetSelectable(true)
+		SetSelectable(true).
+		SetBackgroundColor(tcell.ColorDefault)
 }
 
 func CreateDropDownComponent(label string, options []string) *tview.DropDown {

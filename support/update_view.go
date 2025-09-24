@@ -3,6 +3,7 @@ package support
 import (
 	"log"
 	widgets "simple-git-terminal/widgets/table"
+	"strings"
 
 	"github.com/gdamore/tcell/v2"
 	"github.com/rivo/tview"
@@ -67,7 +68,12 @@ func UpdateView(targetView interface{}, content interface{}) {
 		case widgets.TableView:
 			switch c := content.(type) {
 			case string:
-				tcell := CreateTableCell(c, tcell.ColorDefault)
+				tcell := CreateTableCell(c, tcell.ColorDarkGray)
+				// NOTE: By default show spinner at last new cell. Maybe would be wiser to make this configurable in future
+				if strings.Contains(c, "Loading...") {
+					v.SetLoadingCell(tcell)
+					break
+				}
 				v.SetCell(0, 0, tcell)
 			case tview.Primitive:
 				// Handle case if content is another Primitive (optional)

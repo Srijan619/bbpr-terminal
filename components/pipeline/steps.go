@@ -16,10 +16,6 @@ import (
 func GenerateStepsView(steps []types.StepDetail, selectedPipeline types.PipelineResponse, frame int) tview.Primitive {
 	stepsTable := state.PipelineUIState.PipelineSteps
 
-	stepsTable.
-		SetBorders(false).
-		SetBackgroundColor(tcell.ColorDefault)
-
 	stepsTable.SetSteps(steps, frame)
 	// Determine left bar color from most critical status
 	barColor := util.GetColorForStatus(state.PipelineUIState.SelectedPipeline.State.Name) // Bar color is pipeline's state color
