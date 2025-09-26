@@ -7,10 +7,11 @@ import (
 	"simple-git-terminal/components/pipeline"
 	"simple-git-terminal/components/pr"
 	"simple-git-terminal/custom/borders"
+	"simple-git-terminal/events"
 	"simple-git-terminal/state"
 	"simple-git-terminal/support"
 	"simple-git-terminal/util"
-	"simple-git-terminal/widgets"
+	"simple-git-terminal/views"
 
 	"github.com/gdamore/tcell/v2"
 	"github.com/rivo/tview"
@@ -19,6 +20,8 @@ import (
 func CreateMainAppForBBPipeline() *tview.Application {
 	borders.CustomizeBorders()
 	app := tview.NewApplication()
+	bus := events.NewBus()
+
 	workspace, repoSlug, _ = util.GetRepoAndWorkspace()
 	log.Printf("Loading workspace - %s and repo - %s ....", workspace, repoSlug)
 	fmt.Printf("Loading workspace - %s and repo - %s ....", workspace, repoSlug)
@@ -30,7 +33,7 @@ func CreateMainAppForBBPipeline() *tview.Application {
 	currentUser := bitbucket.FetchCurrentUser()
 	state.SetCurrentUser(currentUser)
 
-	state.SetWorkspaceRepo(workspace, repoSlug)
+	state.InitPartialPipelineState(app, workspace, repoSlug)
 	util.InitMdRenderer() // Markdown renderer takes time, so init it beforehand
 
 	// LEFT
@@ -41,26 +44,26 @@ func CreateMainAppForBBPipeline() *tview.Application {
 
 	// Pipelines LIST UI
 
-	ppList := widgets.NewPipelineTable()
+	ppList := views.NewPipelineView(bus)
 
 	leftFullFlex := tview.NewFlex().
 		SetDirection(tview.FlexRow)
 
 	leftFullFlex.
 		AddItem(ppStatusFilterFlex, 0, 2, false).
-		AddItem(ppList, 0, 15, true)
+		AddItem(ppList.GetView(), 0, 15, true)
 
 		// MIDDLE
 	stepsWrapper := tview.NewFlex()
 	stepsWrapper.SetDirection(tview.FlexRow).SetBackgroundColor(tcell.ColorDefault)
 
 	debugView := support.CreateFlexComponent("Debug Info")
-	steps := widgets.NewStepsTable()
+	steps := views.NewStepsView(bus)
 
 	stepCommandsView := support.CreateFlexComponent("Script Commands")
 	stepsWrapper.
 		AddItem(debugView, 0, 2, true).
-		AddItem(steps, 0, 2, true).
+		AddItem(steps.Render(), 0, 2, true).
 		AddItem(stepCommandsView, 0, 4, true)
 
 		// Right
@@ -86,8 +89,8 @@ func CreateMainAppForBBPipeline() *tview.Application {
 	mainFlexWrapper.AddItem(leftFullFlex, 0, 1, true).
 		AddItem(middleFullFlex, 0, 3, false)
 
-	state.InitializePipelineViews(app, mainFlexWrapper, ppList, debugView, steps, step, stepCommandsView, stepCommandLogView, nil, nil, nil)
-	pipeline.PopulatePipelineList()
+	state.InitializePipelineViews(mainFlexWrapper, ppList.GetView(), debugView, steps.Render(), step, stepCommandsView, stepCommandLogView, nil, nil, nil)
+	// pipeline.PopulatePipelineList()
 
 	pipeline.SetupKeyBindings()
 	app.SetRoot(mainFlexWrapper, true).EnableMouse(true)

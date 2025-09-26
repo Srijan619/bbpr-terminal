@@ -47,7 +47,6 @@ type PipelineState struct {
 var PipelineUIState *PipelineState
 
 func InitializePipelineViews(
-	app *tview.Application,
 	mainFlexWrapper *tview.Flex,
 	pipelineList *widgets.PipelineTable,
 	pipelineStepsDebugView *tview.Flex,
@@ -59,7 +58,6 @@ func InitializePipelineViews(
 	pipelineSearchBar *tview.InputField,
 ) {
 	PipelineUIState = &PipelineState{
-		App:                        app,
 		MainFlexWrapper:            mainFlexWrapper,
 		PipelineList:               pipelineList,
 		PipelineStepsDebugView:     pipelineStepsDebugView,
@@ -107,6 +105,15 @@ func InitializePipelineStatusFilter(filter *PipelineStatusFilterType) {
 		}
 	}
 	PipelineStatusFilter = filter
+}
+
+func InitPartialPipelineState(app *tview.Application, workspace, repo string) {
+	if PipelineUIState == nil {
+		PipelineUIState = &PipelineState{}
+	}
+	PipelineUIState.App = app
+	Workspace = workspace
+	Repo = repo
 }
 
 func SetSelectedPipeline(pipeline *types.PipelineResponse) {

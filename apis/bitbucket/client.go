@@ -264,17 +264,28 @@ func buildStateFilter() string {
 }
 
 // Pipelines
+
 func FetchPipelinesByQuery(query string) ([]types.PipelineResponse, types.Pagination) {
-	if state.PipelineUIState.IsNetworkMockMode {
+	log.Println("[DEBUG] Starting FetchPipelinesByQuery")
+	if state.PipelineUIState == nil {
+		log.Fatal("[ERROR] PipelineUIState is nil")
+	}
+	log.Printf("[DEBUG] Workspace: %q, Repo: %q", state.Workspace, state.Repo)
+
+	if state.PipelineUIState != nil && state.PipelineUIState.IsNetworkMockMode {
+		log.Println("[DEBUG] Using mock mode")
 		return TestFetchPipelinesByQuery(query)
 	}
 
 	client := createClient()
+	if client == nil {
+		log.Println("[ERROR] createClient returned nil")
+	}
 
 	baseURL := fmt.Sprintf("%s/repositories/%s/%s/pipelines",
 		BitbucketBaseURL, state.Workspace, state.Repo)
+	log.Printf("[DEBUG] Base URL: %s", baseURL)
 
-	// Add default sort if not already in query
 	if !strings.Contains(query, "sort=") {
 		if len(query) > 0 && !strings.HasPrefix(query, "&") {
 			query = "&" + query
@@ -286,23 +297,27 @@ func FetchPipelinesByQuery(query string) ([]types.PipelineResponse, types.Pagina
 	if query != "" {
 		url += "?" + strings.TrimPrefix(query, "&")
 	}
-
-	log.Printf("[CLIENT] Fetching Pipelines with query... %v", url)
+	log.Printf("[DEBUG] Full URL: %s", url)
 
 	resp, err := client.R().
 		SetResult(&types.BitbucketPipelineResponse{}).
 		Get(url)
 	if err != nil {
-		log.Fatalf("Error fetching pipelines: %v", err)
+		log.Fatalf("[ERROR] Error fetching pipelines: %v", err)
 		return nil, types.Pagination{}
 	}
 
 	if resp.StatusCode() != 200 {
-		log.Fatalf("Unexpected status code: %d. Response body: %s", resp.StatusCode(), string(resp.Body()))
+		log.Fatalf("[ERROR] Unexpected status code: %d. Response body: %s", resp.StatusCode(), string(resp.Body()))
 		return nil, types.Pagination{}
 	}
 
 	response := resp.Result().(*types.BitbucketPipelineResponse)
+	if response == nil {
+		log.Println("[ERROR] Response result is nil")
+		return nil, types.Pagination{}
+	}
+
 	log.Printf("[INFO] Total pipelines: %d", len(response.Values))
 
 	return response.Values, response.Pagination

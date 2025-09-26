@@ -30,7 +30,7 @@ func PopulatePipelineList() {
 		data        types.PipelineResponse
 	}
 
-	pipelineCache := make(map[string]pipelineCacheEntry)
+	// pipelineCache := make(map[string]pipelineCacheEntry)
 
 	loadPipelines := func(query string, appendData bool) {
 		if lastFetchDone {
@@ -76,14 +76,14 @@ func PopulatePipelineList() {
 
 			state.PipelineUIState.PipelineList.SetPipelines(pipelineList, frame)
 
-			state.PipelineUIState.PipelineList.SetSelectedFunc(func(row, column int) {
-				go func() {
-					HandleOnPipelineSelect(pipelineList, row, frame)
-				}()
-			})
+			// state.PipelineUIState.PipelineList.SetSelectedFunc(func(row, column int) {
+			// 	go func() {
+			// 		HandleOnPipelineSelect(pipelineList, row, frame)
+			// 	}()
+			// })
 
 			// Select first pipeline by default
-			HandleOnPipelineSelect(pipelineList, 0, frame)
+			//	HandleOnPipelineSelect(pipelineList, 0, frame)
 		})
 	}
 	// Initial load
@@ -95,56 +95,56 @@ func PopulatePipelineList() {
 	})
 
 	// Animate status with throttled refresh
-	go func() {
-		ticker := time.NewTicker(100 * time.Millisecond) // 10 FPS
-
-		defer ticker.Stop()
-
-		for range ticker.C {
-			if len(pipelineList) == 0 {
-				continue
-			}
-			frame++
-
-			state.PipelineUIState.App.QueueUpdateDraw(func() {
-				for _, pp := range pipelineList {
-					status := pp.State.Result.Name
-					if status == "" {
-						status = pp.State.Name
-					}
-
-					if !status.NeedsTracking() {
-						continue
-					}
-
-					// Check cache
-					cached, found := pipelineCache[pp.UUID]
-					if found && time.Since(cached.lastFetched) < 10*time.Second {
-						// Use cached result
-						updated := cached.data
-						icon := util.GetIconForStatusWithColorAnimated(updated.State.Name, frame)
-						color := util.GetColorForStatus(updated.State.Name)
-						text := fmt.Sprintf("%s %s", icon, updated.State.Name)
-
-						state.PipelineUIState.PipelineList.UpdateStatus(updated.UUID, util.CellFormat(text, color))
-						continue
-					}
-
-					// Fetch updated pipeline status
-					updated := bitbucket.FetchPipeline(pp.UUID)
-					pipelineCache[pp.UUID] = pipelineCacheEntry{
-						lastFetched: time.Now(),
-						data:        *updated,
-					}
-
-					icon := util.GetIconForStatusWithColorAnimated(updated.State.Name, frame)
-					color := util.GetColorForStatus(updated.State.Name)
-					text := fmt.Sprintf("%s %s", icon, updated.State.Name)
-					state.PipelineUIState.PipelineList.UpdateStatus(updated.UUID, util.CellFormat(text, color))
-				}
-			})
-		}
-	}()
+	// go func() {
+	// 	ticker := time.NewTicker(100 * time.Millisecond) // 10 FPS
+	//
+	// 	defer ticker.Stop()
+	//
+	// 	for range ticker.C {
+	// 		if len(pipelineList) == 0 {
+	// 			continue
+	// 		}
+	// 		frame++
+	//
+	// 		state.PipelineUIState.App.QueueUpdateDraw(func() {
+	// 			for _, pp := range pipelineList {
+	// 				status := pp.State.Result.Name
+	// 				if status == "" {
+	// 					status = pp.State.Name
+	// 				}
+	//
+	// 				if !status.NeedsTracking() {
+	// 					continue
+	// 				}
+	//
+	// 				// Check cache
+	// 				cached, found := pipelineCache[pp.UUID]
+	// 				if found && time.Since(cached.lastFetched) < 10*time.Second {
+	// 					// Use cached result
+	// 					updated := cached.data
+	// 					icon := util.GetIconForStatusWithColorAnimated(updated.State.Name, frame)
+	// 					color := util.GetColorForStatus(updated.State.Name)
+	// 					text := fmt.Sprintf("%s %s", icon, updated.State.Name)
+	//
+	// 					state.PipelineUIState.PipelineList.UpdateStatus(updated.UUID, util.CellFormat(text, color))
+	// 					continue
+	// 				}
+	//
+	// 				// Fetch updated pipeline status
+	// 				updated := bitbucket.FetchPipeline(pp.UUID)
+	// 				pipelineCache[pp.UUID] = pipelineCacheEntry{
+	// 					lastFetched: time.Now(),
+	// 					data:        *updated,
+	// 				}
+	//
+	// 				icon := util.GetIconForStatusWithColorAnimated(updated.State.Name, frame)
+	// 				color := util.GetColorForStatus(updated.State.Name)
+	// 				text := fmt.Sprintf("%s %s", icon, updated.State.Name)
+	// 				state.PipelineUIState.PipelineList.UpdateStatus(updated.UUID, util.CellFormat(text, color))
+	// 			}
+	// 		})
+	// 	}
+	// }()
 
 	// Infinite scroll - load next page if user scrolls to the bottom
 	state.PipelineUIState.PipelineList.SetInputCapture(func(event *tcell.EventKey) *tcell.EventKey {
@@ -185,6 +185,8 @@ func HandleOnPipelineSelect(pipelines []types.PipelineResponse, row int, frame i
 
 	state.SetSelectedPipeline(&selectedPipeline)
 	state.PipelineUIState.PipelineList.UpdateSelectedRow(row)
+
+	return
 
 	log.Printf("Selected pipeline UUID: %s, Name: %s", selectedPipeline.UUID, selectedPipeline.Creator.DisplayName)
 
