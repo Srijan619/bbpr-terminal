@@ -3,9 +3,10 @@ package state
 import (
 	"context"
 	"log"
+	"strings"
+
 	"simple-git-terminal/types"
 	"simple-git-terminal/widgets"
-	"strings"
 
 	"github.com/rivo/tview"
 )
@@ -57,19 +58,43 @@ func InitializePipelineViews(
 	pipelineStatusFilter, paginationFlex *tview.Flex,
 	pipelineSearchBar *tview.InputField,
 ) {
-	PipelineUIState = &PipelineState{
-		MainFlexWrapper:            mainFlexWrapper,
-		PipelineList:               pipelineList,
-		PipelineStepsDebugView:     pipelineStepsDebugView,
-		PipelineSteps:              pipelineSteps,
-		PipelineStep:               pipelineStep,
-		PipelineStepCommandsView:   pipelineStepCommandsView,
-		PipelineStepCommandLogView: pipelineStepCommandLogView,
-		PipelineStatusFilter:       pipelineStatusFilter,
-		PaginationFlex:             paginationFlex,
-		PipelineSearchBar:          pipelineSearchBar,
+	if PipelineUIState == nil {
+		PipelineUIState = &PipelineState{}
 	}
 
+	// Only set fields if they aren't already set (allows partial init)
+	if PipelineUIState.MainFlexWrapper == nil {
+		PipelineUIState.MainFlexWrapper = mainFlexWrapper
+	}
+	if PipelineUIState.PipelineList == nil {
+		PipelineUIState.PipelineList = pipelineList
+	}
+	if PipelineUIState.PipelineStepsDebugView == nil {
+		PipelineUIState.PipelineStepsDebugView = pipelineStepsDebugView
+	}
+	if PipelineUIState.PipelineSteps == nil {
+		PipelineUIState.PipelineSteps = pipelineSteps
+	}
+	if PipelineUIState.PipelineStep == nil {
+		PipelineUIState.PipelineStep = pipelineStep
+	}
+	if PipelineUIState.PipelineStepCommandsView == nil {
+		PipelineUIState.PipelineStepCommandsView = pipelineStepCommandsView
+	}
+	if PipelineUIState.PipelineStepCommandLogView == nil {
+		PipelineUIState.PipelineStepCommandLogView = pipelineStepCommandLogView
+	}
+	if PipelineUIState.PipelineStatusFilter == nil {
+		PipelineUIState.PipelineStatusFilter = pipelineStatusFilter
+	}
+	if PipelineUIState.PaginationFlex == nil {
+		PipelineUIState.PaginationFlex = paginationFlex
+	}
+	if PipelineUIState.PipelineSearchBar == nil {
+		PipelineUIState.PipelineSearchBar = pipelineSearchBar
+	}
+
+	// Update the views slice
 	PipelineUIState.Views = []tview.Primitive{
 		pipelineList,
 		pipelineSteps,

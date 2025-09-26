@@ -3,6 +3,7 @@ package views
 import (
 	"fmt"
 	"log"
+
 	"simple-git-terminal/apis/bitbucket"
 	"simple-git-terminal/events"
 	"simple-git-terminal/support"
@@ -27,8 +28,7 @@ func NewPipelineView(bus *events.Bus) *PipelinesView {
 	sv.Subscribe(bus) // attach reactive event handling
 
 	sv.table.SetSelectedFunc(func(row, column int) {
-		sv.table.SetSelectedRow(row) // <- this updates SelectedRow and returns pipeline
-
+		sv.table.UpdateSelectedRow(row)
 		selected := sv.table.GetSelectedPipeline()
 		if selected == nil {
 			log.Printf("[ERROR] No pipeline at row %d", row)

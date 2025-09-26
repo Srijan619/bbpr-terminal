@@ -2,12 +2,14 @@ package util
 
 import (
 	"fmt"
+	"log"
 	"os"
 	"os/exec"
 	"regexp"
+	"strings"
+
 	"simple-git-terminal/constants"
 	"simple-git-terminal/types"
-	"strings"
 
 	"github.com/gdamore/tcell/v2"
 	"github.com/rivo/tview"
@@ -26,6 +28,7 @@ func GetRepoAndWorkspace() (string, string, error) {
 	cmd := exec.Command("git", "remote", "get-url", "origin")
 	cmd.Dir = getCurrentDir()
 	out, err := cmd.Output()
+	log.Println("IOOOOO %v", out)
 	if err != nil {
 		return "", "", fmt.Errorf("failed to get git remote URL: %v", err)
 	}
@@ -47,12 +50,32 @@ func GetRepoAndWorkspace() (string, string, error) {
 }
 
 func getCurrentDir() string {
-	// For testing during local development override
+	dirs := []string{}
+
 	if os.Getenv("BBPR_APP_ENV") == "development" {
-		return "/Users/srijanpersonal/personal_workspace/raw/test_repo"
-	} else {
-		return "."
+		dirs = append(dirs,
+			"/home/srijan/workspace/test_repo",
+			"Users/personal_workspace/raw/test_repo",
+		)
 	}
+
+	dirs = append(dirs, ".")
+
+	for _, dir := range dirs {
+		if dirExists(dir) {
+			return dir
+		}
+	}
+
+	return ""
+}
+
+func dirExists(path string) bool {
+	info, err := os.Stat(path)
+	if err != nil {
+		return false
+	}
+	return info.IsDir()
 }
 
 // Remove diff hunks as they are unnecessary
