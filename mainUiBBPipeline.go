@@ -3,6 +3,7 @@ package main
 import (
 	"fmt"
 	"log"
+
 	"simple-git-terminal/apis/bitbucket"
 	"simple-git-terminal/components/pipeline"
 	"simple-git-terminal/components/pr"
@@ -60,11 +61,11 @@ func CreateMainAppForBBPipeline() *tview.Application {
 	debugView := support.CreateFlexComponent("Debug Info")
 	steps := views.NewStepsView(bus)
 
-	stepCommandsView := support.CreateFlexComponent("Script Commands")
+	stepCommandsView := views.NewStepsCommandsView(bus)
 	stepsWrapper.
 		AddItem(debugView, 0, 2, true).
 		AddItem(steps.Render(), 0, 2, true).
-		AddItem(stepCommandsView, 0, 4, true)
+		AddItem(stepCommandsView.Render(), 0, 4, true)
 
 		// Right
 	stepWrapper := tview.NewFlex()
@@ -89,7 +90,14 @@ func CreateMainAppForBBPipeline() *tview.Application {
 	mainFlexWrapper.AddItem(leftFullFlex, 0, 1, true).
 		AddItem(middleFullFlex, 0, 3, false)
 
-	state.InitializePipelineViews(mainFlexWrapper, ppList.GetView(), debugView, steps.Render(), step, stepCommandsView, stepCommandLogView, nil, nil, nil)
+	state.InitializePipelineViews(mainFlexWrapper,
+		ppList.GetView(),
+		debugView,
+		steps.Render(),
+		step,
+		stepCommandsView.Render(),
+		stepCommandLogView,
+		nil, nil, nil)
 	// pipeline.PopulatePipelineList()
 
 	pipeline.SetupKeyBindings()

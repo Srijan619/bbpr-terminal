@@ -21,7 +21,7 @@ type PipelineState struct {
 	PipelineStepsDebugView     *tview.Flex
 	PipelineSteps              *widgets.StepsTable
 	PipelineStep               *tview.Flex
-	PipelineStepCommandsView   *tview.Flex
+	PipelineStepCommandsView   *widgets.StepsCommandsTable
 	PipelineStepCommandLogView *tview.Flex
 	RightPanelHeader           *tview.TextView
 	CurrentView                tview.Primitive
@@ -53,7 +53,7 @@ func InitializePipelineViews(
 	pipelineStepsDebugView *tview.Flex,
 	pipelineSteps *widgets.StepsTable,
 	pipelineStep *tview.Flex,
-	pipelineStepCommandsView *tview.Flex,
+	pipelineStepCommandsView *widgets.StepsCommandsTable,
 	pipelineStepCommandLogView *tview.Flex,
 	pipelineStatusFilter, paginationFlex *tview.Flex,
 	pipelineSearchBar *tview.InputField,

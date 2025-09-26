@@ -11,16 +11,16 @@ import (
 	"simple-git-terminal/widgets"
 )
 
-// StepsView is a reactive view that renders a StepsTable and manages events
-type StepsView struct {
+// StepsCommandsView is a reactive view that renders a StepsTable and manages events
+type StepsCommandsView struct {
 	BaseView
-	table *widgets.StepsTable
+	table *widgets.StepsCommandsTable
 	bus   *events.Bus
 }
 
-func NewStepsView(bus *events.Bus) *StepsView {
-	table := widgets.NewStepsTable()
-	sv := &StepsView{
+func NewStepsCommandsView(bus *events.Bus) *StepsCommandsView {
+	table := widgets.NewStepsCommandsTable()
+	sv := &StepsCommandsView{
 		BaseView: NewBaseView(table), // gives Subscribe, Refresh, etc.
 		table:    table,
 		bus:      bus,
@@ -28,45 +28,29 @@ func NewStepsView(bus *events.Bus) *StepsView {
 
 	sv.Subscribe(bus) // attach reactive event handling
 
-	sv.table.SetSelectedFunc(func(row, column int) {
-		sv.table.UpdateSelectedRow(row)
-		selected := sv.table.GetSelectedStep()
-		if selected == nil {
-			log.Printf("[ERROR] No steps at row %d", row)
-			return
-		}
-
-		// Now publish the selection event
-		sv.bus.Publish(events.StepSelectedEvent{
-			Step: *selected,
-			Row:  row,
-		})
-	})
-
 	return sv
 }
 
 // Subscribe handles events for this view
-func (sv *StepsView) Subscribe(bus *events.Bus) {
+func (sv *StepsCommandsView) Subscribe(bus *events.Bus) {
 	bus.Subscribe(func(e events.Event) {
 		switch ev := e.(type) {
-		case events.PipelineSelectedEvent:
-			// fetch steps async, then publish StepsUpdatedEvent
+		case events.StepSelectedEvent:
 			support.ShowPipelineLoadingSpinner(sv.table, func() (interface{}, error) {
-				steps := bitbucket.FetchPipelineSteps(ev.Pipeline.UUID)
-				if steps == nil {
-					log.Println("Failed to fetch pipeline steps, nil returned")
-					return nil, fmt.Errorf("failed to fetch pipeline steps")
+				step := bitbucket.FetchPipelineStep(ev.Step.Pipeline.UUID, ev.Step.UUID)
+				if step.UUID == "" {
+					log.Println("Failed to fetch selected step's step, nil returned")
+					return nil, fmt.Errorf("failed to fetch selected step's step")
 				}
-				return steps, nil
+				return step, nil
 			}, func(result interface{}, err error) {
-				steps, ok := result.([]types.StepDetail)
+				step, ok := result.(types.StepDetail)
 				if !ok {
 					support.UpdateView(sv.table, fmt.Sprintf("[red]Error: %v[-]", err))
 					return
 				}
 
-				sv.table.SetSteps(steps, 0)
+				sv.table.SetStepDetail(step, 0)
 			})
 		case events.StepsUpdatedEvent:
 			// if ev.PipelineUUID == sv.table.GetSelectedStep {
@@ -77,12 +61,12 @@ func (sv *StepsView) Subscribe(bus *events.Bus) {
 }
 
 // Render returns the table widget as tview.Primitive
-func (sv *StepsView) Render() *widgets.StepsTable {
+func (sv *StepsCommandsView) Render() *widgets.StepsCommandsTable {
 	return sv.table
 }
 
 // Refresh triggers a full refresh (from BaseView)
-func (sv *StepsView) Refresh() {
+func (sv *StepsCommandsView) Refresh() {
 	sv.table.Clear()
 	// if sv.OnRefresh != nil {
 	// 	sv.OnRefresh()

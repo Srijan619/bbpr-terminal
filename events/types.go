@@ -8,6 +8,11 @@ type PipelineSelectedEvent struct {
 	Row      int
 }
 
+type StepSelectedEvent struct {
+	Step types.StepDetail
+	Row  int
+}
+
 // StepsUpdatedEvent is emitted when the steps for a pipeline have been fetched
 type StepsUpdatedEvent struct {
 	PipelineUUID string
