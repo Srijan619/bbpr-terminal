@@ -17,7 +17,7 @@ fi
 
 # Download the binary
 echo "Downloading $FILE..."
-curl -L -o bb "https://github.com/srijan619/bb-terminal/releases/latest/download/$FILE"
+curl -L -o bb "https://github.com/srijan619/bbpr-terminal/releases/latest/download/$FILE"
 
 # Make executable and move to a directory in PATH
 chmod +x bb
